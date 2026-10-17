@@ -1,0 +1,47 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# JavaScript
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Local data, uploaded documents, databases
+*.sqlite
+*.sqlite3
+*.db
+storage/
+uploads/
+data/local/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Build outputs
+build/
+artifacts/
+
+# Local prompt package & deliverables (distributed out-of-band)
+ClinSync_Phase_Prompt_Package/
+ClinSync_Person_Specific_Guides_and_Prompts/
+*.zip

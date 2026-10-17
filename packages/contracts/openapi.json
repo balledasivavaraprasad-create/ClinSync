@@ -1,0 +1,989 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ClinSync API",
+    "version": "1.0.0",
+    "description": "API contracts for ClinSync AI-assisted voice-first hospital intake and clinical handoff system."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api/v1",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/encounters": {
+      "post": {
+        "summary": "Start an intake encounter",
+        "description": "Start an intake encounter after identity confirmation workflow has completed.",
+        "operationId": "createEncounter",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEncounterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Encounter created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          }
+        }
+      }
+    },
+    "/identity/candidates": {
+      "post": {
+        "summary": "Lookup identity candidates (demo-only)",
+        "description": "Biometric or demographic candidate lookup returning masked/candidate hints without medical details.",
+        "operationId": "lookupCandidates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateLookupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Candidate list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateLookupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/identity/confirm": {
+      "post": {
+        "summary": "Confirm patient identity",
+        "description": "Confirm identity candidate using secondary confirmation before records can be accessed.",
+        "operationId": "confirmIdentity",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identity confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityConfirmResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/context": {
+      "get": {
+        "summary": "Retrieve authorized patient clinical context",
+        "operationId": "getPatientContext",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient clinical context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientContextResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/answers": {
+      "post": {
+        "summary": "Save validated intake answer",
+        "operationId": "saveIntakeAnswer",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer saved and next state returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeStateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/documents": {
+      "post": {
+        "summary": "Register/upload document and trigger extraction",
+        "operationId": "uploadDocument",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Document accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{document_id}/status": {
+      "get": {
+        "summary": "Read document processing state and extraction result",
+        "operationId": "getDocumentStatus",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document status and extracted facts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/ledger": {
+      "get": {
+        "summary": "Read Clinical Context Ledger with provenance",
+        "operationId": "getEncounterLedger",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Encounter facts ledger",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/diff": {
+      "get": {
+        "summary": "Read Patient Context Diff (previous vs current)",
+        "operationId": "getEncounterDiff",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient Context Diff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiffResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/routing-review": {
+      "post": {
+        "summary": "Run deterministic routing/safety policy",
+        "operationId": "evaluateRouting",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Routing decision with reason codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointments/slots": {
+      "get": {
+        "summary": "Query seeded available appointment slots",
+        "operationId": "getAvailableSlots",
+        "parameters": [
+          {
+            "name": "department_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available appointment slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointments": {
+      "post": {
+        "summary": "Atomically book an appointment slot",
+        "operationId": "bookAppointment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Appointment booked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          }
+        }
+      }
+    },
+    "/doctors/{doctor_id}/queue": {
+      "get": {
+        "summary": "Read authorized doctor encounter queue",
+        "operationId": "getDoctorQueue",
+        "parameters": [
+          {
+            "name": "doctor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Doctor encounter queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorQueueResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/brief": {
+      "get": {
+        "summary": "Get evidence-linked doctor brief",
+        "operationId": "getDoctorBrief",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Doctor brief with evidence citations and audio state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorBriefResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/encounters/{encounter_id}/approvals": {
+      "post": {
+        "summary": "Record doctor clinical review and approval",
+        "operationId": "approveEncounter",
+        "parameters": [
+          {
+            "name": "encounter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Clinical record updated with doctor approval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateEncounterRequest": {
+        "type": "object",
+        "required": ["patient_id", "identity_confirmation_id"],
+        "properties": {
+          "patient_id": { "type": "string" },
+          "identity_confirmation_id": { "type": "string" },
+          "intake_language": { "type": "string", "default": "en" }
+        }
+      },
+      "Encounter": {
+        "type": "object",
+        "required": ["id", "patient_id", "status", "started_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "patient_id": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["IN_PROGRESS", "TRIAGED", "BOOKED", "DOCTOR_REVIEWED", "COMPLETED"]
+          },
+          "started_at": { "type": "string", "format": "date-time" },
+          "intake_language": { "type": "string" },
+          "intake_status": { "type": "string" },
+          "identity_confirmation_id": { "type": "string" },
+          "assigned_department_id": { "type": "string", "nullable": true },
+          "appointment_id": { "type": "string", "nullable": true }
+        }
+      },
+      "EncounterResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": { "$ref": "#/components/schemas/Encounter" },
+          "request_id": { "type": "string" }
+        }
+      },
+      "CandidateLookupRequest": {
+        "type": "object",
+        "required": ["biometric_consent"],
+        "properties": {
+          "biometric_consent": { "type": "boolean" },
+          "search_hint": { "type": "string" }
+        }
+      },
+      "CandidateLookupResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "candidate_id": { "type": "string" },
+                    "display_name_masked": { "type": "string" },
+                    "confidence_score": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "IdentityConfirmRequest": {
+        "type": "object",
+        "required": ["candidate_id", "date_of_birth", "consent_accepted"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "date_of_birth": { "type": "string", "format": "date" },
+          "consent_accepted": { "type": "boolean" }
+        }
+      },
+      "IdentityConfirmResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "confirmed": { "type": "boolean" },
+              "patient_id": { "type": "string" },
+              "identity_confirmation_id": { "type": "string" },
+              "patient_display_name": { "type": "string" }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "ClinicalFact": {
+        "type": "object",
+        "required": ["id", "patient_id", "concept", "value", "fact_type", "status", "source_type", "recorded_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "patient_id": { "type": "string" },
+          "encounter_id": { "type": "string", "nullable": true },
+          "concept": { "type": "string" },
+          "value": { "type": "string" },
+          "unit": { "type": "string", "nullable": true },
+          "clinical_time": { "type": "string", "nullable": true },
+          "recorded_at": { "type": "string", "format": "date-time" },
+          "fact_type": {
+            "type": "string",
+            "enum": ["symptom", "medication", "allergy", "condition", "investigation", "procedure", "other"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["reported", "extracted_unverified", "historical_recorded", "doctor_confirmed", "uncertain", "conflicting", "rejected"]
+          },
+          "source_type": {
+            "type": "string",
+            "enum": ["PATIENT_VOICE", "PATIENT_FORM", "UPLOADED_DOCUMENT", "HISTORICAL_EHR", "DOCTOR_INPUT"]
+          },
+          "source_id": { "type": "string" },
+          "source_location": { "type": "string", "nullable": true },
+          "extraction_method": { "type": "string", "nullable": true },
+          "confidence": { "type": "number", "nullable": true },
+          "reviewed_by": { "type": "string", "nullable": true },
+          "supersedes_fact_id": { "type": "string", "nullable": true }
+        }
+      },
+      "PatientContextResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "patient_id": { "type": "string" },
+              "display_name": { "type": "string" },
+              "historical_facts": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ClinicalFact" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "IntakeAnswerRequest": {
+        "type": "object",
+        "required": ["field_key", "raw_response"],
+        "properties": {
+          "field_key": { "type": "string" },
+          "raw_response": { "type": "string" },
+          "input_modality": { "type": "string", "enum": ["VOICE", "TOUCH_TEXT"] }
+        }
+      },
+      "IntakeStateResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "encounter_id": { "type": "string" },
+              "turn_count": { "type": "integer" },
+              "status": { "type": "string" },
+              "next_question": { "type": "string", "nullable": true },
+              "extracted_facts": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ClinicalFact" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "DocumentUploadRequest": {
+        "type": "object",
+        "required": ["filename", "mime_type", "content_base64"],
+        "properties": {
+          "filename": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "content_base64": { "type": "string" }
+        }
+      },
+      "DocumentStatusResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "document_id": { "type": "string" },
+              "status": {
+                "type": "string",
+                "enum": ["UPLOADED", "PROCESSING", "EXTRACTED", "FAILED"]
+              },
+              "extracted_facts": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ClinicalFact" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "LedgerResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "encounter_id": { "type": "string" },
+              "facts": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ClinicalFact" }
+              },
+              "unresolved_conflicts": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "DiffResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "encounter_id": { "type": "string" },
+              "new_facts": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ClinicalFact" }
+              },
+              "changed_facts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "previous": { "$ref": "#/components/schemas/ClinicalFact" },
+                    "current": { "$ref": "#/components/schemas/ClinicalFact" }
+                  }
+                }
+              },
+              "conflicts": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "DecisionResultResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["decision", "reason_codes", "policy_version", "evaluated_at"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["ROUTINE_SCHEDULING", "HUMAN_REVIEW", "URGENT_ESCALATION", "UNABLE_TO_DETERMINE"]
+              },
+              "reason_codes": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "recommended_department_id": { "type": "string", "nullable": true },
+              "policy_version": { "type": "string" },
+              "evaluated_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "AppointmentSlot": {
+        "type": "object",
+        "required": ["slot_id", "doctor_id", "department_id", "start_at", "end_at", "status"],
+        "properties": {
+          "slot_id": { "type": "string" },
+          "doctor_id": { "type": "string" },
+          "doctor_name": { "type": "string" },
+          "department_id": { "type": "string" },
+          "start_at": { "type": "string", "format": "date-time" },
+          "end_at": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "enum": ["AVAILABLE", "HOLD", "BOOKED"] }
+        }
+      },
+      "SlotsResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "slots": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/AppointmentSlot" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "BookingRequest": {
+        "type": "object",
+        "required": ["slot_id", "encounter_id", "idempotency_key"],
+        "properties": {
+          "slot_id": { "type": "string" },
+          "encounter_id": { "type": "string" },
+          "idempotency_key": { "type": "string" }
+        }
+      },
+      "BookingResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "booking_id": { "type": "string" },
+              "slot_id": { "type": "string" },
+              "start_at": { "type": "string", "format": "date-time" },
+              "doctor_id": { "type": "string" },
+              "status": { "type": "string" }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "DoctorQueueResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "doctor_id": { "type": "string" },
+              "encounters": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Encounter" }
+              }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "DoctorBriefResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["summary_text", "citations"],
+            "properties": {
+              "summary_text": { "type": "string" },
+              "citations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fact_id": { "type": "string" },
+                    "source_id": { "type": "string" },
+                    "source_type": { "type": "string" }
+                  }
+                }
+              },
+              "audio_status": {
+                "type": "string",
+                "enum": ["READY", "PENDING", "UNAVAILABLE"]
+              },
+              "audio_url": { "type": "string", "nullable": true }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "ApprovalRequest": {
+        "type": "object",
+        "required": ["approved", "doctor_notes"],
+        "properties": {
+          "approved": { "type": "boolean" },
+          "doctor_notes": { "type": "string" },
+          "corrected_facts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ClinicalFact" }
+          }
+        }
+      },
+      "ApprovalResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "encounter_id": { "type": "string" },
+              "status": { "type": "string" },
+              "approved_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "request_id": { "type": "string" }
+        }
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "required": ["code", "message", "request_id"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "IDENTITY_NOT_CONFIRMED",
+              "ACCESS_DENIED",
+              "VALIDATION_ERROR",
+              "DOCUMENT_PARSE_FAILED",
+              "EXTRACTION_UNCERTAIN",
+              "POLICY_REVIEW_REQUIRED",
+              "SLOT_UNAVAILABLE",
+              "IDEMPOTENCY_CONFLICT",
+              "MODEL_TIMEOUT",
+              "MODEL_OUTPUT_INVALID",
+              "NOT_FOUND",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": { "type": "string" },
+          "request_id": { "type": "string" },
+          "field_errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Validation or malformed request error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Access denied or identity not confirmed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Conflict, such as slot already booked or idempotency conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            }
+          }
+        }
+      }
+    }
+  }
+}

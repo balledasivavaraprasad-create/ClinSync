@@ -1,0 +1,252 @@
+name: ClinSync CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  contracts:
+    name: API contracts and formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate OpenAPI 3.1.0 contracts
+        run: node packages/contracts/scripts/validate-contracts.js
+      - name: Whitespace and diff error check
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}...${{ github.sha }}" || true
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^ HEAD || true
+          else
+            echo 'No parent commit; skipping commit-diff whitespace check.'
+          fi
+
+  governance:
+    name: Repository governance & security hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required project files exist
+        run: |
+          test -f AGENTS.md
+          test -f AUDIT.md
+          test -f docs/API_CONTRACTS.md
+          test -f docs/ARCHITECTURE.md
+          test -f docs/MODEL_PROVIDER_STRATEGY.md
+          test -f docs/TEAM_OWNERSHIP.md
+          test -f docs/UI_UX_DIRECTION.md
+          test -f docs/BACKEND_ENGINEERING_STANDARDS.md
+          test -f docs/IMPLEMENTATION_ROADMAP.md
+          test -f docs/DEPENDENCY_GRAPH.md
+          test -f docs/CI_CD_AND_AUTO_MERGE.md
+          test -f docs/ARCHITECTURE_DECISIONS.md
+          test -f docs/COLLABORATION_PROTOCOL.md
+          test -f .agents/README.md
+          test -f .agents/skills/web-frontend/SKILL.md
+          test -f .agents/skills/design-system-motion/SKILL.md
+          test -f .agents/skills/fastapi-backend/SKILL.md
+          test -f .agents/skills/agentic-workflow/SKILL.md
+      - name: Security and secret-leak checks
+        shell: bash
+        run: |
+          echo "Verifying no private keys or active secrets are tracked in Git..."
+          if git ls-files | grep -E '\.env$|\.key$|\.pem$'; then
+            echo "ERROR: Tracked sensitive files detected!"
+            exit 1
+          fi
+          echo "Security hygiene checks passed."
+
+  web:
+    name: Web checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect web workspace
+        id: detect
+        shell: bash
+        run: |
+          if [[ -f apps/web/package.json ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Web workspace found."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "apps/web/package.json not found; skipping web checks."
+          fi
+      - name: Setup Node
+        if: steps.detect.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          if [[ -f package-lock.json ]]; then
+            npm ci
+          elif [[ -f apps/web/package-lock.json ]]; then
+            cd apps/web && npm ci
+          else
+            cd apps/web && npm install
+          fi
+      - name: Lint web
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: cd apps/web && npm run lint --if-present
+      - name: Test web
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: cd apps/web && npm test --if-present -- --run
+      - name: Build web
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: cd apps/web && npm run build --if-present
+
+  api:
+    name: API checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect API workspace
+        id: detect
+        shell: bash
+        run: |
+          if [[ -f apps/api/pyproject.toml || -f apps/api/requirements.txt ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "API workspace found."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "apps/api not yet initialized; skipping API checks."
+          fi
+      - name: Setup Python
+        if: steps.detect.outputs.enabled == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          cd apps/api
+          python -m pip install --upgrade pip
+          if [[ -f pyproject.toml ]]; then
+            python -m pip install -e '.[dev]' || python -m pip install . || true
+          elif [[ -f requirements.txt ]]; then
+            python -m pip install -r requirements.txt
+          fi
+          python -m pip install pytest
+      - name: Run API tests
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          cd apps/api
+          python -m pytest
+
+  ai:
+    name: AI workflow checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect AI workspace
+        id: detect
+        shell: bash
+        run: |
+          if [[ -f apps/ai/pyproject.toml || -f apps/ai/requirements.txt ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "AI workspace found."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "apps/ai not yet initialized; skipping AI checks."
+          fi
+      - name: Setup Python
+        if: steps.detect.outputs.enabled == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          cd apps/ai
+          python -m pip install --upgrade pip
+          if [[ -f pyproject.toml ]]; then
+            python -m pip install -e '.[dev]' || python -m pip install . || true
+          elif [[ -f requirements.txt ]]; then
+            python -m pip install -r requirements.txt
+          fi
+          python -m pip install pytest
+      - name: Run AI tests
+        if: steps.detect.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          cd apps/ai
+          python -m pytest
+
+  quality-gates:
+    name: quality-gates
+    runs-on: ubuntu-latest
+    needs: [contracts, governance, web, api, ai]
+    if: always()
+    steps:
+      - name: Evaluate Aggregate Quality Gates
+        shell: bash
+        run: |
+          echo "=================================================="
+          echo "ClinSync Aggregate Quality Gates Evaluation"
+          echo "=================================================="
+          echo "contracts job status:  ${{ needs.contracts.result }}"
+          echo "governance job status: ${{ needs.governance.result }}"
+          echo "web job status:        ${{ needs.web.result }}"
+          echo "api job status:        ${{ needs.api.result }}"
+          echo "ai job status:         ${{ needs.ai.result }}"
+          echo "=================================================="
+
+          FAILED=0
+          if [[ "${{ needs.contracts.result }}" != "success" ]]; then
+            echo "FAILED: contracts validation did not pass."
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.governance.result }}" != "success" ]]; then
+            echo "FAILED: governance checks did not pass."
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.web.result }}" != "success" ]]; then
+            echo "FAILED: web checks failed."
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.api.result }}" != "success" ]]; then
+            echo "FAILED: api checks failed."
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.ai.result }}" != "success" ]]; then
+            echo "FAILED: ai workflow checks failed."
+            FAILED=1
+          fi
+
+          if [[ $FAILED -ne 0 ]]; then
+            echo "ERROR: Quality gates failed. Pull request merge is blocked."
+            exit 1
+          fi
+
+          echo "SUCCESS: All required quality gates passed. PR is eligible for merge."

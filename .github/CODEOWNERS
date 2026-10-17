@@ -1,0 +1,34 @@
+# Replace placeholders with actual GitHub handles before relying on CODEOWNERS.
+# Teammate B is the default Integration Captain; update consistently if the team chooses another person.
+/AGENTS.md                             @INTEGRATION_CAPTAIN
+/AUDIT.md                              @INTEGRATION_CAPTAIN
+/docs/API_CONTRACTS.md                 @INTEGRATION_CAPTAIN
+/docs/ARCHITECTURE.md                  @INTEGRATION_CAPTAIN
+/docs/ARCHITECTURE_DECISIONS.md        @INTEGRATION_CAPTAIN
+/docs/COLLABORATION_PROTOCOL.md        @INTEGRATION_CAPTAIN
+/docs/TEAM_OWNERSHIP.md                @INTEGRATION_CAPTAIN
+/docs/BACKEND_ENGINEERING_STANDARDS.md @INTEGRATION_CAPTAIN
+/docs/IMPLEMENTATION_ROADMAP.md        @INTEGRATION_CAPTAIN
+/docs/DEPENDENCY_GRAPH.md              @INTEGRATION_CAPTAIN
+/docs/CI_CD_AND_AUTO_MERGE.md          @INTEGRATION_CAPTAIN
+/.github/                              @INTEGRATION_CAPTAIN
+/.env.example                          @INTEGRATION_CAPTAIN
+/packages/contracts/                   @INTEGRATION_CAPTAIN
+/apps/web/                             @WEB_OWNER
+/docs/UI_UX_DIRECTION.md               @WEB_OWNER
+/.agents/skills/web-frontend/          @WEB_OWNER
+/.agents/skills/design-system-motion/  @WEB_OWNER
+/.agents/skills/visual-qa/             @WEB_OWNER
+/apps/api/                             @API_OWNER
+/.agents/skills/fastapi-backend/       @API_OWNER
+/.agents/skills/database-integrity/    @API_OWNER
+/.agents/skills/api-contracts/         @INTEGRATION_CAPTAIN
+/apps/ai/                              @AI_OWNER
+/evals/                                @AI_OWNER
+/.agents/skills/agentic-workflow/      @AI_OWNER
+/.agents/skills/clinical-context-ledger/ @AI_OWNER
+/.agents/skills/document-ingestion-rag/ @AI_OWNER
+/.agents/skills/testing-evals/         @AI_OWNER
+/.agents/skills/security-privacy/      @INTEGRATION_CAPTAIN
+/.agents/skills/git-collaboration/     @INTEGRATION_CAPTAIN
+/.agents/skills/integration-release/   @INTEGRATION_CAPTAIN

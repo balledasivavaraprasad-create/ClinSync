@@ -1,0 +1,15 @@
+{
+  "name": "clinsync",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClinSync — AI-assisted voice-first hospital intake and clinical handoff system",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "contracts:validate": "node packages/contracts/scripts/validate-contracts.js",
+    "format:check": "git diff --check",
+    "validate:all": "npm run contracts:validate && git diff --check"
+  }
+}

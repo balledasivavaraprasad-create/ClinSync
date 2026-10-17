@@ -1,0 +1,21 @@
+[project]
+name = "clinsync"
+version = "0.1.0"
+description = "ClinSync — AI-assisted voice-first hospital intake and clinical handoff system"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "ClinSync Team" }
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["apps/api/tests", "apps/ai/tests", "evals"]
+python_files = ["test_*.py", "*_test.py"]
