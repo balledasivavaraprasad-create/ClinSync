@@ -179,6 +179,11 @@ class DocumentFactExtractor:
         result_models: list[ClinicalFactModel] = []
         for cand in candidate_facts:
             fact_id = f"FACT-DOC-{uuid.uuid4().hex[:8].upper()}"
+            status: FactStatus = "extracted_unverified"
+            val_lower = cand.value.lower()
+            if cand.confidence < 0.75 or "?" in cand.value or "~" in cand.value or "unclear" in val_lower or "[?]" in cand.value:
+                status = "uncertain"
+
             result_models.append(
                 ClinicalFactModel(
                     id=fact_id,
@@ -189,7 +194,7 @@ class DocumentFactExtractor:
                     unit=cand.unit,
                     clinical_time=cand.clinical_time,
                     fact_type=cand.fact_type,
-                    status="extracted_unverified",
+                    status=status,
                     source_type="UPLOADED_DOCUMENT",
                     source_id=document_id,
                     source_location=f"Page {page.page_number}",

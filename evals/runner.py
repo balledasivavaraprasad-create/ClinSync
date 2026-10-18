@@ -430,7 +430,91 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 5: Standard, urgent, and provider failure fallback cases
+        # Branch 5: LlamaIndex retrieval, patient isolation, and citation integrity
+        if case_data.get("test_type") == "retrieval_citation_evaluation":
+            from clinsync_ai.documents.parser import DocumentParser
+            from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex
+            from clinsync_ai.retrieval.citation_linker import CitationLinker
+
+            parser = DocumentParser()
+            doc_info = case_data["document"]
+            parsed_doc = parser.parse(
+                document_id=doc_info["document_id"],
+                filename=doc_info["filename"],
+                mime_type=doc_info["mime_type"],
+                content=doc_info["content"],
+            )
+
+            primary_pat_id = case_data["primary_patient"]["patient_id"]
+            other_pat_id = case_data["other_patient"]["patient_id"]
+
+            index = ClinicalDocumentIndex()
+            index.index_parsed_document(
+                document=parsed_doc,
+                patient_id=primary_pat_id,
+            )
+
+            # Assertion 1: Targeted document retrieval with page provenance
+            retrieval_hits = True
+            for q_spec in case_data.get("search_queries", []):
+                hits = index.search(query=q_spec["query"], patient_id=primary_pat_id)
+                if not hits or hits[0].page_number != q_spec["expected_page"]:
+                    retrieval_hits = False
+                    break
+
+            assertions_details.append({
+                "assertion": "page_provenance_retrieval_accuracy",
+                "passed": retrieval_hits,
+            })
+            if retrieval_hits:
+                passed_count += 1
+
+            # Assertion 2: Strict cross-patient isolation (zero leakage to other patient)
+            other_patient_hits = index.search(query="Asthma", patient_id=other_pat_id)
+            cross_patient_isolated = len(other_patient_hits) == 0
+            assertions_details.append({
+                "assertion": "cross_patient_isolation_enforced",
+                "passed": cross_patient_isolated,
+                "other_patient_hits_count": len(other_patient_hits),
+            })
+            if cross_patient_isolated:
+                passed_count += 1
+
+            # Assertion 3: Citation grounding & hallucination refusal
+            linker = CitationLinker(index=index)
+            claims = [
+                {"claim": c["claim"], "source_id": c["source_id"]}
+                for c in case_data.get("claims_to_verify", [])
+            ]
+            verify_rep = linker.verify_citations(claims=claims, patient_id=primary_pat_id)
+
+            expected_grounded_count = sum(1 for c in case_data.get("claims_to_verify", []) if c.get("expected_grounded"))
+            expected_fabricated_count = sum(1 for c in case_data.get("claims_to_verify", []) if not c.get("expected_grounded"))
+
+            citation_valid = (
+                len(verify_rep.grounded_citations) == expected_grounded_count and
+                len(verify_rep.fabricated_citation_ids) == expected_fabricated_count
+            )
+            assertions_details.append({
+                "assertion": "citation_grounding_and_fabrication_refusal",
+                "passed": citation_valid,
+                "grounded_count": len(verify_rep.grounded_citations),
+                "fabricated_ids": verify_rep.fabricated_citation_ids,
+            })
+            if citation_valid:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.8,
+                details=assertions_details,
+            )
+
+        # Branch 6: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"
