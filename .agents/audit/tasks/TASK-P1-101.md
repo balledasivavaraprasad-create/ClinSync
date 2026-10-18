@@ -2,7 +2,8 @@
 - **Owner**: person-1 (Frontend / Product Experience)
 - **Branch**: `feat/p1-web-shell`
 - **Workstream**: Frontend & Product Experience (`apps/web/**`)
-- **Status**: IMPLEMENTED / VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main` (commit `dfcb1a9`)
 
 ## Goal and Acceptance Criteria
 - [x] React 18 + TypeScript + Vite web application initialized in `apps/web`.
