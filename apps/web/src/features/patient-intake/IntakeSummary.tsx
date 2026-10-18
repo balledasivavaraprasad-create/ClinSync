@@ -16,6 +16,7 @@ interface IntakeSummaryProps {
   encounterId: string;
   facts: ClinicalFact[];
   onStartNewSession: () => void;
+  onProceedToDocuments?: () => void;
 }
 
 export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
@@ -24,6 +25,7 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
   encounterId,
   facts,
   onStartNewSession,
+  onProceedToDocuments,
 }) => {
   // Fallback demo facts if none returned from mock turn
   const displayFacts: ClinicalFact[] = facts.length > 0 ? facts : [
@@ -142,14 +144,25 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
             Finish & Return to Welcome
           </Button>
 
-          <Button
-            variant="primary"
-            disabled
-            title="Phase 3: Document upload and appointment booking"
-            className="w-full sm:w-auto bg-slate-400 text-white cursor-not-allowed"
-          >
-            Proceed to Documents (G3)
-          </Button>
+          {onProceedToDocuments ? (
+            <Button
+              variant="primary"
+              onClick={onProceedToDocuments}
+              data-testid="proceed-to-documents-btn"
+              className="w-full sm:w-auto"
+            >
+              Proceed to Document Upload (G3)
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              disabled
+              title="Phase 3: Document upload and appointment booking"
+              className="w-full sm:w-auto bg-slate-400 text-white cursor-not-allowed"
+            >
+              Proceed to Documents (G3)
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

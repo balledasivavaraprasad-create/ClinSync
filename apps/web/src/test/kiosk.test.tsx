@@ -398,6 +398,22 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
       expect(screen.getByText(/Headache/)).toBeInTheDocument();
       expect(screen.getByText(/reported/i)).toBeInTheDocument();
     });
+
+    it('triggers onProceedToDocuments when proceed button is clicked', () => {
+      const onProceed = vi.fn();
+      render(
+        <IntakeSummary
+          patientName="Eleanor Johnson"
+          encounterId="enc_1"
+          facts={[]}
+          onStartNewSession={vi.fn()}
+          onProceedToDocuments={onProceed}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId('proceed-to-documents-btn'));
+      expect(onProceed).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('PatientKioskFlow Full Integration', () => {
