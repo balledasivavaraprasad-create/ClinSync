@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { slideUp } from '../animations/variants';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -11,16 +9,14 @@ import { LoadingState } from '../components/shared/LoadingState';
 import { EmptyState } from '../components/shared/EmptyState';
 import { ErrorState } from '../components/shared/ErrorState';
 import { SuccessState } from '../components/shared/SuccessState';
-import { KioskLayout } from '../layouts/KioskLayout';
 import { DoctorConsoleLayout } from '../layouts/DoctorConsoleLayout';
+import { PatientKioskFlow } from '../features/patient-kiosk/PatientKioskFlow';
 import { mockApi } from '../lib/api/mockAdapter';
-import { mockClinicalFacts, mockDoctorQueue, mockCitations } from '../lib/api/mockData';
+import { mockDoctorQueue, mockCitations } from '../lib/api/mockData';
 import {
   Sparkles,
   Stethoscope,
   Tablet,
-  CheckCircle2,
-  Mic,
   Database,
 } from 'lucide-react';
 
@@ -32,10 +28,6 @@ export const MainView: React.FC = () => {
   const [errorExample, setErrorExample] = useState<boolean>(false);
   const [mockApiResult, setMockApiResult] = useState<string>('Click an endpoint below to test the typed mock adapter.');
   const [mockLoading, setMockLoading] = useState<boolean>(false);
-
-  // Kiosk demo state
-  const [kioskStep, setKioskStep] = useState<number>(1);
-  const [isListening, setIsListening] = useState<boolean>(false);
 
   const handleTestEndpoint = async (name: string, fn: () => Promise<unknown>) => {
     setMockLoading(true);
@@ -56,9 +48,9 @@ export const MainView: React.FC = () => {
         <div className="flex items-center space-x-2">
           <span className="font-bold text-white tracking-wide">CLINSYNC</span>
           <span className="text-xs bg-brand-600/30 text-teal-300 border border-teal-500/40 px-2 py-0.5 rounded font-mono">
-            G1 Web Shell
+            G2 Kiosk & Intake
           </span>
-          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-101</span>
+          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-201</span>
         </div>
 
         {/* View Switcher Tabs */}
@@ -116,186 +108,7 @@ export const MainView: React.FC = () => {
       {/* View Content */}
       <div className="flex-1">
         {/* 1. KIOSK TAB */}
-        {activeTab === 'kiosk' && (
-          <KioskLayout
-            currentStep={kioskStep}
-            totalSteps={3}
-            onResetSession={() => setKioskStep(1)}
-            onHelp={() => alert('Hospital Staff notified to assist Kiosk Station A.')}
-          >
-            <AnimatePresence mode="wait">
-              {kioskStep === 1 && (
-                <motion.div
-                  key="step1"
-                  variants={slideUp}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-6"
-                >
-                  <Card variant="elevated">
-                    <CardHeader>
-                      <div className="flex items-center space-x-2 text-xs font-semibold uppercase text-brand-600 tracking-wider">
-                        <span>Welcome to Outpatient Check-in</span>
-                      </div>
-                      <CardTitle className="text-2xl mt-1">Identity Confirmation</CardTitle>
-                      <CardDescription>
-                        To protect your clinical privacy, please confirm your identity before proceeding.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
-                        <p className="text-sm font-semibold text-blue-900">
-                          Candidate Suggested: E. J***son (Born 1982)
-                        </p>
-                        <p className="text-xs text-blue-700">
-                          Please enter your year of birth or mobile contact suffix to confirm.
-                        </p>
-                      </div>
-
-                      <Input
-                        label="Birth Year or 4-Digit Passcode"
-                        placeholder="e.g. 1982"
-                        value={inputVal}
-                        onChange={(e) => setInputVal(e.target.value)}
-                        helperText="A non-biometric manual registration route is always available."
-                      />
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="ghost" onClick={() => alert('Redirecting to manual staff desk...')}>
-                        Not you? Register with Staff
-                      </Button>
-                      <Button variant="primary" onClick={() => setKioskStep(2)}>
-                        Confirm Identity & Begin
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              )}
-
-              {kioskStep === 2 && (
-                <motion.div
-                  key="step2"
-                  variants={slideUp}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-6"
-                >
-                  <Card variant="elevated">
-                    <CardHeader>
-                      <div className="flex items-center space-x-2 text-xs font-semibold uppercase text-brand-600 tracking-wider">
-                        <span>Conversational Intake</span>
-                      </div>
-                      <CardTitle className="text-2xl mt-1">What brings you in today?</CardTitle>
-                      <CardDescription>
-                        Speak naturally or switch to typing anytime. One question at a time.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="p-6 bg-surfaceMuted rounded-xl border border-borderSubtle flex flex-col items-center justify-center text-center space-y-4">
-                        <motion.button
-                          onClick={() => setIsListening(!isListening)}
-                          className={`w-20 h-20 rounded-full flex items-center justify-center shadow-card transition-colors ${
-                            isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-brand-600 text-white hover:bg-brand-700'
-                          }`}
-                          aria-label={isListening ? 'Stop recording' : 'Start speaking'}
-                        >
-                          <Mic className="w-8 h-8" />
-                        </motion.button>
-                        <div>
-                          <p className="text-sm font-semibold text-ink-primary">
-                            {isListening ? 'Listening to your symptoms...' : 'Tap the microphone to speak'}
-                          </p>
-                          <p className="text-xs text-ink-muted mt-0.5">
-                            {isListening ? 'Speak clearly at normal volume' : 'Touch anywhere or tap keyboard to type'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-surface rounded-lg border border-borderSubtle">
-                        <span className="text-xs font-bold text-ink-muted uppercase tracking-wider block mb-1">
-                          Current Transcript Preview:
-                        </span>
-                        <p className="text-base text-ink-primary italic">
-                          "I have been having this tight squeezing feeling right in the middle of my chest for the past three mornings."
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        <Badge status="reported">Symptom Reported</Badge>
-                        <Badge status="uncertain">Severity Rating Needed</Badge>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="secondary" onClick={() => setKioskStep(1)}>
-                        Back
-                      </Button>
-                      <Button variant="primary" onClick={() => setKioskStep(3)}>
-                        Continue to Health Summary
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              )}
-
-              {kioskStep === 3 && (
-                <motion.div
-                  key="step3"
-                  variants={slideUp}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-6"
-                >
-                  <Card variant="elevated">
-                    <CardHeader>
-                      <CardTitle className="text-2xl">Intake Review & Confirmation</CardTitle>
-                      <CardDescription>
-                        Here is what we have recorded for the attending doctor.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {mockClinicalFacts.map((fact) => (
-                        <div
-                          key={fact.id}
-                          className="p-4 rounded-xl border border-borderSubtle bg-surface flex items-start justify-between"
-                        >
-                          <div>
-                            <span className="text-xs font-bold uppercase text-ink-muted">
-                              {fact.concept}
-                            </span>
-                            <p className="text-base font-medium text-ink-primary mt-0.5">
-                              {fact.value}
-                            </p>
-                            <span className="text-xs text-ink-muted mt-1 block">
-                              Source: {fact.source_type} ({fact.source_location || 'N/A'})
-                            </span>
-                          </div>
-                          <Badge status={fact.status}>
-                            {fact.status.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      ))}
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="secondary" onClick={() => setKioskStep(2)}>
-                        Make Corrections
-                      </Button>
-                      <Button
-                        variant="primary"
-                        leftIcon={<CheckCircle2 className="w-5 h-5" />}
-                        onClick={() => alert('Submitted! Encounter routed to Dr. Chen.')}
-                      >
-                        Submit to Clinician
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </KioskLayout>
-        )}
+        {activeTab === 'kiosk' && <PatientKioskFlow />}
 
         {/* 2. DOCTOR CONSOLE TAB */}
         {activeTab === 'doctor' && (
