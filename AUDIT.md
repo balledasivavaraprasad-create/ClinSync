@@ -29,6 +29,7 @@
 | TASK-P1-201: Kiosk Intake & Registration UI | Person 1 | INTEGRATED | `main` | Voice/kiosk wizard, DOB modal, review summary passing | None |
 | TASK-P3-201: LangGraph Intake & Evals | Person 3 | INTEGRATED | `main` | 36 tests pass, intake graph, bounded turns, evals verified | None |
 | TASK-P2-301: Document Storage, Ledger & Diff APIs | Person 2 | INTEGRATED | `main` | 59 tests pass, safe upload, sha256 checksum, ledger & diff verified | None |
+| TASK-P3-301: Document Extraction, Ledger & Diff Engine | Person 3 | INTEGRATED | `main` | 51 tests pass, 9 evals pass, LlamaIndex retrieval, provenance & diff verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -44,7 +45,7 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [ ] Deterministic demo policy routes a predefined high-risk scenario to the configured escalation path.
 - [ ] Routine scenario books a seeded slot; conflicting booking is rejected.
 - [ ] Doctor queue shows the encounter and source-linked brief; audio has a safe text fallback.
-- [ ] Golden tests include invalid model output, unsupported source claims and prompt injection.
+- [x] Golden tests include invalid model output, unsupported source claims and prompt injection.
 - [ ] Gemini generation adapter works with `GEMINI_API_KEY` and has schema/output validation.
 - [ ] Optional Groq fallback is disabled by default and works only for declared text-only generation tasks when explicitly enabled.
 - [ ] Provider errors never produce fake success; invalid/uncertain outputs use deterministic fallback or human review.
