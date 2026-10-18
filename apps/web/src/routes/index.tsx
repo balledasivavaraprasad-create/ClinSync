@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Slider } from '../components/ui/Slider';
@@ -13,8 +13,9 @@ import { DoctorConsoleLayout } from '../layouts/DoctorConsoleLayout';
 import { PatientKioskFlow } from '../features/patient-kiosk/PatientKioskFlow';
 import { LedgerDiffHub } from '../features/patient-context/LedgerDiffHub';
 import { AppointmentSchedulingHub } from '../features/appointments/AppointmentSchedulingHub';
+import { DoctorDashboardHub } from '../features/doctor-dashboard/DoctorDashboardHub';
 import { mockApi } from '../lib/api/mockAdapter';
-import { mockDoctorQueue, mockCitations } from '../lib/api/mockData';
+import { mockDoctorQueue } from '../lib/api/mockData';
 import {
   Sparkles,
   Stethoscope,
@@ -54,9 +55,9 @@ export const MainView: React.FC = () => {
         <div className="flex items-center space-x-2">
           <span className="font-bold text-white tracking-wide">CLINSYNC</span>
           <span className="text-xs bg-brand-600/30 text-teal-300 border border-teal-500/40 px-2 py-0.5 rounded font-mono">
-            G4 Appointments & Scheduling UI
+            G5 Doctor Console & Briefing UI
           </span>
-          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-401</span>
+          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-501</span>
         </div>
 
         {/* View Switcher Tabs */}
@@ -101,6 +102,7 @@ export const MainView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('doctor')}
+            data-testid="tab-doctor-console"
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center space-x-1.5 ${
               activeTab === 'doctor'
                 ? 'bg-brand-600 text-white shadow-sm'
@@ -159,118 +161,7 @@ export const MainView: React.FC = () => {
         {/* 2. DOCTOR CONSOLE TAB */}
         {activeTab === 'doctor' && (
           <DoctorConsoleLayout activePatientCount={mockDoctorQueue.length}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Triage Queue List */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900">Today's Patient Queue</h2>
-                  <Badge variant="info">{mockDoctorQueue.length} Active</Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {mockDoctorQueue.map((item) => (
-                    <Card
-                      key={item.encounter_id}
-                      className="cursor-pointer border-brand-600 shadow-card bg-surface hover:border-brand-700"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-bold text-base text-ink-primary">{item.patient_name}</h4>
-                          <p className="text-xs text-ink-muted">{item.appointment_time}</p>
-                        </div>
-                        <Badge
-                          variant={item.priority === 'ELEVATED' ? 'warning' : 'neutral'}
-                        >
-                          {item.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-ink-secondary mt-3 line-clamp-2">
-                        {item.triage_note}
-                      </p>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sourced Clinical Brief & Evidence */}
-              <div className="lg:col-span-2 space-y-4">
-                <Card variant="elevated">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
-                        Patient Encounter #enc_demo_001
-                      </span>
-                      <Badge status="doctor_confirmed">Vitals Checked</Badge>
-                    </div>
-                    <CardTitle className="text-xl mt-1">
-                      Eleanor Johnson (44F) — Clinical Brief
-                    </CardTitle>
-                    <CardDescription>
-                      Chief Complaint: Progressive retrosternal tightness for 3 days
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase mb-2">
-                        Synthesized Clinical Summary
-                      </h4>
-                      <p className="text-sm text-slate-800 leading-relaxed">
-                        44-year-old female presenting with 3 days of progressive retrosternal chest tightness. Blood pressure elevated at 142/88. Currently on Lisinopril 10mg daily. Documented severe allergy to Penicillin. Note discrepancy regarding symptom onset timeline between oral statement and external referral.
-                      </p>
-                    </div>
-
-                    {/* Cited Evidence Sources */}
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-700 uppercase mb-2">
-                        Evidence Citations (Click to inspect source)
-                      </h4>
-                      <div className="space-y-2">
-                        {mockCitations.map((cite) => (
-                          <div
-                            key={cite.citation_id}
-                            className="p-3 bg-white border border-borderSubtle rounded-lg flex items-start space-x-3 text-xs"
-                          >
-                            <span className="bg-brand-50 text-brand-700 border border-brand-200 font-bold px-2 py-0.5 rounded">
-                              {cite.citation_id}
-                            </span>
-                            <div className="flex-1">
-                              <span className="font-semibold text-ink-primary">
-                                {cite.source_title} ({cite.source_location})
-                              </span>
-                              <p className="text-ink-muted italic mt-0.5">{cite.text_snippet}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Unresolved Clinical Questions */}
-                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="text-xs font-bold text-purple-900 uppercase mb-1">
-                        Unresolved Questions For Consultation
-                      </h4>
-                      <ul className="list-disc list-inside text-xs text-purple-800 space-y-1">
-                        <li>Verify true symptom duration (3 days vs 2 weeks).</li>
-                        <li>Confirm last dose of Lisinopril.</li>
-                      </ul>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm">
-                      Request Pre-Labs (ECG / Trop)
-                    </Button>
-                    <div className="space-x-2">
-                      <Button variant="secondary" size="sm">
-                        Request Corrections
-                      </Button>
-                      <Button variant="primary" size="sm">
-                        Sign Off & Complete Review
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
+            <DoctorDashboardHub />
           </DoctorConsoleLayout>
         )}
 
