@@ -15,22 +15,33 @@ from app.schemas.doctor import (
     ApprovalData,
     ApprovalRequest,
     ApprovalResponse,
+    DoctorBriefCitation,
+    DoctorBriefData,
+    DoctorBriefResponse,
     DoctorQueueData,
     DoctorQueueItem,
     DoctorQueueResponse,
 )
 from app.schemas.encounter import Encounter as EncounterSchema
 
-# Map doctor IDs to primary departments
+# Map doctor IDs and common aliases to primary departments
 DOCTOR_DEPARTMENT_MAP = {
     "dr_clara_chen": "dept_cardiology",
+    "dr_chen": "dept_cardiology",
     "dr_marcus_vance": "dept_internal_med",
+    "dr_vance": "dept_internal_med",
     "dr_elena_rostova": "dept_neurology",
+    "dr_rostova": "dept_neurology",
     "dr_james_wilson": "dept_orthopedics",
+    "dr_wilson": "dept_orthopedics",
     "dr_amita_patel": "dept_pulmonology",
+    "dr_patel": "dept_pulmonology",
     "dr_robert_lang": "dept_ent",
+    "dr_lang": "dept_ent",
     "dr_sophia_martinez": "dept_dermatology",
+    "dr_martinez": "dept_dermatology",
     "dr_alex_rivera": "dept_general_practice",
+    "dr_rivera": "dept_general_practice",
 }
 
 
@@ -147,6 +158,10 @@ class DoctorService:
                 )
             )
 
+        # Sort queue by priority: URGENT -> ELEVATED -> ROUTINE
+        priority_rank = {"URGENT": 0, "ELEVATED": 1, "ROUTINE": 2}
+        queue_items.sort(key=lambda item: priority_rank.get(item.priority, 3))
+
         return DoctorQueueResponse(
             data=DoctorQueueData(
                 doctor_id=doctor_id,
@@ -192,6 +207,8 @@ class DoctorService:
         now = datetime.now(timezone.utc)
         doctor_id = payload.doctor_id or "dr_review"
 
+        corrections: list[dict[str, str]] = []
+
         if payload.approved:
             # Transition encounter status
             encounter.status = "DOCTOR_REVIEWED"
@@ -202,6 +219,14 @@ class DoctorService:
                     fact.status = "doctor_confirmed"
                     fact.reviewed_by = doctor_id
 
+            # Apply any specific corrected fact IDs
+            if payload.corrected_fact_ids:
+                for fact in encounter.facts:
+                    if fact.id in payload.corrected_fact_ids:
+                        fact.status = "doctor_confirmed"
+                        fact.reviewed_by = doctor_id
+                        corrections.append({"fact_id": fact.id, "action": "confirmed"})
+
             # Apply any corrected facts if supplied
             if payload.corrected_facts:
                 for corr in payload.corrected_facts:
@@ -210,8 +235,13 @@ class DoctorService:
                             fact.value = corr.value
                             fact.status = "doctor_confirmed"
                             fact.reviewed_by = doctor_id
+                            corrections.append({
+                                "fact_id": fact.id,
+                                "concept": fact.concept,
+                                "new_value": str(corr.value),
+                            })
 
-        # Record append-only audit event
+        # Record append-only audit event with doctor ID, timestamp, and corrections
         audit_event = AuditEvent(
             id=generate_uuid(),
             patient_id=encounter.patient_id,
@@ -227,6 +257,7 @@ class DoctorService:
                 "approved": payload.approved,
                 "decision": payload.decision,
                 "doctor_notes": payload.doctor_notes,
+                "corrections": corrections,
             }),
             timestamp=now,
         )
@@ -244,6 +275,107 @@ class DoctorService:
                 status=encounter.status,
                 approved_at=now,
                 recorded_at=now,
+                approval_status="RECORDED",
+            ),
+            request_id=request_id,
+        )
+
+    def get_doctor_brief(
+        self,
+        db: Session,
+        encounter_id: str,
+        request_id: str = "req_unknown",
+    ) -> DoctorBriefResponse:
+        """Synthesize evidence-backed clinical brief from authoritative ledger facts."""
+        encounter = (
+            db.query(Encounter)
+            .options(
+                joinedload(Encounter.patient),
+                joinedload(Encounter.facts),
+            )
+            .filter(Encounter.id == encounter_id)
+            .first()
+        )
+        if not encounter:
+            raise ClinSyncAppException(
+                status_code=404,
+                code=ErrorCode.NOT_FOUND,
+                message=f"Encounter '{encounter_id}' not found.",
+            )
+
+        # Scoped authorization check: Patient identity must be confirmed
+        if not encounter.patient or encounter.patient.identity_status != "CONFIRMED":
+            raise ClinSyncAppException(
+                status_code=403,
+                code=ErrorCode.IDENTITY_NOT_CONFIRMED,
+                message="Patient identity must be confirmed before retrieving clinical brief.",
+            )
+
+        patient_name = encounter.patient.display_name or "Unknown Patient"
+        facts = encounter.facts or []
+
+        # Extract chief complaint
+        chief_complaint = "Routine clinical review"
+        for fact in facts:
+            if "complaint" in fact.concept.lower() or fact.fact_type == "symptom":
+                chief_complaint = f"{fact.concept}: {fact.value}"
+                break
+
+        # Synthesize concise clinical summary
+        symptoms = [f"{f.concept} ({f.value})" for f in facts if f.fact_type == "symptom"]
+        vitals = [f"{f.concept}: {f.value}" for f in facts if f.fact_type == "investigation"]
+        meds = [f.value for f in facts if f.fact_type == "medication"]
+        allergies = [f.value for f in facts if f.fact_type == "allergy"]
+
+        summary_parts = [f"Patient {patient_name} presented for evaluation of {chief_complaint}."]
+        if symptoms:
+            summary_parts.append(f"Reported symptoms include: {', '.join(symptoms)}.")
+        if vitals:
+            summary_parts.append(f"Clinical measurements: {', '.join(vitals)}.")
+        if meds:
+            summary_parts.append(f"Current medications: {', '.join(meds)}.")
+        if allergies:
+            summary_parts.append(f"Documented allergies: {', '.join(allergies)}.")
+
+        summary_text = " ".join(summary_parts)
+
+        # Build citations linking back to facts and sources
+        citations: list[DoctorBriefCitation] = []
+        for idx, fact in enumerate(facts):
+            citations.append(
+                DoctorBriefCitation(
+                    citation_id=f"cite_{fact.id[:8] if fact.id else idx}",
+                    fact_id=fact.id,
+                    source_id=fact.source_id or f"source_{encounter.id[:8]}",
+                    source_type=fact.source_type or "PATIENT_FORM",
+                    text_snippet=f"{fact.concept}: {fact.value}",
+                )
+            )
+
+        # Extract unresolved questions
+        unresolved: list[str] = []
+        for fact in facts:
+            if fact.status == "conflicting":
+                unresolved.append(f"Resolve conflicting evidence for {fact.concept}.")
+            elif fact.status == "uncertain":
+                unresolved.append(f"Verify uncertain finding for {fact.concept}.")
+
+        if not unresolved and not facts:
+            unresolved.append("Conduct comprehensive intake history and baseline vitals.")
+
+        return DoctorBriefResponse(
+            data=DoctorBriefData(
+                encounter_id=encounter.id,
+                patient_name=patient_name,
+                chief_complaint=chief_complaint,
+                clinical_summary=summary_text,
+                summary_text=summary_text,
+                citations=citations,
+                unresolved_questions=unresolved,
+                audio_status="PENDING",
+                audio_url=None,
+                audio_brief_available=False,
+                audio_brief_url=None,
             ),
             request_id=request_id,
         )

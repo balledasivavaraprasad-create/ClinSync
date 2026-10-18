@@ -86,7 +86,25 @@ def test_doctor_queue_and_approval_contracts(client: TestClient, db_session: Ses
                 f"Missing required field in Encounter: {req_enc_field}"
             )
 
-    # 3. POST /encounters/{encounter_id}/approvals (Successful Doctor Sign-Off)
+    # 3. GET /encounters/{encounter_id}/brief
+    brief_schema = schemas["DoctorBriefResponse"]
+    brief_res = client.get(f"/api/v1/encounters/{encounter.id}/brief")
+    assert brief_res.status_code == 200
+    brief_json = brief_res.json()
+
+    for req_field in brief_schema["required"]:
+        assert req_field in brief_json, (
+            f"Missing required field in DoctorBriefResponse: {req_field}"
+        )
+
+    brief_data = brief_json["data"]
+    for req_data_field in brief_schema["properties"]["data"]["required"]:
+        assert req_data_field in brief_data, (
+            f"Missing required data field in DoctorBrief: {req_data_field}"
+        )
+    assert len(brief_data["citations"]) >= 1
+
+    # 4. POST /encounters/{encounter_id}/approvals (Successful Doctor Sign-Off)
     approval_payload = {
         "approved": True,
         "doctor_notes": "Reviewed ECG and vitals. Patient stable for outpatient monitoring.",

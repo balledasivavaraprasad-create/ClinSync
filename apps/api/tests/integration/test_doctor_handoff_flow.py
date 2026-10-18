@@ -113,3 +113,38 @@ def test_approve_encounter_flow(client, db_session, confirmed_patient):
     assert audit is not None
     assert audit.action == "DOCTOR_APPROVAL"
     assert audit.actor_role == "DOCTOR"
+
+
+def test_get_doctor_brief_endpoint_flow(client, db_session, confirmed_patient):
+    enc = Encounter(
+        patient_id=confirmed_patient.id,
+        status="TRIAGED",
+    )
+    db_session.add(enc)
+    db_session.commit()
+
+    fact = ClinicalFact(
+        patient_id=confirmed_patient.id,
+        encounter_id=enc.id,
+        concept="Chief Complaint",
+        value="Subacute retrosternal chest tightness with hypertensive trend",
+        fact_type="symptom",
+        status="reported",
+        source_type="PATIENT_FORM",
+        source_id="form_01",
+    )
+    db_session.add(fact)
+    db_session.commit()
+
+    res = client.get(f"/api/v1/encounters/{enc.id}/brief")
+    assert res.status_code == 200
+    body = res.json()
+    assert "data" in body
+    data = body["data"]
+
+    assert data["encounter_id"] == enc.id
+    assert data["patient_name"] == confirmed_patient.display_name
+    assert "chest tightness" in data["summary_text"]
+    assert len(data["citations"]) >= 1
+    assert data["citations"][0]["fact_id"] == fact.id
+    assert data["audio_status"] == "PENDING"

@@ -58,6 +58,7 @@ apps/api/
 | `GET` | `/api/v1/appointments/slots` | Query seeded available appointment slots by department & date | Phase 4 (`TASK-P2-401`) |
 | `POST` | `/api/v1/appointments` | Atomically book slot within transaction (idempotent, race-safe) | Phase 4 (`TASK-P2-401`) |
 | `GET` | `/api/v1/doctors/{doctor_id}/queue` | Read authorized doctor encounter queue by department & booking | Phase 5 (`TASK-P2-501`) |
+| `GET` | `/api/v1/encounters/{encounter_id}/brief` | Evidence-backed clinical brief synthesized from ledger facts | Phase 5 (`TASK-P2-501`) |
 | `POST` | `/api/v1/encounters/{encounter_id}/approvals` | Record clinical sign-off, confirm facts, append audit event | Phase 5 (`TASK-P2-501`) |
 
 ## Key Engineering & Privacy Invariants

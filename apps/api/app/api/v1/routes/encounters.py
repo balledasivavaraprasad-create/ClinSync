@@ -2,7 +2,11 @@
 
 from app.dependencies.db import get_db
 from app.dependencies.request_id import get_current_request_id
-from app.schemas.doctor import ApprovalRequest, ApprovalResponse
+from app.schemas.doctor import (
+    ApprovalRequest,
+    ApprovalResponse,
+    DoctorBriefResponse,
+)
 from app.schemas.encounter import (
     CreateEncounterRequest,
     EncounterResponse,
@@ -63,6 +67,25 @@ def save_intake_answer(
     )
     return IntakeStateResponse(
         data=state_data,
+        request_id=request_id,
+    )
+
+
+@router.get(
+    "/{encounter_id}/brief",
+    response_model=DoctorBriefResponse,
+    summary="Get evidence-linked doctor brief",
+    description="Retrieve synthesized doctor brief with evidence citations from ledger facts.",
+)
+def get_doctor_brief(
+    encounter_id: str,
+    db: Session = Depends(get_db),
+    request_id: str = Depends(get_current_request_id),
+) -> DoctorBriefResponse:
+    """Retrieve evidence-backed clinical brief for an encounter."""
+    return doctor_service.get_doctor_brief(
+        db=db,
+        encounter_id=encounter_id,
         request_id=request_id,
     )
 
