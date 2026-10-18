@@ -26,6 +26,9 @@
 | TASK-P2-101: FastAPI App Core & SQLite | Person 2 | INTEGRATED | `main` | 12 tests pass, Alembic lifecycle verified, error schema conforms | None |
 | TASK-P3-101: Model Gateway & Offline Evals | Person 3 | INTEGRATED | `main` | 14 tests pass, Gemini/Groq gateway, guardrails, eval runner verified | None |
 | TASK-P2-201: Patient APIs & Identity Gating | Person 2 | INTEGRATED | `main` | 34 tests pass, candidate masking, DOB gate, encounter answers verified | None |
+| TASK-P1-201: Kiosk Intake & Registration UI | Person 1 | INTEGRATED | `main` | Voice/kiosk wizard, DOB modal, review summary passing | None |
+| TASK-P3-201: LangGraph Intake & Evals | Person 3 | INTEGRATED | `main` | 36 tests pass, intake graph, bounded turns, evals verified | None |
+| TASK-P2-301: Document Storage, Ledger & Diff APIs | Person 2 | INTEGRATED | `main` | 59 tests pass, safe upload, sha256 checksum, ledger & diff verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -35,9 +38,9 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [ ] Hospital/doctor demo access works with synthetic credentials.
 - [x] A patient candidate must be confirmed before history is displayed.
 - [x] New synthetic patient can complete a bounded intake.
-- [ ] A sample PDF/image can be attached and extracted facts retain source metadata.
+- [x] A sample PDF/image can be attached and extracted facts retain source metadata.
 - [x] Clinical Context Ledger distinguishes reported, extracted-unverified, historical and doctor-confirmed facts.
-- [ ] Patient Context Diff shows meaningful new/changed/historical/conflicting context.
+- [x] Patient Context Diff shows meaningful new/changed/historical/conflicting context.
 - [ ] Deterministic demo policy routes a predefined high-risk scenario to the configured escalation path.
 - [ ] Routine scenario books a seeded slot; conflicting booking is rejected.
 - [ ] Doctor queue shows the encounter and source-linked brief; audio has a safe text fallback.
