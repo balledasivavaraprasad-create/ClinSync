@@ -514,7 +514,116 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 6: Standard, urgent, and provider failure fallback cases
+        # Branch 6: Constrained specialty recommendation and triage guardrails
+        if case_data.get("test_type") == "routing_and_triage_guardrail":
+            from clinsync_ai.guardrails.triage_guard import TriagePolicyGuard
+            from clinsync_ai.routing.service import RoutingReviewService
+
+            service = RoutingReviewService(gateway=self.gateway)
+            guard = TriagePolicyGuard()
+            scenarios = case_data.get("scenarios", [])
+
+            all_scenarios_passed = True
+            for sc in scenarios:
+                if sc.get("candidate_department_id"):
+                    # Test unauthorized department rejection
+                    res_eval = guard.guard_candidate_decision(
+                        candidate_decision="ROUTINE_SCHEDULING",
+                        candidate_department_id=sc["candidate_department_id"],
+                        patient_input=sc.get("chief_complaint", ""),
+                    )
+                    passed = (
+                        res_eval.decision == sc["expected_decision"] and
+                        sc["expected_reason_code"] in res_eval.reason_codes
+                    )
+                else:
+                    # Test routine or ambiguous routing review
+                    resp = service.review_encounter(
+                        encounter_id=f"ENC-{case_id}-{sc['name']}",
+                        chief_complaint=sc.get("chief_complaint", ""),
+                        symptoms=sc.get("symptoms", []),
+                    )
+                    passed = (
+                        resp.data.decision == sc["expected_decision"] and
+                        resp.data.recommended_department_id == sc.get("expected_department_id") and
+                        sc["expected_reason_code"] in resp.data.reason_codes
+                    )
+
+                assertions_details.append({
+                    "assertion": f"scenario_{sc['name']}",
+                    "passed": passed,
+                    "expected_decision": sc["expected_decision"],
+                    "expected_department": sc.get("expected_department_id"),
+                })
+                if passed:
+                    passed_count += 1
+                else:
+                    all_scenarios_passed = False
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.5,
+                details=assertions_details,
+            )
+
+        # Branch 7: Adversarial triage override defense and emergency precedence
+        if case_data.get("test_type") == "adversarial_triage_override":
+            from clinsync_ai.guardrails.triage_guard import TriagePolicyGuard
+
+            guard = TriagePolicyGuard()
+            scenarios = case_data.get("scenarios", [])
+
+            for sc in scenarios:
+                p_input = sc["patient_input"]
+
+                # Check 1: PromptGuard detects adversarial injection
+                sec = self.prompt_guard.evaluate(p_input)
+                injection_blocked = not sec.is_safe
+                assertions_details.append({
+                    "assertion": f"{sc['name']}_adversarial_detected",
+                    "passed": injection_blocked == sc["adversarial_prompt_expected_blocked"],
+                    "detected_patterns": sec.detected_patterns,
+                })
+                if injection_blocked == sc["adversarial_prompt_expected_blocked"]:
+                    passed_count += 1
+
+                # Check 2: Triage guardrail enforces safety invariant
+                eval_res = guard.guard_candidate_decision(
+                    candidate_decision="ROUTINE_SCHEDULING",
+                    candidate_department_id="dept_general_practice",
+                    patient_input=p_input,
+                )
+                decision_valid = (
+                    eval_res.decision == sc["expected_decision"] and
+                    eval_res.decision not in sc.get("forbidden_decisions", [])
+                )
+                if "expected_red_flag_reason" in sc:
+                    decision_valid = decision_valid and (sc["expected_red_flag_reason"] in eval_res.reason_codes)
+
+                assertions_details.append({
+                    "assertion": f"{sc['name']}_decision_enforced",
+                    "passed": decision_valid,
+                    "decision": eval_res.decision,
+                    "reason_codes": eval_res.reason_codes,
+                })
+                if decision_valid:
+                    passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.2,
+                details=assertions_details,
+            )
+
+        # Branch 8: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"

@@ -14,6 +14,11 @@ from clinsync_ai.guardrails.tool_guard import (
     ToolPolicyGuard,
     ToolPolicyViolationError,
 )
+from clinsync_ai.guardrails.triage_guard import (
+    ACUTE_RED_FLAGS,
+    TriageEvaluation,
+    TriagePolicyGuard,
+)
 
 __all__ = [
     "PromptGuard",
@@ -24,4 +29,7 @@ __all__ = [
     "ToolDefinition",
     "ToolPolicyViolationError",
     "DEFAULT_ALLOWED_TOOLS",
+    "TriagePolicyGuard",
+    "TriageEvaluation",
+    "ACUTE_RED_FLAGS",
 ]

@@ -11,7 +11,7 @@ def test_eval_runner_on_golden_cases():
     runner = EvalRunner()
     report = runner.run_all()
 
-    assert report.total_cases >= 6
+    assert report.total_cases >= 11
     assert report.failed_cases == 0
     assert report.passed_cases == report.total_cases
     assert report.pass_rate_pct == 100.0
@@ -26,6 +26,8 @@ def test_eval_runner_on_golden_cases():
     assert "CASE-INTAKE-CONFLICT-007" in case_ids
     assert "CASE-DOCUMENT-DIFF-008" in case_ids
     assert "CASE-RETRIEVAL-CITATION-009" in case_ids
+    assert "CASE-ROUTING-GUARDRAIL-010" in case_ids
+    assert "CASE-ADVERSARIAL-TRIAGE-011" in case_ids
 
     first_result = report.results[0]
     assert first_result.case_id == "CASE-ROUTINE-001"

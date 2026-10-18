@@ -1,0 +1,43 @@
+{
+  "case_id": "CASE-ROUTING-GUARDRAIL-010",
+  "title": "Constrained Specialty Recommendation & Ambiguous Presentation Handling",
+  "test_type": "routing_and_triage_guardrail",
+  "scenarios": [
+    {
+      "name": "routine_orthopedics",
+      "chief_complaint": "Severe right ankle sprain and knee swelling after soccer match",
+      "symptoms": ["ankle pain", "difficulty bearing weight", "joint stiffness"],
+      "expected_decision": "ROUTINE_SCHEDULING",
+      "expected_department_id": "dept_orthopedics",
+      "expected_reason_code": "ROUTINE_DEPARTMENT_MATCH",
+      "expect_override": false
+    },
+    {
+      "name": "routine_dermatology",
+      "chief_complaint": "Intensely itchy red eczema patches on both forearms",
+      "symptoms": ["pruritus", "scaling skin", "erythema"],
+      "expected_decision": "ROUTINE_SCHEDULING",
+      "expected_department_id": "dept_dermatology",
+      "expected_reason_code": "ROUTINE_DEPARTMENT_MATCH",
+      "expect_override": false
+    },
+    {
+      "name": "ambiguous_multisystem_presentation",
+      "chief_complaint": "Diffuse fatigue, knee pain, rash, and earache all starting together",
+      "symptoms": ["joint stiffness", "itchy rash", "ear fullness", "general fatigue"],
+      "expected_decision": "HUMAN_REVIEW",
+      "expected_department_id": null,
+      "expected_reason_code": "AMBIGUOUS_CLINICAL_PRESENTATION",
+      "expect_override": true
+    },
+    {
+      "name": "unauthorized_department_rejection",
+      "chief_complaint": "Seeking elective cosmetic contouring",
+      "candidate_department_id": "dept_unregistered_cosmetic",
+      "expected_decision": "HUMAN_REVIEW",
+      "expected_department_id": null,
+      "expected_reason_code": "UNAUTHORIZED_DEPARTMENT_REJECTED",
+      "expect_override": true
+    }
+  ]
+}
