@@ -119,6 +119,40 @@ export const mockClinicalFacts: ClinicalFact[] = [
   },
 ];
 
+export interface SpecialtyDepartment {
+  id: string;
+  name: string;
+  description: string;
+  wait_time_minutes: number;
+}
+
+export const mockDepartments: SpecialtyDepartment[] = [
+  {
+    id: 'dept_cardiology',
+    name: 'Cardiology & Chest Pain Center',
+    description: 'Specialized heart, rhythm, and cardiovascular evaluation',
+    wait_time_minutes: 15,
+  },
+  {
+    id: 'dept_internal_med',
+    name: 'General Internal Medicine',
+    description: 'Comprehensive adult diagnostics and chronic disease management',
+    wait_time_minutes: 25,
+  },
+  {
+    id: 'dept_orthopedics',
+    name: 'Orthopedics & Joint Clinic',
+    description: 'Musculoskeletal injuries, joints, and mobility evaluation',
+    wait_time_minutes: 30,
+  },
+  {
+    id: 'dept_neurology',
+    name: 'Neurology Consultation',
+    description: 'Headache, neurological symptoms, and cognitive assessment',
+    wait_time_minutes: 40,
+  },
+];
+
 export const mockSlots: AppointmentSlot[] = [
   {
     slot_id: 'slot_cardio_101',
@@ -149,6 +183,26 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T11:15:00Z',
     end_at: '2026-10-18T11:45:00Z',
     available: false,
+  },
+  {
+    slot_id: 'slot_internal_202',
+    doctor_id: 'dr_marcus_vance',
+    doctor_name: 'Dr. Marcus Vance, MD (Internal Medicine)',
+    department_id: 'dept_internal_med',
+    department_name: 'General Internal Medicine',
+    start_at: '2026-10-18T14:00:00Z',
+    end_at: '2026-10-18T14:30:00Z',
+    available: true,
+  },
+  {
+    slot_id: 'slot_ortho_301',
+    doctor_id: 'dr_sarah_patel',
+    doctor_name: 'Dr. Sarah Patel, MD (Orthopedics)',
+    department_id: 'dept_orthopedics',
+    department_name: 'Orthopedics & Joint Clinic',
+    start_at: '2026-10-18T15:00:00Z',
+    end_at: '2026-10-18T15:30:00Z',
+    available: true,
   },
 ];
 

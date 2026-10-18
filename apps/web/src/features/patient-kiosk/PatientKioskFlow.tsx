@@ -5,6 +5,7 @@ import { NewPatientForm } from '../patient-registration/NewPatientForm';
 import { IntakeInterview } from '../patient-intake/IntakeInterview';
 import { IntakeSummary } from '../patient-intake/IntakeSummary';
 import { DocumentUploadZone } from '../documents/DocumentUploadZone';
+import { AppointmentSchedulingHub } from '../appointments/AppointmentSchedulingHub';
 import { KioskLayout } from '../../layouts/KioskLayout';
 import { mockApi } from '../../lib/api/mockAdapter';
 import type { IdentityCandidate, ClinicalFact, Encounter } from '../../lib/api/types';
@@ -15,10 +16,13 @@ export type KioskFlowStep =
   | 'new-patient'
   | 'interview'
   | 'summary'
-  | 'documents';
+  | 'documents'
+  | 'scheduling';
 
-export const PatientKioskFlow: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<KioskFlowStep>('welcome');
+export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
+  initialStep = 'welcome',
+}) => {
+  const [currentStep, setCurrentStep] = useState<KioskFlowStep>(initialStep);
   const [patientId, setPatientId] = useState<string>('');
   const [patientName, setPatientName] = useState<string>('');
   const [encounterId, setEncounterId] = useState<string>('');
@@ -148,22 +152,42 @@ export const PatientKioskFlow: React.FC = () => {
             facts={collectedFacts}
             onStartNewSession={handleResetSession}
             onProceedToDocuments={() => setCurrentStep('documents')}
+            onProceedToScheduling={() => setCurrentStep('scheduling')}
           />
         )}
 
         {currentStep === 'documents' && (
           <div className="w-full max-w-4xl space-y-6" data-testid="kiosk-documents-step">
             <DocumentUploadZone encounterId={encounterId || 'enc_demo_001'} />
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleResetSession}
                 data-testid="kiosk-finish-checkin-btn"
-                className="inline-flex items-center justify-center font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 min-h-[48px] px-6 py-3 shadow-sm text-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 min-h-[48px] px-6 py-3 shadow-xs text-sm"
               >
-                Complete Check-in & Return to Welcome
+                Skip & Return to Welcome
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep('scheduling')}
+                data-testid="proceed-to-scheduling-from-docs-btn"
+                className="w-full sm:w-auto inline-flex items-center justify-center font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 min-h-[48px] px-6 py-3 shadow-sm text-sm font-semibold"
+              >
+                Proceed to Appointment Scheduling (G4)
               </button>
             </div>
+          </div>
+        )}
+
+        {currentStep === 'scheduling' && (
+          <div className="w-full max-w-4xl" data-testid="kiosk-scheduling-step">
+            <AppointmentSchedulingHub
+              encounterId={encounterId || 'enc_demo_001'}
+              patientName={patientName || 'Eleanor Johnson'}
+              onReturnHome={handleResetSession}
+            />
           </div>
         )}
       </div>
