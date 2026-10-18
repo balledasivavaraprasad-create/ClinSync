@@ -4,6 +4,7 @@ import { IdentityConfirmationModal } from './IdentityConfirmationModal';
 import { NewPatientForm } from '../patient-registration/NewPatientForm';
 import { IntakeInterview } from '../patient-intake/IntakeInterview';
 import { IntakeSummary } from '../patient-intake/IntakeSummary';
+import { DocumentUploadZone } from '../documents/DocumentUploadZone';
 import { KioskLayout } from '../../layouts/KioskLayout';
 import { mockApi } from '../../lib/api/mockAdapter';
 import type { IdentityCandidate, ClinicalFact, Encounter } from '../../lib/api/types';
@@ -13,7 +14,8 @@ export type KioskFlowStep =
   | 'confirm-identity'
   | 'new-patient'
   | 'interview'
-  | 'summary';
+  | 'summary'
+  | 'documents';
 
 export const PatientKioskFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<KioskFlowStep>('welcome');
@@ -145,7 +147,24 @@ export const PatientKioskFlow: React.FC = () => {
             encounterId={encounterId || 'enc_synth_001'}
             facts={collectedFacts}
             onStartNewSession={handleResetSession}
+            onProceedToDocuments={() => setCurrentStep('documents')}
           />
+        )}
+
+        {currentStep === 'documents' && (
+          <div className="w-full max-w-4xl space-y-6" data-testid="kiosk-documents-step">
+            <DocumentUploadZone encounterId={encounterId || 'enc_demo_001'} />
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleResetSession}
+                data-testid="kiosk-finish-checkin-btn"
+                className="inline-flex items-center justify-center font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 min-h-[48px] px-6 py-3 shadow-sm text-sm"
+              >
+                Complete Check-in & Return to Welcome
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </KioskLayout>
