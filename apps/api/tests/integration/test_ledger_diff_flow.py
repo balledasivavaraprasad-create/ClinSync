@@ -253,3 +253,30 @@ def test_patient_ledger_and_diff_isolation(client: TestClient, db_session: Sessi
     assert res_b_diff.status_code == 200
     assert len(res_b_diff.json()["data"]["new_facts"]) == 0
     assert len(res_b_diff.json()["data"]["changed_facts"]) == 0
+
+
+def test_get_ledger_and_diff_unauthorized_patient_fails_403(
+    client: TestClient, db_session: Session
+):
+    """Encounter ledger or diff with mismatched patient_id returns 403 ACCESS_DENIED."""
+    patient_a, enc_a = _seed_patient_and_encounter(db_session, "Patient A")
+    patient_b = Patient(
+        id=generate_uuid(),
+        display_name="Patient B",
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient_b)
+    db_session.commit()
+
+    # Query Patient A's encounter passing Patient B's patient_id
+    res_ledger = client.get(
+        f"/api/v1/encounters/{enc_a.id}/ledger?patient_id={patient_b.id}"
+    )
+    assert res_ledger.status_code == 403
+    assert res_ledger.json()["code"] == "ACCESS_DENIED"
+
+    res_diff = client.get(
+        f"/api/v1/encounters/{enc_a.id}/diff?patient_id={patient_b.id}"
+    )
+    assert res_diff.status_code == 403
+    assert res_diff.json()["code"] == "ACCESS_DENIED"

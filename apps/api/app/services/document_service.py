@@ -87,6 +87,17 @@ class DocumentService:
                 message="Patient identity must be confirmed before uploading documents.",
             )
 
+        # Check client patient association if supplied (wrong-patient validation)
+        if req.patient_id and req.patient_id != encounter.patient_id:
+            raise ClinSyncAppException(
+                status_code=403,
+                code=ErrorCode.ACCESS_DENIED,
+                message=(
+                    f"Patient {req.patient_id} does not match encounter "
+                    f"patient {encounter.patient_id} (wrong-patient association)."
+                ),
+            )
+
         # 3. Validate MIME type whitelist
         normalized_mime = req.mime_type.strip().lower()
         if normalized_mime not in settings.ALLOWED_MIME_TYPES:
@@ -163,8 +174,20 @@ class DocumentService:
         # Store securely without executing or using raw client filenames
         storage_file_path = storage_dir / f"{doc_id}.bin"
 
-        with open(storage_file_path, "wb") as f:
-            f.write(file_bytes)
+        try:
+            with open(storage_file_path, "wb") as f:
+                f.write(file_bytes)
+        except (IOError, OSError) as exc:
+            if storage_file_path.exists():
+                try:
+                    storage_file_path.unlink()
+                except Exception:
+                    pass
+            raise ClinSyncAppException(
+                status_code=500,
+                code=ErrorCode.INTERNAL_ERROR,
+                message="Document storage failure: unable to persist file to disk.",
+            ) from exc
 
         # 8. Persist Document record
         doc = Document(
@@ -208,7 +231,11 @@ class DocumentService:
         )
 
     @staticmethod
-    def get_document_status(db: Session, document_id: str) -> DocumentStatusData:
+    def get_document_status(
+        db: Session,
+        document_id: str,
+        patient_id: Optional[str] = None,
+    ) -> DocumentStatusData:
         """Retrieve document processing status and associated extracted facts."""
         doc = db.query(Document).filter(Document.id == document_id).first()
         if not doc:
@@ -216,6 +243,13 @@ class DocumentService:
                 status_code=404,
                 code=ErrorCode.NOT_FOUND,
                 message=f"Document {document_id} not found.",
+            )
+
+        if patient_id and doc.patient_id != patient_id:
+            raise ClinSyncAppException(
+                status_code=403,
+                code=ErrorCode.ACCESS_DENIED,
+                message=f"Access denied: document {document_id} belongs to a different patient.",
             )
 
         # Fetch facts extracted from this document
@@ -275,3 +309,48 @@ class DocumentService:
         db.commit()
         db.refresh(doc)
         return doc
+
+    @staticmethod
+    def add_extracted_fact(
+        db: Session,
+        document_id: str,
+        concept: str,
+        value: str,
+        fact_type: str,
+        unit: Optional[str] = None,
+        clinical_time: Optional[str] = None,
+        source_location: Optional[str] = None,
+        confidence: Optional[float] = None,
+        extraction_method: Optional[str] = "LlamaIndex_OCR",
+        status: str = "extracted_unverified",
+    ) -> ClinicalFactModel:
+        """Link an extracted clinical fact back to source document preserving provenance."""
+        doc = db.query(Document).filter(Document.id == document_id).first()
+        if not doc:
+            raise ClinSyncAppException(
+                status_code=404,
+                code=ErrorCode.NOT_FOUND,
+                message=f"Document {document_id} not found.",
+            )
+
+        fact = ClinicalFactModel(
+            id=generate_uuid(),
+            patient_id=doc.patient_id,
+            encounter_id=doc.encounter_id,
+            concept=concept,
+            value=value,
+            unit=unit,
+            clinical_time=clinical_time,
+            fact_type=fact_type,
+            status=status,
+            source_type="UPLOADED_DOCUMENT",
+            source_id=doc.id,
+            source_location=source_location,
+            confidence=confidence,
+            extraction_method=extraction_method,
+        )
+        db.add(fact)
+        doc.processing_status = "EXTRACTED"
+        db.commit()
+        db.refresh(fact)
+        return fact

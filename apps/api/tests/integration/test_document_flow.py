@@ -3,6 +3,7 @@
 import base64
 import hashlib
 from pathlib import Path
+from unittest import mock
 
 from app.db.base import generate_uuid
 from app.models.audit import AuditEvent
@@ -337,3 +338,160 @@ def test_get_document_status_nonexistent_returns_404(client: TestClient):
     res = client.get("/api/v1/documents/doc_nonexistent_123/status")
     assert res.status_code == 404
     assert res.json()["code"] == "NOT_FOUND"
+
+
+def test_upload_document_wrong_patient_association_fails_403(
+    client: TestClient, db_session: Session
+):
+    """Uploading a document with a mismatched patient_id returns 403 ACCESS_DENIED."""
+    patient_a, enc_a = _seed_confirmed_encounter(db_session)
+    patient_b = Patient(
+        id=generate_uuid(),
+        display_name="Other Patient",
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient_b)
+    db_session.commit()
+
+    b64_content = base64.b64encode(VALID_PDF_BYTES).decode("utf-8")
+    res = client.post(
+        f"/api/v1/encounters/{enc_a.id}/documents",
+        json={
+            "filename": "cross_patient.pdf",
+            "mime_type": "application/pdf",
+            "content_base64": b64_content,
+            "patient_id": patient_b.id,
+        },
+    )
+    assert res.status_code == 403
+    err = res.json()
+    assert err["code"] == "ACCESS_DENIED"
+    assert "wrong-patient association" in err["message"]
+
+
+def test_get_document_status_unauthorized_patient_fails_403(
+    client: TestClient, db_session: Session
+):
+    """Reading another patient's document status returns 403 ACCESS_DENIED."""
+    _, enc_a = _seed_confirmed_encounter(db_session)
+
+    b64_content = base64.b64encode(VALID_PDF_BYTES).decode("utf-8")
+    upload_res = client.post(
+        f"/api/v1/encounters/{enc_a.id}/documents",
+        json={
+            "filename": "private_scan.pdf",
+            "mime_type": "application/pdf",
+            "content_base64": b64_content,
+        },
+    )
+    doc_id = upload_res.json()["data"]["document_id"]
+
+    # Query with wrong patient_id parameter
+    wrong_patient_id = generate_uuid()
+    res = client.get(f"/api/v1/documents/{doc_id}/status?patient_id={wrong_patient_id}")
+    assert res.status_code == 403
+    assert res.json()["code"] == "ACCESS_DENIED"
+
+
+def test_upload_document_storage_write_failure_raises_500(
+    client: TestClient, db_session: Session
+):
+    """Storage write failure cleanly raises 500 INTERNAL_ERROR."""
+    _, encounter = _seed_confirmed_encounter(db_session)
+
+    b64_content = base64.b64encode(VALID_PDF_BYTES).decode("utf-8")
+    payload = {
+        "filename": "storage_fail.pdf",
+        "mime_type": "application/pdf",
+        "content_base64": b64_content,
+    }
+
+    with mock.patch("builtins.open", side_effect=OSError("Disk write error")):
+        res = client.post(f"/api/v1/encounters/{encounter.id}/documents", json=payload)
+        assert res.status_code == 500
+        assert res.json()["code"] == "INTERNAL_ERROR"
+        assert "storage failure" in res.json()["message"].lower()
+
+
+def test_document_processing_failure_records_error_message(
+    client: TestClient, db_session: Session
+):
+    """Failed document processing persists error message and returns FAILED status."""
+    _, encounter = _seed_confirmed_encounter(db_session)
+
+    b64_content = base64.b64encode(VALID_PDF_BYTES).decode("utf-8")
+    upload_res = client.post(
+        f"/api/v1/encounters/{encounter.id}/documents",
+        json={
+            "filename": "unreadable_corrupt.pdf",
+            "mime_type": "application/pdf",
+            "content_base64": b64_content,
+        },
+    )
+    doc_id = upload_res.json()["data"]["document_id"]
+
+    # Update status to FAILED with error detail
+    DocumentService.update_document_status(
+        db_session,
+        doc_id,
+        "FAILED",
+        error_message="OCR extraction pipeline error: corrupted font tables.",
+    )
+
+    status_res = client.get(f"/api/v1/documents/{doc_id}/status")
+    assert status_res.status_code == 200
+    data = status_res.json()["data"]
+    assert data["status"] == "FAILED"
+    assert "corrupted font tables" in data["error_message"]
+
+
+def test_source_file_remains_immutable_after_extraction(
+    client: TestClient, db_session: Session
+):
+    """Source file on disk remains unchanged and uncorrupted after extraction."""
+    _, encounter = _seed_confirmed_encounter(db_session)
+
+    b64_content = base64.b64encode(VALID_PDF_BYTES).decode("utf-8")
+    upload_res = client.post(
+        f"/api/v1/encounters/{encounter.id}/documents",
+        json={
+            "filename": "immutable_source.pdf",
+            "mime_type": "application/pdf",
+            "content_base64": b64_content,
+        },
+    )
+    doc_id = upload_res.json()["data"]["document_id"]
+
+    doc = db_session.query(Document).filter(Document.id == doc_id).first()
+    storage_path = Path(doc.storage_path)
+    initial_bytes = storage_path.read_bytes()
+    initial_sha = hashlib.sha256(initial_bytes).hexdigest()
+
+    # Link multiple extracted facts
+    DocumentService.add_extracted_fact(
+        db_session,
+        document_id=doc_id,
+        concept="Blood Glucose",
+        value="110",
+        unit="mg/dL",
+        fact_type="investigation",
+        source_location="page 1",
+        confidence=0.97,
+    )
+    DocumentService.add_extracted_fact(
+        db_session,
+        document_id=doc_id,
+        concept="Hemoglobin A1c",
+        value="5.6",
+        unit="%",
+        fact_type="investigation",
+        source_location="page 2",
+        confidence=0.99,
+    )
+
+    # Re-read physical file on disk: must be 100% byte-for-byte identical
+    after_bytes = storage_path.read_bytes()
+    after_sha = hashlib.sha256(after_bytes).hexdigest()
+    assert after_bytes == initial_bytes
+    assert after_sha == initial_sha
+    assert after_sha == doc.checksum_sha256

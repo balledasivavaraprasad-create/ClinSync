@@ -16,6 +16,7 @@ class DocumentUploadRequest(BaseModel):
     mime_type: str
     content_base64: Optional[str] = None
     file_size_bytes: Optional[int] = None
+    patient_id: Optional[str] = None
 
     model_config = ConfigDict(extra="ignore")
 

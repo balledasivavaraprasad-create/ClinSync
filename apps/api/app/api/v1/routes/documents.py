@@ -40,9 +40,12 @@ def upload_document(
 )
 def get_document_status(
     document_id: str,
+    patient_id: str | None = None,
     db: Session = Depends(get_db),
     request_id: str = Depends(get_current_request_id),
 ) -> DocumentStatusResponse:
     """Read document processing state and extracted clinical facts."""
-    data = DocumentService.get_document_status(db=db, document_id=document_id)
+    data = DocumentService.get_document_status(
+        db=db, document_id=document_id, patient_id=patient_id
+    )
     return DocumentStatusResponse(data=data, request_id=request_id)

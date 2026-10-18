@@ -18,7 +18,9 @@ class LedgerService:
     """Service aggregating Clinical Context Ledger and computing Context Diffs."""
 
     @staticmethod
-    def get_encounter_ledger(db: Session, encounter_id: str) -> LedgerData:
+    def get_encounter_ledger(
+        db: Session, encounter_id: str, patient_id: str | None = None
+    ) -> LedgerData:
         """Fetch all facts recorded for an encounter and identify unresolved conflicts."""
         encounter = db.query(Encounter).filter(Encounter.id == encounter_id).first()
         if not encounter:
@@ -26,6 +28,13 @@ class LedgerService:
                 status_code=404,
                 code=ErrorCode.NOT_FOUND,
                 message=f"Encounter {encounter_id} not found.",
+            )
+
+        if patient_id and encounter.patient_id != patient_id:
+            raise ClinSyncAppException(
+                status_code=403,
+                code=ErrorCode.ACCESS_DENIED,
+                message=f"Access denied: encounter {encounter_id} belongs to a different patient.",
             )
 
         facts = (
@@ -76,7 +85,9 @@ class LedgerService:
         )
 
     @staticmethod
-    def get_encounter_diff(db: Session, encounter_id: str) -> DiffData:
+    def get_encounter_diff(
+        db: Session, encounter_id: str, patient_id: str | None = None
+    ) -> DiffData:
         """Compute Patient Context Diff comparing historical EHR facts with current encounter."""
         encounter = db.query(Encounter).filter(Encounter.id == encounter_id).first()
         if not encounter:
@@ -84,6 +95,13 @@ class LedgerService:
                 status_code=404,
                 code=ErrorCode.NOT_FOUND,
                 message=f"Encounter {encounter_id} not found.",
+            )
+
+        if patient_id and encounter.patient_id != patient_id:
+            raise ClinSyncAppException(
+                status_code=403,
+                code=ErrorCode.ACCESS_DENIED,
+                message=f"Access denied: encounter {encounter_id} belongs to a different patient.",
             )
 
         # Current encounter facts

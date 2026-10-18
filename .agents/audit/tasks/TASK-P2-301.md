@@ -13,7 +13,7 @@
 - [x] Clinical Context Ledger retrieval (`GET /api/v1/encounters/{encounter_id}/ledger`) returning all encounter facts with complete provenance (`source_type`, `source_id`, `source_location`, `confidence`, `extraction_method`) and surfaced unresolved conflicts list.
 - [x] Patient Context Diff retrieval (`GET /api/v1/encounters/{encounter_id}/diff`) computing new facts, changed facts (with historical vs current comparison), and surfacing contradictions/conflicts without silent reconciliation.
 - [x] Database migration `0003_add_documents.py` defining `documents` table with foreign keys, constraints, and indexes on `patient_id`, `encounter_id`, and `checksum_sha256`.
-- [x] Full test coverage with 53 automated API tests passing (unit, integration, and OpenAPI contract tests).
+- [x] Full test coverage with 59 automated API tests passing (unit, integration, and OpenAPI contract tests).
 
 ## Files Changed / Created
 - `apps/api/app/core/config.py`: Added `STORAGE_DIR`, `MAX_UPLOAD_SIZE_BYTES`, and `ALLOWED_MIME_TYPES` configuration.
@@ -39,7 +39,7 @@
 
 ## Validation Evidence
 - **Test Command**: `python -m pytest apps/api/tests -v`
-  - Result: 53 passed in 1.25s
+  - Result: 59 passed in 1.35s
 - **Linter Command**: `python -m ruff check apps/api`
   - Result: All checks passed!
 - **Cross-Service Tests**: `python -m pytest apps/ai/tests -v`
