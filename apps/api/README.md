@@ -39,7 +39,7 @@ apps/api/
     └── contract/               # API contract conformity tests against openapi.json
 ```
 
-## Implemented API Endpoints (Phases 1 - 5)
+## Implemented API Endpoints (Phases 1 - 6)
 
 | Method | Endpoint | Description | Phase / Gate |
 |---|---|---|---|
@@ -67,10 +67,28 @@ apps/api/
 3. **Safe Storage & Immutability**: Uploaded documents (PDF, PNG, JPEG) are checked against magic bytes and size caps (10MB), stored securely on disk under stable UUIDs without executing payloads, and tracked with sha256 checksums.
 4. **Clinical Context Ledger & Diff**: Every fact retains source modality (`PATIENT_VOICE`, `PATIENT_FORM`, `UPLOADED_DOCUMENT`), source ID, status, and clinical timestamp. Diffs compute new, changed, and conflicting facts without silent reconciliation.
 5. **Deterministic Safety Policy (Rule 10)**: Clinical model outputs cannot independently escalate or schedule emergency patients. High-risk acute red flags (ACS, respiratory distress, FAST acute stroke, anaphylaxis, massive hemorrhage, psychiatric crisis) unconditionally trigger `URGENT_ESCALATION`.
-6. **Atomic Booking & Race Safety**: Appointment booking transactions enforce database-level uniqueness constraints and idempotency checking. Concurrent duplicate booking attempts for the same slot strictly result in 1 winner (201 Created) and 409 Conflict (`SLOT_UNAVAILABLE`).
+6. **Atomic Booking & Race Safety**: Appointment booking transactions enforce database-level uniqueness constraints and idempotency checking. Concurrent duplicate booking attempts for the same slot strictly result in 1 winner (201 Created) and 409 Conflict (`SLOT_UNAVAILABLE`). Identical concurrent replays return the existing booking idempotently.
 7. **Doctor Sign-Off & Fact Confirmation**: Doctor review transitions encounters to `DOCTOR_REVIEWED`, marks facts as `doctor_confirmed` with `reviewed_by`, applies fact corrections, and records immutable `AuditEvent` logs with `actor_role="DOCTOR"`. Unconfirmed patient encounters reject approvals with 403 `IDENTITY_NOT_CONFIRMED`.
 8. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`, `RoutingService`, `AppointmentService`, `DoctorService`), and return standard envelopes. No direct DB queries in route modules.
-9. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
+9. **Zero Secret Leakage & Redaction**: Strict log filter masks SSNs, PANs, 10-digit phone numbers, Bearer tokens, and vendor API keys (`AIza...`, `gsk_...`, `AQ...`) across all console and file loggers.
+
+## Demo Data Seeding & Database Reset
+
+A deterministic, idempotent seeder is provided in `apps/api/scripts/seed_demo_data.py`:
+
+```bash
+# Seed demo data idempotently (skips already existing records)
+python apps/api/scripts/seed_demo_data.py
+
+# Cleanly purge all clinical/audit data and re-seed fresh state
+python apps/api/scripts/seed_demo_data.py --reset
+```
+
+The script populates:
+- Synthetic Patients: Eleanor Vance (`pat_eleanor_001`), Marcus Brody (`pat_marcus_002`), Sarah Jenkins (`pat_sarah_003`)
+- Historical EHR records (hypertension, penicillin allergy, chronic migraine)
+- Available appointment slots across all 8 hospital departments
+- Active cardiology demo encounter (`enc_demo_cardio_01`) booked with Dr. Clara Chen
 
 ## Running Locally
 
@@ -85,8 +103,17 @@ alembic upgrade head
 ## Running Tests & Linters
 
 ```bash
-# Run complete test suite (unit, integration, and contract tests)
-python -m pytest apps/api/tests -v
+# Run complete test suite (unit, integration, and security tests)
+python -m pytest apps/api -v
+
+# Run End-to-End System Journey test
+python -m pytest apps/api/tests/integration/test_end_to_end_journey.py -v
+
+# Run Concurrency & Race Condition tests
+python -m pytest apps/api/tests/integration/test_concurrency_booking.py -v
+
+# Run Security & Privacy Audit tests
+python -m pytest apps/api/tests/unit/test_security_privacy_audit.py -v
 
 # Run linter
 python -m ruff check apps/api

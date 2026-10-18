@@ -39,13 +39,14 @@
 | TASK-P1-501: Doctor Console, Briefing UI & Audio Player | Person 1 | INTEGRATED | `main` | 117 web tests pass, anti-wrong-patient safeguard, scannable queue, audio player & sign-off verified | None |
 | TASK-P3-601: Golden AI Evaluation Suite, Grounding Benchmarks & Trace Auditing | Person 3 | INTEGRATED | `main` | 75 tests pass, 18/18 golden benchmark evals pass (100%), citation grounding score 100%, zero emergency bypass, trace PHI redaction verified | None |
 | TASK-P1-601: Visual QA, Tablet Responsiveness & Accessibility Auditing | Person 1 | INTEGRATED | `main` | 137 web tests pass, tablet viewports, >=48px touch targets, high contrast, reduced-motion & screen reader audit verified | None |
+| TASK-P2-601: Full System End-to-End Integration, Concurrency & Security Testing | Person 2 | VERIFIED | `feat/p2-system-integration` | 105 tests pass, e2e journey verified, multi-client race & idempotent replays verified, security audit & log redaction verified, seed_demo_data.py --reset verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
 
 ## Readiness checklist
 
-- [ ] Hospital/doctor demo access works with synthetic credentials.
+- [x] Hospital/doctor demo access works with synthetic credentials.
 - [x] A patient candidate must be confirmed before history is displayed.
 - [x] New synthetic patient can complete a bounded intake.
 - [x] A sample PDF/image can be attached and extracted facts retain source metadata.
@@ -60,7 +61,7 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [x] Provider errors never produce fake success; invalid/uncertain outputs use deterministic fallback or human review.
 - [x] No direct OpenAI provider/key is present in the baseline.
 - [x] CI passes on the integrated branch (governance check verified).
-- [ ] The system can be started and demo data reset from a clean checkout.
+- [x] The system can be started and demo data reset from a clean checkout.
 - [x] UI screenshot review covers main and failure states.
 - [x] Known mocks, deferred features and non-validated behavior are documented.
 
@@ -86,8 +87,8 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 ### Integrated system
 
 - [x] Booking transaction, doctor queue and brief are connected.
-- [ ] Identity, policy and failure cases tested.
-- [ ] Demo data reset is reproducible.
+- [x] Identity, policy and failure cases tested.
+- [x] Demo data reset is reproducible.
 - [ ] Safe screenshots and trace identifiers are captured.
 
 ### Release candidate
