@@ -10,6 +10,7 @@ from app.db.base import Base, TimestampMixin, generate_uuid
 
 if TYPE_CHECKING:
     from app.models.encounter import Encounter
+    from app.models.fact import ClinicalFact
 
 
 class Patient(Base, TimestampMixin):
@@ -37,6 +38,11 @@ class Patient(Base, TimestampMixin):
     # Relationships
     encounters: Mapped[list["Encounter"]] = relationship(
         "Encounter",
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )
+    facts: Mapped[list["ClinicalFact"]] = relationship(
+        "ClinicalFact",
         back_populates="patient",
         cascade="all, delete-orphan",
     )

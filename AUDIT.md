@@ -25,6 +25,7 @@
 | TASK-P1-101: Web App Shell & Design Tokens | Person 1 | READY | `feat/p1-web-shell` | Contract mock & module boundaries mapped | None |
 | TASK-P2-101: FastAPI App Core & SQLite | Person 2 | INTEGRATED | `main` | 12 tests pass, Alembic lifecycle verified, error schema conforms | None |
 | TASK-P3-101: Model Gateway & Offline Evals | Person 3 | INTEGRATED | `main` | 14 tests pass, Gemini/Groq gateway, guardrails, eval runner verified | None |
+| TASK-P2-201: Patient APIs & Identity Gating | Person 2 | VERIFIED | `feat/p2-patient-api` | 28 tests pass, candidate masking, DOB gate, encounter answers verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -32,10 +33,10 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 ## Readiness checklist
 
 - [ ] Hospital/doctor demo access works with synthetic credentials.
-- [ ] A patient candidate must be confirmed before history is displayed.
-- [ ] New synthetic patient can complete a bounded intake.
+- [x] A patient candidate must be confirmed before history is displayed.
+- [x] New synthetic patient can complete a bounded intake.
 - [ ] A sample PDF/image can be attached and extracted facts retain source metadata.
-- [ ] Clinical Context Ledger distinguishes reported, extracted-unverified, historical and doctor-confirmed facts.
+- [x] Clinical Context Ledger distinguishes reported, extracted-unverified, historical and doctor-confirmed facts.
 - [ ] Patient Context Diff shows meaningful new/changed/historical/conflicting context.
 - [ ] Deterministic demo policy routes a predefined high-risk scenario to the configured escalation path.
 - [ ] Routine scenario books a seeded slot; conflicting booking is rejected.

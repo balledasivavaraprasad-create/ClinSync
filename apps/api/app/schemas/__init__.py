@@ -8,8 +8,29 @@ from app.schemas.encounter import (
     EncounterResponse,
     EncounterStatus,
 )
+from app.schemas.fact import ClinicalFact, FactSourceType, FactStatus, FactType
 from app.schemas.health import HealthData, HealthResponse
-from app.schemas.patient import Patient, PatientResponse
+from app.schemas.identity import (
+    CandidateItem,
+    CandidateLookupData,
+    CandidateLookupRequest,
+    CandidateLookupResponse,
+    IdentityConfirmData,
+    IdentityConfirmRequest,
+    IdentityConfirmResponse,
+)
+from app.schemas.intake import (
+    IntakeAnswerRequest,
+    IntakeStateData,
+    IntakeStateResponse,
+)
+from app.schemas.patient import (
+    Patient,
+    PatientContextData,
+    PatientContextResponse,
+    PatientRegistrationRequest,
+    PatientResponse,
+)
 
 __all__ = [
     "ResponseEnvelope",
@@ -17,10 +38,27 @@ __all__ = [
     "HealthResponse",
     "Patient",
     "PatientResponse",
+    "PatientRegistrationRequest",
+    "PatientContextData",
+    "PatientContextResponse",
     "Encounter",
     "EncounterResponse",
     "CreateEncounterRequest",
     "EncounterStatus",
     "AuditEvent",
     "AuditEventResponse",
+    "ClinicalFact",
+    "FactType",
+    "FactStatus",
+    "FactSourceType",
+    "CandidateItem",
+    "CandidateLookupData",
+    "CandidateLookupRequest",
+    "CandidateLookupResponse",
+    "IdentityConfirmData",
+    "IdentityConfirmRequest",
+    "IdentityConfirmResponse",
+    "IntakeAnswerRequest",
+    "IntakeStateData",
+    "IntakeStateResponse",
 ]
