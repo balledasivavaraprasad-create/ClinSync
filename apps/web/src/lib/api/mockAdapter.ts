@@ -218,10 +218,15 @@ export const mockApi = {
   },
 
   // 11. GET /appointments/slots
-  async getSlots(departmentId: string): Promise<SlotsResponse> {
-    const slots = departmentId
+  async getSlots(departmentId: string, date?: string): Promise<SlotsResponse> {
+    let slots = departmentId
       ? mockSlots.filter((s) => s.department_id === departmentId)
       : mockSlots;
+
+    if (date) {
+      slots = slots.filter((s) => s.start_at.startsWith(date));
+    }
+
     return {
       data: {
         department_id: departmentId || 'all',
@@ -241,7 +246,8 @@ export const mockApi = {
     }
 
     const slot = mockSlots.find((s) => s.slot_id === req.slot_id);
-    if (!slot || !slot.available) {
+    const isAvailable = slot?.status ? slot.status === 'AVAILABLE' : slot?.available;
+    if (!slot || !isAvailable) {
       const err = new Error('SLOT_UNAVAILABLE');
       // @ts-expect-error custom error property
       err.code = 'SLOT_UNAVAILABLE';
@@ -251,7 +257,10 @@ export const mockApi = {
     return {
       data: {
         booking_id: `bkg_${Date.now()}`,
-        slot: { ...slot, available: false },
+        slot_id: slot.slot_id,
+        doctor_id: slot.doctor_id,
+        start_at: slot.start_at,
+        slot: { ...slot, available: false, status: 'BOOKED' },
         confirmed_at: new Date().toISOString(),
         status: 'CONFIRMED',
       },

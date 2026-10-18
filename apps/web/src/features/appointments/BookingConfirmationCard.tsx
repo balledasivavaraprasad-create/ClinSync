@@ -31,6 +31,12 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
   onPrint = () => window.print(),
 }) => {
   const { booking_id, slot, confirmed_at, status } = booking;
+  const doctorName =
+    slot?.doctor_name ||
+    (booking.doctor_id ? `Physician (${booking.doctor_id})` : 'Assigned Physician');
+  const departmentName = slot?.department_name || 'Specialty Outpatient Clinic';
+  const startAt = slot?.start_at || booking.start_at;
+  const endAt = slot?.end_at;
 
   const formatSlotTime = (isoString?: string) => {
     if (!isoString) return '10:00 AM';
@@ -120,7 +126,7 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
                 </span>
                 <div className="flex items-center text-sm font-bold text-slate-900 mt-1">
                   <User className="w-4 h-4 mr-1.5 text-teal-700 shrink-0" />
-                  <span>{slot.doctor_name}</span>
+                  <span>{doctorName}</span>
                 </div>
               </div>
 
@@ -130,7 +136,7 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
                 </span>
                 <div className="flex items-center text-sm font-bold text-slate-900 mt-1">
                   <Stethoscope className="w-4 h-4 mr-1.5 text-teal-700 shrink-0" />
-                  <span>{slot.department_name}</span>
+                  <span>{departmentName}</span>
                 </div>
               </div>
 
@@ -140,7 +146,7 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
                 </span>
                 <div className="flex items-center text-sm font-bold text-slate-900 mt-1">
                   <Calendar className="w-4 h-4 mr-1.5 text-teal-700 shrink-0" />
-                  <span>{formatSlotDate(slot.start_at)}</span>
+                  <span>{formatSlotDate(startAt)}</span>
                 </div>
               </div>
 
@@ -151,7 +157,7 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
                 <div className="flex items-center text-sm font-bold text-slate-900 mt-1">
                   <Clock className="w-4 h-4 mr-1.5 text-teal-700 shrink-0" />
                   <span>
-                    {formatSlotTime(slot.start_at)} – {formatSlotTime(slot.end_at)}
+                    {formatSlotTime(startAt)} {endAt ? `– ${formatSlotTime(endAt)}` : ''}
                   </span>
                 </div>
               </div>
@@ -163,7 +169,7 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
             <span className="font-bold text-slate-900 block">Next Steps at Hospital:</span>
             <ul className="list-disc pl-5 space-y-1 text-slate-600">
               <li>Please proceed to <strong>Waiting Area B</strong> (2nd Floor).</li>
-              <li>Your intake answers and uploaded records have been synced to Dr. Clara Chen's clinical console.</li>
+              <li>Your intake answers and uploaded records have been synced to {doctorName}'s clinical console.</li>
               <li>A mobile SMS pass has been prepared for patient <strong>{patientName}</strong> under encounter <code className="font-mono text-teal-900 font-semibold">{encounterId}</code>.</li>
             </ul>
           </div>

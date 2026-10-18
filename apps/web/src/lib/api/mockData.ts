@@ -163,6 +163,7 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T10:00:00Z',
     end_at: '2026-10-18T10:30:00Z',
     available: true,
+    status: 'AVAILABLE',
   },
   {
     slot_id: 'slot_cardio_102',
@@ -173,6 +174,18 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T10:30:00Z',
     end_at: '2026-10-18T11:00:00Z',
     available: true,
+    status: 'AVAILABLE',
+  },
+  {
+    slot_id: 'slot_cardio_tomorrow_103',
+    doctor_id: 'dr_clara_chen',
+    doctor_name: 'Dr. Clara Chen, MD (Cardiology)',
+    department_id: 'dept_cardiology',
+    department_name: 'Cardiology & Chest Pain Center',
+    start_at: '2026-10-19T09:30:00Z',
+    end_at: '2026-10-19T10:00:00Z',
+    available: true,
+    status: 'AVAILABLE',
   },
   {
     slot_id: 'slot_internal_201',
@@ -183,6 +196,7 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T11:15:00Z',
     end_at: '2026-10-18T11:45:00Z',
     available: false,
+    status: 'BOOKED',
   },
   {
     slot_id: 'slot_internal_202',
@@ -193,6 +207,7 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T14:00:00Z',
     end_at: '2026-10-18T14:30:00Z',
     available: true,
+    status: 'AVAILABLE',
   },
   {
     slot_id: 'slot_ortho_301',
@@ -203,6 +218,7 @@ export const mockSlots: AppointmentSlot[] = [
     start_at: '2026-10-18T15:00:00Z',
     end_at: '2026-10-18T15:30:00Z',
     available: true,
+    status: 'AVAILABLE',
   },
 ];
 

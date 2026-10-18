@@ -73,11 +73,11 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
 
   // 2. Fetch Available Slots for Department
   const fetchSlots = useCallback(
-    async (deptId: string, preserveSelection = false) => {
+    async (deptId: string, preserveSelection = false, date?: string) => {
       setIsSlotsLoading(true);
       setSlotsError(null);
       try {
-        const res = await mockApi.getSlots(deptId);
+        const res = await mockApi.getSlots(deptId, date);
         setSlots(res.data.slots);
         if (!preserveSelection) {
           setSelectedSlot(null);
@@ -100,8 +100,8 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
   }, [fetchRoutingDecision]);
 
   useEffect(() => {
-    fetchSlots(selectedDepartmentId);
-  }, [selectedDepartmentId, fetchSlots]);
+    fetchSlots(selectedDepartmentId, false, selectedDate);
+  }, [selectedDepartmentId, selectedDate, fetchSlots]);
 
   // Handle department change
   const handleSelectDepartment = (deptId: string) => {
@@ -110,9 +110,11 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
 
   // Handle slot selection
   const handleSelectSlot = (slot: AppointmentSlot) => {
-    if (!slot.available) return;
+    const isAvailable = slot.status ? slot.status === 'AVAILABLE' : slot.available;
+    if (!isAvailable) return;
     setSelectedSlot(slot);
     setBookingError(null);
+    setSlotConflictMessage(null);
   };
 
   // Open booking modal
@@ -144,10 +146,14 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
 
       // Strictly verify persisted confirmation
       if (bookingRes.data.status === 'CONFIRMED' && bookingRes.data.booking_id) {
-        setConfirmedBooking(bookingRes.data);
+        const confirmedData = {
+          ...bookingRes.data,
+          slot: bookingRes.data.slot || selectedSlot,
+        };
+        setConfirmedBooking(confirmedData);
         setIsModalOpen(false);
         if (onBookingConfirmed) {
-          onBookingConfirmed(bookingRes.data);
+          onBookingConfirmed(confirmedData);
         }
       } else {
         throw new Error('Server returned unconfirmed booking status.');
@@ -166,7 +172,7 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
         setBookingError(conflictAlert);
         setSlotConflictMessage(conflictAlert);
         // Refresh slot list without clearing conflict alert
-        fetchSlots(selectedDepartmentId, true);
+        fetchSlots(selectedDepartmentId, true, selectedDate);
       } else {
         setBookingError(`Booking failed: ${errorMsg}`);
       }

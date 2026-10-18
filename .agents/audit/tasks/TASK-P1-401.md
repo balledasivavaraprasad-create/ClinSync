@@ -12,7 +12,7 @@
 - [x] Test keyboard/touch interactions, slow API, retry, stale slot and booking conflict states.
 - [x] Responsive tablet-first accessible interaction (touch target >= 44px, radiogroup/radio roles, clear keyboard focus).
 - [x] Seamless integration into Patient Kiosk flow (progressing from Intake Summary and Documents to Scheduling) and top-level navigation tab.
-- [x] 20/20 unit and integration tests passing in `appointments.test.tsx` (90/90 passing across all 6 web test suites).
+- [x] 23/23 unit and integration tests passing in `appointments.test.tsx` (93/93 passing across all 6 web test suites).
 
 ## Files Created / Modified
 - `apps/web/src/features/appointments/SpecialtyRoutingBanner.tsx`
@@ -24,6 +24,7 @@
 - `apps/web/src/features/patient-intake/IntakeSummary.tsx`
 - `apps/web/src/features/patient-kiosk/PatientKioskFlow.tsx`
 - `apps/web/src/routes/index.tsx`
+- `apps/web/src/lib/api/types.ts`
 - `apps/web/src/lib/api/mockData.ts`
 - `apps/web/src/lib/api/mockAdapter.ts`
 - `apps/web/src/test/appointments.test.tsx`
@@ -35,7 +36,7 @@
 - Parallel Work Allowed: Built and verified with typed mock adapter against frozen slot/booking contract; live API integration ready for `TASK-P2-401`.
 
 ## Verification & Test Results
-- `npm --prefix apps/web test`: PASSED (90/90 passed across 6 test suites in 4.27s)
+- `npm --prefix apps/web test`: PASSED (93/93 passed across 6 test suites in 4.00s)
 - `npm --prefix apps/web run lint`: PASSED (0 errors, 0 warnings)
 - `npm --prefix apps/web run typecheck`: PASSED (0 errors)
 - `npm --prefix apps/web run build`: PASSED (built in 2.15s)

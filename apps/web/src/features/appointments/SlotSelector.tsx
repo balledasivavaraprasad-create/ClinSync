@@ -41,9 +41,16 @@ export const SlotSelector: React.FC<SlotSelectorProps> = ({
   onRefreshSlots,
   departments = mockDepartments,
 }) => {
-  // Available slots returned strictly by backend availability
-  const availableSlots = slots.filter((slot) => slot.available);
-  const unavailableSlots = slots.filter((slot) => !slot.available);
+  // Available slots returned strictly by backend availability (supports available boolean or status enum)
+  const isSlotAvailable = (slot: AppointmentSlot) => {
+    if (slot.status) {
+      return slot.status === 'AVAILABLE';
+    }
+    return Boolean(slot.available);
+  };
+
+  const availableSlots = slots.filter(isSlotAvailable);
+  const unavailableSlots = slots.filter((slot) => !isSlotAvailable(slot));
 
   const formatSlotTime = (isoString: string) => {
     try {

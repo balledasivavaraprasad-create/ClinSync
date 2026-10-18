@@ -441,6 +441,96 @@ describe('TASK-P1-401: Appointment and Scheduling UI Suite', () => {
           /This appointment slot was just claimed by another patient/i
         ).length
       ).toBeGreaterThanOrEqual(1);
+
+      // Dismiss modal
+      fireEvent.click(screen.getByTestId('btn-cancel-booking-modal'));
+
+      // Conflict alert remains visible on slot selector
+      expect(screen.getByTestId('slot-conflict-alert')).toBeInTheDocument();
+
+      // Selecting another slot clears the conflict banner
+      fireEvent.click(screen.getByTestId('slot-card-slot_cardio_102'));
+      expect(screen.queryByTestId('slot-conflict-alert')).not.toBeInTheDocument();
+    });
+
+    it('queries and filters slots when date filter is toggled', async () => {
+      const getSlotsSpy = vi.spyOn(mockApi, 'getSlots');
+
+      render(
+        <AppointmentSchedulingHub
+          encounterId="enc_demo_001"
+          patientName="Eleanor Johnson"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('date-filter-2026-10-19')).toBeInTheDocument();
+      });
+
+      // Switch to tomorrow
+      fireEvent.click(screen.getByTestId('date-filter-2026-10-19'));
+
+      await waitFor(() => {
+        expect(getSlotsSpy).toHaveBeenCalledWith('dept_cardiology', '2026-10-19');
+        expect(screen.getByTestId('slot-card-slot_cardio_tomorrow_103')).toBeInTheDocument();
+      });
+    });
+
+    it('handles slot fetch failure with retry button', async () => {
+      const getSlotsSpy = vi
+        .spyOn(mockApi, 'getSlots')
+        .mockRejectedValueOnce(new Error('Network timeout fetching slots'));
+
+      render(
+        <AppointmentSchedulingHub
+          encounterId="enc_demo_001"
+          patientName="Eleanor Johnson"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to Load Available Slots/i)).toBeInTheDocument();
+      });
+
+      // Click retry
+      getSlotsSpy.mockResolvedValueOnce({
+        data: { department_id: 'dept_cardiology', slots: mockSlots },
+        request_id: 'req_retry_01',
+      });
+
+      fireEvent.click(screen.getByText(/Retry Fetching Slots/i));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('slot-card-slot_cardio_101')).toBeInTheDocument();
+      });
+    });
+
+    it('gracefully handles BookingConfirmationCard when nested slot is omitted', () => {
+      // Contract response according to openapi without convenience slot object
+      const minimalBooking: BookingResponse['data'] = {
+        booking_id: 'bkg_raw_openapi_001',
+        slot_id: 'slot_cardio_101',
+        doctor_id: 'dr_clara_chen',
+        start_at: '2026-10-18T10:00:00Z',
+        confirmed_at: '2026-10-18T10:05:00Z',
+        status: 'CONFIRMED',
+      };
+
+      render(
+        <BookingConfirmationCard
+          booking={minimalBooking}
+          patientName="Eleanor Johnson"
+          encounterId="enc_demo_001"
+          onResetSession={vi.fn()}
+        />
+      );
+
+      expect(screen.getByTestId('confirmed-booking-id')).toHaveTextContent(
+        'bkg_raw_openapi_001'
+      );
+      expect(
+        screen.getAllByText(/Physician \(dr_clara_chen\)/i).length
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 
