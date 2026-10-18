@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T08:41:06.037851+00:00",
+  "timestamp_utc": "2026-10-18T08:47:16.337252+00:00",
   "total_cases": 11,
   "passed_cases": 11,
   "failed_cases": 0,
@@ -7,7 +7,7 @@
   "latency_summary_ms": {
     "min_ms": 0.05,
     "avg_ms": 2.24,
-    "max_ms": 12.57
+    "max_ms": 12.64
   },
   "provider_failure_count": 0,
   "results": [
@@ -16,7 +16,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 0.12,
+      "duration_ms": 0.09,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -97,7 +97,7 @@
             "INSTRUCTION_OVERRIDE",
             "SYSTEM_DIRECTIVE_INJECTION"
           ],
-          "reason": "Detected adversarial patterns: SYSTEM_DIRECTIVE_INJECTION, INSTRUCTION_OVERRIDE"
+          "reason": "Detected adversarial patterns: INSTRUCTION_OVERRIDE, SYSTEM_DIRECTIVE_INJECTION"
         }
       ]
     },
@@ -125,7 +125,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 12.57,
+      "duration_ms": 12.64,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -345,9 +345,9 @@
           "decision": "URGENT_ESCALATION",
           "reason_codes": [
             "ACUTE_RED_FLAG_DETECTED",
+            "CHEST_PAIN_EMERGENCY",
             "ACUTE_CORONARY_SYNDROME_SUSPECTED",
-            "ACUTE_RESPIRATORY_DISTRESS",
-            "CHEST_PAIN_EMERGENCY"
+            "ACUTE_RESPIRATORY_DISTRESS"
           ]
         },
         {
