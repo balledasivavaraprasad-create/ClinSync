@@ -1,10 +1,9 @@
 """Clinical Context Ledger engine preserving fact status and conflict visibility."""
 
 import uuid
-from typing import Any
 from pydantic import BaseModel, Field
 
-from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType, SourceType
+from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType
 
 
 class LedgerResponseData(BaseModel):

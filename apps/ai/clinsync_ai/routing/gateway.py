@@ -121,7 +121,7 @@ class ModelGateway:
             except Exception as exc:
                 last_error = exc
                 latency_ms = (time.perf_counter() - start) * 1000
-                logger.warning(f"Primary provider attempt {attempt + 1} failed: {exc}")
+                logger.warning(f"Primary provider attempt {attempt + 1} failed after {latency_ms:.1f}ms: {exc}")
                 if isinstance(exc, ProviderAuthenticationError) or not getattr(exc, "is_retryable", True):
                     # Fail fast on non-retryable errors
                     break

@@ -1,9 +1,6 @@
 """Unit tests for constrained specialty recommendation, triage guardrails, and routing service."""
 
-import pytest
-from clinsync_ai.clinical_context.ledger import ClinicalContextLedger
-from clinsync_ai.graph.state import ClinicalFactModel
-from clinsync_ai.guardrails.triage_guard import ACUTE_RED_FLAGS, TriagePolicyGuard
+from clinsync_ai.guardrails.triage_guard import TriagePolicyGuard
 from clinsync_ai.providers.fake import FakeModelProvider
 from clinsync_ai.routing.gateway import ModelGateway
 from clinsync_ai.routing.recommender import (
@@ -11,7 +8,6 @@ from clinsync_ai.routing.recommender import (
     SpecialtyRecommender,
 )
 from clinsync_ai.routing.service import (
-    DecisionResult,
     DecisionResultResponse,
     RoutingReviewService,
 )

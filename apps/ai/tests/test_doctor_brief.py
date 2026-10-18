@@ -2,7 +2,6 @@
 
 import pytest
 from clinsync_ai.brief.audio import AudioBriefService
-from clinsync_ai.brief.generator import DoctorBriefGenerator
 from clinsync_ai.brief.models import AudioStatus, DoctorBriefResponse
 from clinsync_ai.brief.service import DoctorBriefService
 from clinsync_ai.graph.state import ClinicalFactModel

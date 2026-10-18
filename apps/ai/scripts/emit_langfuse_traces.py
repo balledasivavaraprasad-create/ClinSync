@@ -1,6 +1,5 @@
 """Live demonstration script that executes real ClinSync AI workflows and streams traces to Langfuse."""
 
-import os
 import sys
 import uuid
 from pathlib import Path

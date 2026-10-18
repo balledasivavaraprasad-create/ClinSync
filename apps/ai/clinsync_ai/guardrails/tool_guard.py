@@ -1,6 +1,6 @@
 """Tool policy guardrail enforcing least privilege and blocking unauthorized side effects."""
 
-from typing import Any, Callable, Type
+from typing import Any, Type
 from pydantic import BaseModel, ValidationError
 
 from clinsync_ai.providers.errors import ModelProviderError

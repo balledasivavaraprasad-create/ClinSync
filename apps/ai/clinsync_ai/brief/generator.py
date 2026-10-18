@@ -2,12 +2,10 @@
 
 import re
 import uuid
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.brief.audio import AudioBriefService
 from clinsync_ai.brief.models import (
-    AudioStatus,
     BriefSection,
     Citation,
     DoctorBriefData,

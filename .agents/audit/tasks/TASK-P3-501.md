@@ -63,4 +63,5 @@
   - `npm --prefix apps/web test`: 93 passed in 2.42s
   - `npm --prefix apps/web run build`: built cleanly in 775ms
   - `python3 apps/ai/scripts/emit_langfuse_traces.py`: live pipeline verified with Langfuse Cloud trace emission (17 citations grounded)
+  - `python3 -m flake8 apps/ai --select=F,E9`: clean (0 errors across scripts, tests, clinsync_ai)
   - `git diff --check`: clean (0 errors)

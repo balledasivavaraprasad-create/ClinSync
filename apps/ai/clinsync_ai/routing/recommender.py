@@ -1,16 +1,13 @@
 """Constrained specialty recommender with ModelGateway adapter and deterministic fallback."""
 
 import re
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel
 from clinsync_ai.providers.errors import ModelProviderError
 from clinsync_ai.routing.gateway import ModelGateway
 from clinsync_ai.routing.specialty_catalog import (
-    ALLOWLISTED_DEPARTMENTS,
     get_department,
-    is_valid_department_id,
     normalize_department_candidate,
 )
 

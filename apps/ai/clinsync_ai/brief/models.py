@@ -1,10 +1,7 @@
 """Data models for Evidence-Backed Doctor Brief and Spoken Summary."""
 
 from enum import Enum
-from typing import Any
 from pydantic import BaseModel, Field
-
-from clinsync_ai.graph.state import ClinicalFactModel
 
 
 class AudioStatus(str, Enum):
