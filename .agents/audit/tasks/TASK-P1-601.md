@@ -23,6 +23,13 @@
 - `apps/web/src/features/visual-qa/index.ts`
 - `apps/web/src/routes/index.tsx`
 - `.agents/audit/visual/TASK-P1-601/VISUAL_AUDIT_REPORT.md`
+- `.agents/audit/visual/TASK-P1-601/01_kiosk_welcome_tablet.svg`
+- `.agents/audit/visual/TASK-P1-601/02_kiosk_intake_tablet.svg`
+- `.agents/audit/visual/TASK-P1-601/03_document_extraction_tablet.svg`
+- `.agents/audit/visual/TASK-P1-601/04_context_ledger_tablet.svg`
+- `.agents/audit/visual/TASK-P1-601/05_appointment_booking_tablet.svg`
+- `.agents/audit/visual/TASK-P1-601/06_doctor_brief_workstation.svg`
+- `.agents/audit/visual/TASK-P1-601/07_error_and_conflict_state.svg`
 - `.agents/audit/tasks/TASK-P1-601.md`
 
 ## Contracts & Dependencies

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768" style="background:#0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <!-- Tablet Frame & Header -->
+  <rect x="0" y="0" width="1024" height="768" fill="#f8fafc" />
+  <rect x="0" y="0" width="1024" height="72" fill="#0f172a" />
+  
+  <text x="32" y="44" fill="#ffffff" font-size="20" font-weight="700" letter-spacing="1">CLINSYNC</text>
+  <rect x="145" y="24" width="210" height="26" rx="4" fill="#0d9488" opacity="0.25" />
+  <text x="153" y="42" fill="#5eead4" font-size="12" font-family="monospace">CLINICAL CONTEXT LEDGER</text>
+
+  <!-- Filter & Sub-navigation bar -->
+  <rect x="48" y="88" width="928" height="48" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  <text x="68" y="118" fill="#0f172a" font-size="14" font-weight="700">Filter View:</text>
+  
+  <rect x="160" y="96" width="100" height="32" rx="16" fill="#0d9488" />
+  <text x="180" y="117" fill="#ffffff" font-size="13" font-weight="600">All (8)</text>
+
+  <rect x="270" y="96" width="140" height="32" rx="16" fill="#f1f5f9" />
+  <text x="286" y="117" fill="#475569" font-size="13" font-weight="600">Medications (3)</text>
+
+  <rect x="420" y="96" width="130" height="32" rx="16" fill="#f1f5f9" />
+  <text x="436" y="117" fill="#475569" font-size="13" font-weight="600">Allergies (2)</text>
+
+  <rect x="560" y="96" width="140" height="32" rx="16" fill="#fef2f2" stroke="#fecaca" stroke-width="1" />
+  <text x="576" y="117" fill="#b91c1c" font-size="13" font-weight="700">⚠ Conflicts (1)</text>
+
+  <!-- Side-by-side Ledger and Diff -->
+  <rect x="48" y="148" width="560" height="536" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  <text x="76" y="184" fill="#0f172a" font-size="18" font-weight="800">Unified Clinical Context Timeline</text>
+
+  <!-- Conflict Fact 1 (Prominently Highlighted) -->
+  <rect x="76" y="206" width="504" height="114" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="2" />
+  <rect x="96" y="222" width="110" height="24" rx="4" fill="#e11d48" />
+  <text x="106" y="238" fill="#ffffff" font-size="11" font-weight="bold">CONFLICTING</text>
+  <text x="96" y="266" fill="#9f1239" font-size="16" font-weight="700">Warfarin: 5 mg daily (Kiosk) vs 2.5 mg daily (2024 EHR)</text>
+  <text x="96" y="290" fill="#64748b" font-size="13">Discrepancy: Patient reported increased dose following recent clinic visit.</text>
+  <text x="96" y="310" fill="#e11d48" font-size="12" font-weight="600">Requires clinician reconciliation during consultation.</text>
+
+  <!-- Fact 2 (Doctor Confirmed) -->
+  <rect x="76" y="332" width="504" height="96" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <rect x="96" y="348" width="146" height="22" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1" />
+  <text x="104" y="363" fill="#15803d" font-size="11" font-weight="bold">DOCTOR_CONFIRMED</text>
+  <text x="96" y="392" fill="#0f172a" font-size="15" font-weight="600">Essential Hypertension (ICD-10 I10)</text>
+  <text x="96" y="414" fill="#64748b" font-size="12">Verified by Dr. Robert Chen, MD on 2026-04-12</text>
+
+  <!-- Fact 3 (Historical Recorded) -->
+  <rect x="76" y="440" width="504" height="96" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <rect x="96" y="456" width="154" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+  <text x="104" y="471" fill="#475569" font-size="11" font-weight="bold">HISTORICAL_RECORDED</text>
+  <text x="96" y="500" fill="#0f172a" font-size="15" font-weight="600">Penicillin Allergy: Severe Anaphylaxis</text>
+  <text x="96" y="522" fill="#64748b" font-size="12">Recorded 2019 • Patient Health Portal</text>
+
+  <!-- Right Side: Prior vs Current Context Diff Panel -->
+  <rect x="624" y="148" width="352" height="536" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  <text x="648" y="184" fill="#0f172a" font-size="18" font-weight="800">Context Diff Analysis</text>
+  
+  <rect x="648" y="206" width="304" height="130" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+  <text x="664" y="232" fill="#166534" font-size="14" font-weight="700">+ NEW CLAIMS (2)</text>
+  <text x="664" y="258" fill="#0f172a" font-size="13">• Fasting Blood Glucose (118 mg/dL)</text>
+  <text x="664" y="280" fill="#0f172a" font-size="13">• Tension headache (onset 3 days ago)</text>
+  <text x="664" y="306" fill="#15803d" font-size="12" font-style="italic">Extracted from today's visit &amp; lab</text>
+
+  <rect x="648" y="350" width="304" height="130" rx="8" fill="#fff1f2" stroke="#fda4af" stroke-width="1" />
+  <text x="664" y="376" fill="#9f1239" font-size="14" font-weight="700">Δ CHANGED / CONFLICT (1)</text>
+  <text x="664" y="402" fill="#0f172a" font-size="13">• Warfarin: 2.5mg → 5.0mg daily</text>
+  <text x="664" y="432" fill="#9f1239" font-size="12" font-weight="600">Pending Dr. Sign-off</text>
+
+  <rect x="648" y="494" width="304" height="100" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+  <text x="664" y="520" fill="#475569" font-size="14" font-weight="700">= UNCHANGED (5)</text>
+  <text x="664" y="546" fill="#64748b" font-size="13">Hypertension, Penicillin Allergy, etc.</text>
+
+  <rect x="648" y="608" width="304" height="52" rx="8" fill="#0d9488" />
+  <text x="710" y="640" fill="#ffffff" font-size="15" font-weight="700">Reconcile Diff ›</text>
+</svg>

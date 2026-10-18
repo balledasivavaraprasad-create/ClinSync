@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768" style="background:#0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <!-- Tablet Frame & Header -->
+  <rect x="0" y="0" width="1024" height="768" fill="#f8fafc" />
+  <rect x="0" y="0" width="1024" height="72" fill="#0f172a" />
+  
+  <text x="32" y="44" fill="#ffffff" font-size="20" font-weight="700" letter-spacing="1">CLINSYNC</text>
+  <rect x="145" y="24" width="230" height="26" rx="4" fill="#e11d48" opacity="0.25" />
+  <text x="153" y="42" fill="#fda4af" font-size="12" font-family="monospace">RESILIENT CONFLICT RECOVERY</text>
+
+  <!-- Error & Conflict State Container -->
+  <rect x="48" y="100" width="928" height="576" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  
+  <!-- Failure Scenario 1: HTTP 409 Slot Conflict & Atomic Recovery -->
+  <rect x="80" y="132" width="864" height="150" rx="10" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5" />
+  <circle cx="116" cy="170" r="18" fill="#f43f5e" />
+  <text x="110" y="177" fill="#ffffff" font-size="18" font-weight="bold">!</text>
+  <text x="148" y="166" fill="#9f1239" font-size="16" font-weight="800">409 Booking Collision Handled Safely</text>
+  <text x="148" y="192" fill="#881337" font-size="14">The 10:30 AM slot with Dr. Jenkins was just secured by another patient seconds ago.</text>
+  <text x="148" y="214" fill="#475569" font-size="13">Automatic Recovery: Database lock rejected duplicate booking without corruption. Alternative slots have been fetched:</text>
+  
+  <!-- Alternative slot pills -->
+  <rect x="148" y="230" width="150" height="36" rx="6" fill="#0d9488" />
+  <text x="162" y="253" fill="#ffffff" font-size="13" font-weight="700">11:15 AM (Recommended)</text>
+  <rect x="310" y="230" width="110" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="326" y="253" fill="#334155" font-size="13" font-weight="600">02:00 PM</text>
+
+  <!-- Failure Scenario 2: Identity Verification Gate Rejection (Zero Data Leak) -->
+  <rect x="80" y="306" width="864" height="140" rx="10" fill="#fef2f2" stroke="#fecaca" stroke-width="1.5" />
+  <circle cx="116" cy="344" r="18" fill="#ef4444" />
+  <text x="110" y="351" fill="#ffffff" font-size="18" font-weight="bold">✕</text>
+  <text x="148" y="340" fill="#991b1b" font-size="16" font-weight="800">Secondary DOB Mismatch Detected</text>
+  <text x="148" y="366" fill="#7f1d1d" font-size="14">Provided date of birth does not match candidate profile records.</text>
+  <text x="148" y="390" fill="#475569" font-size="13">Zero PII Leak Guard: Medical history, medication lists, and past encounter summaries remain strictly locked.</text>
+  <rect x="148" y="404" width="220" height="32" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+  <text x="160" y="425" fill="#334155" font-size="12" font-weight="600">Route to Receptionist Window ›</text>
+
+  <!-- Failure Scenario 3: Audio Stream Disconnection / Offline Fallback -->
+  <rect x="80" y="468" width="864" height="130" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+  <circle cx="116" cy="506" r="18" fill="#64748b" />
+  <text x="110" y="513" fill="#ffffff" font-size="18">⌨</text>
+  <text x="148" y="502" fill="#0f172a" font-size="16" font-weight="800">Audio Hardware Denied / Background Noise Spike</text>
+  <text x="148" y="528" fill="#475569" font-size="14">Speech recognition paused. Intake seamlessly switched to standard touch keyboard text entry.</text>
+  <text x="148" y="552" fill="#0d9488" font-size="13" font-weight="600">✓ No clinical questions lost. Progress preserved (Step 2 of 4).</text>
+
+  <!-- Action CTA Buttons -->
+  <rect x="80" y="618" width="260" height="44" rx="8" fill="#0d9488" />
+  <text x="120" y="645" fill="#ffffff" font-size="14" font-weight="700">↺ Reset to Welcome Screen</text>
+
+  <rect x="360" y="618" width="260" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="400" y="645" fill="#475569" font-size="14" font-weight="600">Contact Help Desk (ext. 4410)</text>
+
+  <!-- Bottom Accessibility Status -->
+  <rect x="0" y="700" width="1024" height="68" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+  <text x="48" y="740" fill="#64748b" font-size="14">State Resilience: <tspan fill="#0d9488" font-weight="bold">100% Graceful Degradation (Zero White Screen / Unhandled Exceptions)</tspan></text>
+</svg>

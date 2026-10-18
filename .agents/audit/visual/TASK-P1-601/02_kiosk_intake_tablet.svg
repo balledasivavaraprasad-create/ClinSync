@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768" style="background:#0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <!-- Tablet Frame & Header -->
+  <rect x="0" y="0" width="1024" height="768" fill="#f8fafc" />
+  <rect x="0" y="0" width="1024" height="72" fill="#0f172a" />
+  
+  <text x="32" y="44" fill="#ffffff" font-size="20" font-weight="700" letter-spacing="1">CLINSYNC</text>
+  <rect x="145" y="24" width="150" height="26" rx="4" fill="#0d9488" opacity="0.25" />
+  <text x="153" y="42" fill="#5eead4" font-size="12" font-family="monospace">ADAPTIVE INTAKE</text>
+  
+  <!-- Step Progress Indicator -->
+  <rect x="48" y="92" width="928" height="32" fill="none" />
+  <text x="48" y="114" fill="#0f172a" font-size="16" font-weight="700">Step 2 of 4: Symptom Exploration &amp; Clarification</text>
+  <rect x="648" y="102" width="328" height="12" rx="6" fill="#e2e8f0" />
+  <rect x="648" y="102" width="164" height="12" rx="6" fill="#0d9488" />
+
+  <!-- Interview Question Container -->
+  <rect x="48" y="140" width="928" height="520" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  
+  <!-- Question Header -->
+  <rect x="80" y="172" width="140" height="28" rx="14" fill="#e0f2fe" />
+  <text x="96" y="191" fill="#0369a1" font-size="13" font-weight="700">CLINICAL INTAKE AI</text>
+  
+  <text x="80" y="240" fill="#0f172a" font-size="26" font-weight="800">"Have you experienced any shortness of breath or dizziness along with your headache?"</text>
+  <text x="80" y="272" fill="#64748b" font-size="15">Please speak naturally or switch to typing below if you are in a quiet area.</text>
+
+  <!-- Audio Listening & Waveform Visualizer -->
+  <rect x="80" y="304" width="864" height="140" rx="12" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.5" />
+  
+  <!-- Dynamic Listening Waves -->
+  <rect x="130" y="360" width="6" height="28" rx="3" fill="#0d9488" />
+  <rect x="144" y="348" width="6" height="52" rx="3" fill="#0d9488" />
+  <rect x="158" y="336" width="6" height="76" rx="3" fill="#0d9488" />
+  <rect x="172" y="354" width="6" height="40" rx="3" fill="#0d9488" />
+  <rect x="186" y="342" width="6" height="64" rx="3" fill="#0d9488" />
+  <rect x="200" y="362" width="6" height="24" rx="3" fill="#0d9488" />
+
+  <text x="230" y="364" fill="#0d9488" font-size="14" font-weight="700">LISTENING TO AMBIENT MIC...</text>
+  <text x="230" y="392" fill="#0f172a" font-size="16" font-style="italic">"No shortness of breath, but I feel slightly lightheaded when standing quickly."</text>
+
+  <!-- Transcript Review & Correction Box -->
+  <rect x="80" y="464" width="864" height="100" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+  <text x="104" y="496" fill="#475569" font-size="14" font-weight="600">Captured Speech Transcript (Editable):</text>
+  <text x="104" y="524" fill="#0f172a" font-size="15">No shortness of breath, but I feel slightly lightheaded when standing quickly.</text>
+  <text x="760" y="524" fill="#0d9488" font-size="13" font-weight="700">Edit / Correct</text>
+
+  <!-- Action CTA Buttons (Min-h 48px touch targets) -->
+  <rect x="80" y="584" width="220" height="52" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="114" y="616" fill="#475569" font-size="15" font-weight="600">⌨ Switch to Keyboard</text>
+
+  <rect x="316" y="584" width="180" height="52" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="350" y="616" fill="#475569" font-size="15" font-weight="600">↺ Record Again</text>
+
+  <rect x="724" y="584" width="220" height="52" rx="8" fill="#0d9488" />
+  <text x="770" y="616" fill="#ffffff" font-size="16" font-weight="700">Confirm Answer ›</text>
+
+  <!-- Bottom Accessibility Status -->
+  <rect x="0" y="700" width="1024" height="68" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+  <text x="48" y="740" fill="#64748b" font-size="14">Speech-to-Text Fallback: <tspan fill="#0d9488" font-weight="bold">ACTIVE (Full Keyboard Input Supported)</tspan></text>
+  <text x="760" y="740" fill="#64748b" font-size="14">Need Assistance? <tspan fill="#0d9488" font-weight="bold">Staff Nurse (F2)</tspan></text>
+</svg>
