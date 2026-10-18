@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768" style="background:#0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <!-- Tablet Frame & Header -->
+  <rect x="0" y="0" width="1024" height="768" fill="#f8fafc" />
+  <rect x="0" y="0" width="1024" height="72" fill="#0f172a" />
+  
+  <text x="32" y="44" fill="#ffffff" font-size="20" font-weight="700" letter-spacing="1">CLINSYNC</text>
+  <rect x="145" y="24" width="190" height="26" rx="4" fill="#0d9488" opacity="0.25" />
+  <text x="153" y="42" fill="#5eead4" font-size="12" font-family="monospace">DOCUMENT EXTRACTION</text>
+
+  <!-- Step Progress Indicator -->
+  <rect x="48" y="92" width="928" height="32" fill="none" />
+  <text x="48" y="114" fill="#0f172a" font-size="16" font-weight="700">Step 3 of 4: Prior Medical Records &amp; Lab Ingestion</text>
+  <rect x="648" y="102" width="328" height="12" rx="6" fill="#e2e8f0" />
+  <rect x="648" y="102" width="246" height="12" rx="6" fill="#0d9488" />
+
+  <!-- Main Container -->
+  <rect x="48" y="140" width="928" height="520" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  
+  <!-- Left Side: Dropzone & Upload Progress -->
+  <rect x="80" y="172" width="400" height="448" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,6" />
+  
+  <!-- File Icon & Details -->
+  <rect x="236" y="210" width="88" height="96" rx="8" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="262" y="266" fill="#0284c7" font-size="28" font-weight="bold">PDF</text>
+  
+  <text x="140" y="340" fill="#0f172a" font-size="16" font-weight="700">blood_panel_q3.pdf (2.4 MB)</text>
+  <text x="194" y="364" fill="#64748b" font-size="13">SHA256: 8a4f91c7...</text>
+
+  <!-- Progress Bar (100% Extracted) -->
+  <rect x="120" y="394" width="320" height="12" rx="6" fill="#e2e8f0" />
+  <rect x="120" y="394" width="320" height="12" rx="6" fill="#0d9488" />
+  <text x="120" y="430" fill="#0d9488" font-size="13" font-weight="700">✓ Extraction Complete (3 Facts Found)</text>
+
+  <!-- Upload Action Buttons -->
+  <rect x="120" y="470" width="320" height="52" rx="8" fill="#0d9488" />
+  <text x="190" y="502" fill="#ffffff" font-size="15" font-weight="700">Upload Another File</text>
+
+  <!-- Right Side: Structured Extracted Facts with Provenance -->
+  <rect x="504" y="172" width="440" height="448" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+  
+  <text x="532" y="210" fill="#0f172a" font-size="18" font-weight="800">Extracted Clinical Facts</text>
+  <text x="532" y="234" fill="#64748b" font-size="13">Verified against packages/contracts/openapi.json</text>
+
+  <!-- Fact Card 1 -->
+  <rect x="532" y="256" width="384" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <rect x="548" y="272" width="140" height="22" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1" />
+  <text x="556" y="287" fill="#92400e" font-size="11" font-weight="bold">EXTRACTED_UNVERIFIED</text>
+  <text x="548" y="314" fill="#0f172a" font-size="15" font-weight="600">Total Serum Cholesterol: 242 mg/dL</text>
+  <text x="548" y="334" fill="#64748b" font-size="12">Source: Page 1, Table 2 • Confidence: 0.98</text>
+
+  <!-- Fact Card 2 -->
+  <rect x="532" y="358" width="384" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <rect x="548" y="374" width="140" height="22" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1" />
+  <text x="556" y="389" fill="#92400e" font-size="11" font-weight="bold">EXTRACTED_UNVERIFIED</text>
+  <text x="548" y="416" fill="#0f172a" font-size="15" font-weight="600">Fasting Blood Glucose: 118 mg/dL</text>
+  <text x="548" y="436" fill="#64748b" font-size="12">Source: Page 1, Table 1 • Confidence: 0.96</text>
+
+  <!-- Confirm & Advance Button -->
+  <rect x="532" y="540" width="384" height="52" rx="8" fill="#0d9488" />
+  <text x="640" y="572" fill="#ffffff" font-size="16" font-weight="700">Confirm &amp; Proceed ›</text>
+
+  <!-- Bottom Accessibility Status -->
+  <rect x="0" y="700" width="1024" height="68" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+  <text x="48" y="740" fill="#64748b" font-size="14">Provenance Attribution: <tspan fill="#0d9488" font-weight="bold">100% Grounded (Source Document ID + Page Number)</tspan></text>
+</svg>

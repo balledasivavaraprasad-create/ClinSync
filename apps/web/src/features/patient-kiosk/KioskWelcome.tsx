@@ -116,6 +116,7 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
+                data-testid={`language-btn-${lang}`}
                 className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
                   language === lang
                     ? 'bg-teal-700 text-white shadow-xs'
@@ -130,6 +131,7 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
 
         <button
           onClick={() => setHighContrast(!highContrast)}
+          data-testid="high-contrast-toggle"
           className={`flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-medium border transition-colors ${
             highContrast
               ? 'bg-slate-900 text-white border-slate-900'
@@ -161,7 +163,7 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
           <button
             onClick={onSelectReturning}
             data-testid="returning-patient-btn"
-            className="w-full text-left p-5 rounded-2xl border-2 border-slate-200 hover:border-teal-500 hover:bg-teal-50/40 bg-white shadow-xs hover:shadow-md transition-all group flex items-start space-x-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full text-left p-5 min-h-[80px] rounded-2xl border-2 border-slate-200 hover:border-teal-500 hover:bg-teal-50/40 bg-white shadow-xs hover:shadow-md transition-all group flex items-start space-x-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <UserCheck className="w-7 h-7" />
@@ -183,7 +185,7 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
           <button
             onClick={onSelectNew}
             data-testid="new-patient-btn"
-            className="w-full text-left p-5 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/40 bg-white shadow-xs hover:shadow-md transition-all group flex items-start space-x-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-left p-5 min-h-[80px] rounded-2xl border-2 border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/40 bg-white shadow-xs hover:shadow-md transition-all group flex items-start space-x-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <UserPlus className="w-7 h-7" />

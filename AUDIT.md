@@ -37,6 +37,8 @@
 | TASK-P2-501: Doctor Queue, Consultation & Approval Persistence | Person 2 | INTEGRATED | `main` | 97 tests pass, queue retrieval & priority, brief synthesis with citations, doctor sign-off & audit logging verified | None |
 | TASK-P3-501: Evidence-Backed Doctor Brief & Optional Audio Summary | Person 3 | INTEGRATED | `main` | 70 tests pass, 15/15 golden benchmark evals pass, zero fabricated citations, audio graceful degradation verified | None |
 | TASK-P1-501: Doctor Console, Briefing UI & Audio Player | Person 1 | INTEGRATED | `main` | 117 web tests pass, anti-wrong-patient safeguard, scannable queue, audio player & sign-off verified | None |
+| TASK-P3-601: Golden AI Evaluation Suite, Grounding Benchmarks & Trace Auditing | Person 3 | INTEGRATED | `main` | 75 tests pass, 18/18 golden benchmark evals pass (100%), citation grounding score 100%, zero emergency bypass, trace PHI redaction verified | None |
+| TASK-P1-601: Visual QA, Tablet Responsiveness & Accessibility Auditing | Person 1 | INTEGRATED | `main` | 137 web tests pass, tablet viewports, >=48px touch targets, high contrast, reduced-motion & screen reader audit verified | None |
 | TASK-P2-601: Full System End-to-End Integration, Concurrency & Security Testing | Person 2 | VERIFIED | `feat/p2-system-integration` | 105 tests pass, e2e journey verified, multi-client race & idempotent replays verified, security audit & log redaction verified, seed_demo_data.py --reset verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
@@ -54,13 +56,13 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [x] Routine scenario books a seeded slot; conflicting booking is rejected.
 - [x] Doctor queue shows the encounter and source-linked brief; audio has a safe text fallback.
 - [x] Golden tests include invalid model output, unsupported source claims and prompt injection.
-- [ ] Gemini generation adapter works with `GEMINI_API_KEY` and has schema/output validation.
-- [ ] Optional Groq fallback is disabled by default and works only for declared text-only generation tasks when explicitly enabled.
-- [ ] Provider errors never produce fake success; invalid/uncertain outputs use deterministic fallback or human review.
-- [ ] No direct OpenAI provider/key is present in the baseline.
+- [x] Gemini generation adapter works with `GEMINI_API_KEY` and has schema/output validation.
+- [x] Optional Groq fallback is disabled by default and works only for declared text-only generation tasks when explicitly enabled.
+- [x] Provider errors never produce fake success; invalid/uncertain outputs use deterministic fallback or human review.
+- [x] No direct OpenAI provider/key is present in the baseline.
 - [x] CI passes on the integrated branch (governance check verified).
 - [x] The system can be started and demo data reset from a clean checkout.
-- [ ] UI screenshot review covers main and failure states.
+- [x] UI screenshot review covers main and failure states.
 - [x] Known mocks, deferred features and non-validated behavior are documented.
 
 ## Integration checkpoints
