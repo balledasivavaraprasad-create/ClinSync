@@ -3,7 +3,8 @@
 - **Owner**: Person 2 (Backend & Integration Captain)
 - **Branch**: `feat/p2-doctor-handoff`
 - **Workstream**: Backend & API (`apps/api/**`)
-- **Status**: VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main` (commit `233c430`)
 - **Depends On**: `TASK-P2-401` (INTEGRATED)
 - **Informs / Unblocks**: `TASK-P1-501` (Doctor Queue & Consultation Console UI), `TASK-P3-501` (Clinical Brief & Doctor Audio Summary)
 
