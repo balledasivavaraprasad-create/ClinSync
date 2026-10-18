@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F1F5F9;
+  --color-border: #E2E8F0;
+
+  --color-ink-primary: #0F172A;
+  --color-ink-secondary: #334155;
+  --color-ink-muted: #64748B;
+
+  --color-brand: #0D9488;
+  --color-brand-hover: #0F766E;
+
+  --color-status-reported: #0284C7;
+  --color-status-extracted: #D97706;
+  --color-status-historical: #475569;
+  --color-status-confirmed: #059669;
+  --color-status-uncertain: #7C3AED;
+  --color-status-conflicting: #DC2626;
+
+  --touch-target-min: 48px;
+}
+
+@layer base {
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Touch action optimization for tablets */
+  button, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Accessible focus ring convention */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
