@@ -250,6 +250,44 @@ class AppointmentService:
             )
 
         if slot.status != "AVAILABLE":
+            # Check if this slot was booked by the same idempotency key (concurrent race)
+            existing_booking = (
+                db.query(Appointment)
+                .filter(Appointment.idempotency_key == payload.idempotency_key)
+                .first()
+            )
+            if (
+                existing_booking
+                and existing_booking.slot_id == payload.slot_id
+                and existing_booking.encounter_id == payload.encounter_id
+            ):
+                slot_schema = (
+                    AppointmentSlotSchema(
+                        slot_id=slot.slot_id,
+                        doctor_id=slot.doctor_id,
+                        doctor_name=slot.doctor_name,
+                        department_id=slot.department_id,
+                        department_name=slot.department_name,
+                        start_at=slot.start_at,
+                        end_at=slot.end_at,
+                        status=slot.status,
+                        available=(slot.status == "AVAILABLE"),
+                    )
+                    if slot
+                    else None
+                )
+                return BookingResponse(
+                    data=BookingData(
+                        booking_id=existing_booking.booking_id,
+                        slot_id=existing_booking.slot_id,
+                        start_at=slot.start_at if slot else existing_booking.created_at,
+                        doctor_id=slot.doctor_id if slot else "dr_unknown",
+                        status="BOOKED",
+                        slot=slot_schema,
+                        confirmed_at=existing_booking.created_at,
+                    ),
+                    request_id=request_id,
+                )
             raise ClinSyncAppException(
                 status_code=409,
                 code=ErrorCode.SLOT_UNAVAILABLE,
@@ -282,6 +320,52 @@ class AppointmentService:
             db.refresh(slot)
         except IntegrityError:
             db.rollback()
+            # If concurrent replay with identical idempotency key raced, return idempotent result
+            concurrent_booking = (
+                db.query(Appointment)
+                .filter(Appointment.idempotency_key == payload.idempotency_key)
+                .first()
+            )
+            if concurrent_booking:
+                if (
+                    concurrent_booking.slot_id == payload.slot_id
+                    and concurrent_booking.encounter_id == payload.encounter_id
+                ):
+                    slot = concurrent_booking.slot
+                    slot_schema = (
+                        AppointmentSlotSchema(
+                            slot_id=slot.slot_id,
+                            doctor_id=slot.doctor_id,
+                            doctor_name=slot.doctor_name,
+                            department_id=slot.department_id,
+                            department_name=slot.department_name,
+                            start_at=slot.start_at,
+                            end_at=slot.end_at,
+                            status=slot.status,
+                            available=(slot.status == "AVAILABLE"),
+                        )
+                        if slot
+                        else None
+                    )
+                    return BookingResponse(
+                        data=BookingData(
+                            booking_id=concurrent_booking.booking_id,
+                            slot_id=concurrent_booking.slot_id,
+                            start_at=slot.start_at if slot else concurrent_booking.created_at,
+                            doctor_id=slot.doctor_id if slot else "dr_unknown",
+                            status="BOOKED",
+                            slot=slot_schema,
+                            confirmed_at=concurrent_booking.created_at,
+                        ),
+                        request_id=request_id,
+                    )
+                raise ClinSyncAppException(
+                    status_code=409,
+                    code=ErrorCode.IDEMPOTENCY_CONFLICT,
+                    message=(
+                        "Idempotency key has already been used with different booking parameters."
+                    ),
+                ) from None
             raise ClinSyncAppException(
                 status_code=409,
                 code=ErrorCode.SLOT_UNAVAILABLE,

@@ -110,3 +110,91 @@ def test_concurrent_booking_strictly_single_winner(test_engine, test_settings, d
 
     bookings_db = db_session.query(Appointment).filter(Appointment.slot_id == target_slot_id).all()
     assert len(bookings_db) == 1
+
+
+def test_concurrent_idempotent_replays_under_multithread(test_engine, test_settings, db_session):
+    """Assert multi-threaded concurrent identical requests return same booking idempotently."""
+    now = datetime.now(timezone.utc)
+    target_slot_id = "slot_concurrent_idem_01"
+    slot = AppointmentSlot(
+        slot_id=target_slot_id,
+        doctor_id="dr_idem",
+        doctor_name="Dr. Idempotent Care",
+        department_id="dept_cardiology",
+        start_at=now + timedelta(hours=2),
+        end_at=now + timedelta(hours=2, minutes=30),
+        status="AVAILABLE",
+    )
+    db_session.add(slot)
+
+    pat_id = generate_uuid()
+    pat = Patient(
+        id=pat_id,
+        display_name="Idempotent Patient",
+        hospital_id="HOSP-DEMO-01",
+        identity_status="CONFIRMED",
+    )
+    db_session.add(pat)
+
+    enc_id = generate_uuid()
+    enc = Encounter(
+        id=enc_id,
+        patient_id=pat_id,
+        status="TRIAGED",
+    )
+    db_session.add(enc)
+    db_session.commit()
+
+    app = create_app(test_settings)
+    session_factory = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+
+    def thread_safe_get_db():
+        s = session_factory()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    app.dependency_overrides[get_db] = thread_safe_get_db
+
+    shared_idempotency_key = "shared_multithread_idem_key_999"
+
+    def try_replay(_: int):
+        with TestClient(app) as worker_client:
+            payload = {
+                "slot_id": target_slot_id,
+                "encounter_id": enc_id,
+                "idempotency_key": shared_idempotency_key,
+            }
+            res = worker_client.post("/api/v1/appointments", json=payload)
+            return res.status_code, res.json()
+
+    # 4 concurrent requests racing with the exact same idempotency key
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(try_replay, range(4)))
+
+    status_codes = [r[0] for r in results]
+    assert all(
+        code in (200, 201) for code in status_codes
+    ), f"Unexpected status codes: {status_codes}"
+
+    booking_ids = {r[1]["data"]["booking_id"] for r in results}
+    assert len(booking_ids) == 1, f"Expected exactly 1 unique booking_id, got: {booking_ids}"
+
+    # Assert exactly 1 DB record exists
+    db_session.expire_all()
+    bookings_db = db_session.query(Appointment).filter(Appointment.slot_id == target_slot_id).all()
+    assert len(bookings_db) == 1
+
+    # Conflict on reused key with different parameters
+    with TestClient(app) as client:
+        mismatch_res = client.post(
+            "/api/v1/appointments",
+            json={
+                "slot_id": "slot_mismatch_different",
+                "encounter_id": enc_id,
+                "idempotency_key": shared_idempotency_key,
+            },
+        )
+        assert mismatch_res.status_code == 409
+        assert mismatch_res.json()["code"] == "IDEMPOTENCY_CONFLICT"
