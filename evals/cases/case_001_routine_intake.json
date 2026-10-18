@@ -25,6 +25,11 @@
     }
   ],
   "expected_triage_decision": "ROUTINE_SCHEDULING",
+  "expected_decision": "ROUTINE_SCHEDULING",
+  "expected_citations": ["DOC-PAT-HIST-001"],
+  "intake_inputs": [
+    "Hello, I have had a dry tickling cough for about 3 weeks now. It gets worse at night. I don't have any high fever, no chest pressure, and no difficulty breathing when resting, just annoying coughing and some tiredness."
+  ],
   "expected_suggested_specialty": "pulmonology",
   "forbidden_claims": [
     "acute myocardial infarction",

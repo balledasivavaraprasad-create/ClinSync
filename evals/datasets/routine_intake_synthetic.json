@@ -1,0 +1,24 @@
+[
+  {
+    "dataset_id": "DS-ROUTINE-001",
+    "department": "dermatology",
+    "patient": {
+      "id": "SYNTH-PAT-101",
+      "age": 29,
+      "chief_complaint": "Itchy red rash on both forearms after gardening"
+    },
+    "history": "No systemic symptoms, no swelling of lips or difficulty breathing",
+    "target_urgency": "ROUTINE_SCHEDULING"
+  },
+  {
+    "dataset_id": "DS-ROUTINE-002",
+    "department": "orthopedics",
+    "patient": {
+      "id": "SYNTH-PAT-102",
+      "age": 52,
+      "chief_complaint": "Right knee stiffness and mild swelling after walking downstairs"
+    },
+    "history": "Gradual onset over 2 months, no trauma, weight-bearing intact",
+    "target_urgency": "ROUTINE_SCHEDULING"
+  }
+]

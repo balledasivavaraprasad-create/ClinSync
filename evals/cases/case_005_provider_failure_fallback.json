@@ -1,0 +1,30 @@
+{
+  "case_id": "CASE-FALLBACK-005",
+  "title": "Provider Outage Bounded Retry and Fallback Switching",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-005",
+    "name": "Taylor Quinn",
+    "age": 37,
+    "gender": "female",
+    "known_allergies": [],
+    "chronic_conditions": []
+  },
+  "intake_statement": "I have an itchy red rash on my forearms for 4 days.",
+  "intake_inputs": [
+    "I have an itchy red rash on my forearms for 4 days."
+  ],
+  "expected_facts": [
+    {
+      "category": "symptom",
+      "statement": "Pruritic rash on forearms for 4 days",
+      "verification_status": "patient_reported",
+      "is_acute_emergency": false
+    }
+  ],
+  "test_type": "provider_failure_retry_fallback",
+  "expected_decision": "ROUTINE_SCHEDULING",
+  "expected_suggested_specialty": "dermatology",
+  "expected_citations": [],
+  "primary_error_code": "503_SERVICE_UNAVAILABLE",
+  "expected_fallback_invoked": true
+}

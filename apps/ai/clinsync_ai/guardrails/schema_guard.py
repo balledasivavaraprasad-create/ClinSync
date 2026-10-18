@@ -18,9 +18,19 @@ class SchemaGuardResult(BaseModel):
 class OutputSchemaGuard:
     """Enforces strict schema constraints and clinical data invariants on LLM outputs."""
 
-    @staticmethod
-    def validate(raw_json: str | dict[str, Any], schema: Type[T]) -> tuple[T, SchemaGuardResult]:
+    def __init__(self, schema: Type[T] | None = None):
+        self.schema = schema
+
+    def __call__(self, raw_json: str | dict[str, Any]) -> tuple[T, SchemaGuardResult]:
+        if self.schema is None:
+            raise ValueError("Target schema must be specified for instance call")
+        return self.validate(raw_json, self.schema)
+
+    @classmethod
+    def validate(cls, raw_json: str | dict[str, Any], schema: Type[T]) -> tuple[T, SchemaGuardResult]:
         """Validate raw json string or dictionary against target schema."""
+
+
         errors: list[str] = []
         try:
             if isinstance(raw_json, str):
@@ -43,3 +53,6 @@ class OutputSchemaGuard:
             ) from exc
 
         return parsed, SchemaGuardResult(is_valid=True, data=parsed, errors=[])
+
+
+SchemaGuard = OutputSchemaGuard

@@ -13,11 +13,13 @@ class PromptSafetyResult(BaseModel):
 
 
 INJECTION_PATTERNS = [
-    (r"ignore\s+(all\s+)?(previous|prior)\s+(instructions|prompts|rules)", "INSTRUCTION_OVERRIDE"),
-    (r"disregard\s+(the\s+)?(above|system)\s+(instructions|prompt)", "INSTRUCTION_OVERRIDE"),
+    (r"ignore\s+(?:all\s+)?(?:previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)", "INSTRUCTION_OVERRIDE"),
+    (r"disregard\s+(?:the\s+)?(?:above|system|previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)", "INSTRUCTION_OVERRIDE"),
+    (r"system\s+(?:directive|instruction|override|prompt):", "SYSTEM_DIRECTIVE_INJECTION"),
     (r"(reveal|print|show|dump)\s+(the\s+)?(system\s+prompt|developer\s+message)", "SYSTEM_PROMPT_LEAK"),
     (r"you\s+are\s+now\s+(in\s+developer\s+mode|dan|unrestricted)", "JAILBREAK_ROLEPLAY"),
     (r"bypass\s+(?:(?:triage|safety|escalation|clinical)\s+)+(?:policy|gate|protocol|rules?)", "SAFETY_BYPASS"),
+    (r"(?:grant|gain)\s+(?:unrestricted|admin|root)?\s*(?:access|privileges)", "PRIVILEGE_ESCALATION"),
     (r"act\s+as\s+(an?\s+)?admin(istrator)?", "PRIVILEGE_ESCALATION"),
     (r"drop\s+table|delete\s+from|select\s+.*\s+from\s+users", "SQL_INJECTION"),
 ]

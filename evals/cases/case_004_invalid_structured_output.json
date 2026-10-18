@@ -1,0 +1,26 @@
+{
+  "case_id": "CASE-INVALID-SCHEMA-004",
+  "title": "Invalid Structured Output Guardrail Rejection",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-004",
+    "name": "Sam Chen",
+    "age": 29,
+    "gender": "male",
+    "known_allergies": [],
+    "chronic_conditions": []
+  },
+  "intake_statement": "Routine follow up for prescription check.",
+  "intake_inputs": [
+    "Routine follow up for prescription check."
+  ],
+  "expected_facts": [],
+  "test_type": "invalid_structured_output",
+  "expected_decision": "HUMAN_REVIEW",
+  "expected_citations": [],
+  "malformed_payload": {
+    "facts": "not_a_list_string_instead",
+    "suggested_specialty": 12345,
+    "triage_urgency": "INVALID_URGENCY_LEVEL"
+  },
+  "expected_guardrail_outcome": "SCHEMA_VALIDATION_FAILURE"
+}

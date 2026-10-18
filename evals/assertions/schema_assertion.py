@@ -32,3 +32,7 @@ def assert_schema_conformity(output_data: Any, expected_schema: Type[BaseModel])
         return SchemaAssertionResult(passed=False, errors=errors, details="Pydantic validation failure.")
     except Exception as exc:
         return SchemaAssertionResult(passed=False, errors=[str(exc)], details="Unexpected exception during schema assertion.")
+
+
+# Alias to match evals/assertions/README.md
+assert_schema_validity = assert_schema_conformity

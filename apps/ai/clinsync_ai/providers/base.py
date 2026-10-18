@@ -14,6 +14,10 @@ class TokenUsage(BaseModel):
     total_tokens: int = 0
 
 
+ProviderUsage = TokenUsage
+
+
+
 class ModelResponse(BaseModel):
     """Standardized response container across all LLM providers."""
     text: str

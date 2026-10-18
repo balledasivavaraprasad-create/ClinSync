@@ -1,0 +1,14 @@
+[
+  {
+    "dataset_id": "DS-URGENT-001",
+    "presentation": "Sudden onset severe headache, worst of life, with neck stiffness",
+    "red_flag": "Thunderclap headache, possible subarachnoid hemorrhage",
+    "mandatory_urgency": "URGENT_ESCALATION"
+  },
+  {
+    "dataset_id": "DS-URGENT-002",
+    "presentation": "Unilateral facial drooping and arm weakness noted 1 hour ago",
+    "red_flag": "Acute focal neurological deficit, acute ischemic stroke window",
+    "mandatory_urgency": "URGENT_ESCALATION"
+  }
+]

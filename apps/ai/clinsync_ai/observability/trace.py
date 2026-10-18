@@ -159,3 +159,8 @@ class TraceManager:
 
 # Global singleton instance
 global_trace_manager = TraceManager()
+TraceEmitter = TraceManager
+
+
+def get_trace_emitter() -> TraceManager:
+    return global_trace_manager
