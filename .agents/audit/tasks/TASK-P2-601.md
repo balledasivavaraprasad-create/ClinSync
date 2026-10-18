@@ -3,7 +3,8 @@
 - **Owner**: Person 2 (Backend & Integration Captain)
 - **Branch**: `feat/p2-system-integration`
 - **Workstream**: Backend & API (`apps/api/**`)
-- **Status**: VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main`
 - **Depends On**: `TASK-P2-501` (INTEGRATED), `TASK-P1-501` (INTEGRATED), `TASK-P3-501` (INTEGRATED)
 - **Informs / Unblocks**: System Release & Demo Readiness
 
