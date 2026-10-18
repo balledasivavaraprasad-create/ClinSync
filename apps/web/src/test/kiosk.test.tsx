@@ -67,6 +67,29 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
       // Tap Chinese
       fireEvent.click(screen.getByText('ZH'));
       expect(screen.getByText('复诊患者报到')).toBeInTheDocument();
+
+      // Tap Hindi (Popular Indian language)
+      fireEvent.click(screen.getByText('HI'));
+      expect(screen.getByText('पुराने मरीज (लौटने वाले)')).toBeInTheDocument();
+
+      // Tap Telugu (Popular Indian language)
+      fireEvent.click(screen.getByText('TE'));
+      expect(screen.getByText('గతంలో నమోదైన రోగి')).toBeInTheDocument();
+
+      // Tap Tamil (Popular Indian language)
+      fireEvent.click(screen.getByText('TA'));
+      expect(screen.getByText('ஏற்கனவே பதிவுசெய்த நோயாளி')).toBeInTheDocument();
+
+      // Switch via accessible dropdown to French
+      const select = screen.getByTestId('language-select');
+      fireEvent.change(select, { target: { value: 'fr' } });
+      expect(screen.getByText('Patient Déjà Enregistré')).toBeInTheDocument();
+
+      // Open all languages modal and pick Japanese
+      fireEvent.click(screen.getByTestId('open-language-modal-btn'));
+      expect(screen.getByText(/All Languages \(18\)/i)).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('modal-language-btn-ja'));
+      expect(screen.getByText('再診の方 (診察券をお持ちの方)')).toBeInTheDocument();
     });
 
     it('triggers emergency escalation when red-flag banner is clicked', () => {
