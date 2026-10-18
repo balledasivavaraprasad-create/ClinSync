@@ -164,7 +164,8 @@ class EvalRunner:
 
 
         return ModelGateway(
-            primary_provider=FakeModelProvider(canned_structured=fake_response)
+            primary_provider=FakeModelProvider(canned_structured=fake_response),
+            fallback_provider=None,
         )
 
     def run_case_file(self, case_path: Path) -> CaseEvalResult:
@@ -311,7 +312,125 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 4: Standard, urgent, and provider failure fallback cases
+        # Branch 4: Document ingestion, provenance extraction, and patient context diff
+        if case_data.get("test_type") == "document_diff_evaluation":
+            from clinsync_ai.clinical_context.diff import PatientContextDiffEngine
+            from clinsync_ai.clinical_context.ledger import ClinicalContextLedger
+            from clinsync_ai.documents.extractor import DocumentFactExtractor
+            from clinsync_ai.documents.parser import DocumentParser
+            from clinsync_ai.graph.state import ClinicalFactModel
+
+            gw = self.gateway
+            parser = DocumentParser()
+            doc_info = case_data["document"]
+            parsed_doc = parser.parse(
+                document_id=doc_info["document_id"],
+                filename=doc_info["filename"],
+                mime_type=doc_info["mime_type"],
+                content=doc_info["content"],
+            )
+
+            # Check page count
+            pages_valid = parsed_doc.total_pages == case_data.get("expected_page_count", 1)
+            assertions_details.append({
+                "assertion": "document_page_segmentation",
+                "passed": pages_valid,
+                "total_pages": parsed_doc.total_pages,
+            })
+            if pages_valid:
+                passed_count += 1
+
+            # Extract facts from document
+            extractor = DocumentFactExtractor(gateway=gw)
+            pat_id = case_data.get("patient_profile", {}).get("patient_id", "PAT-001")
+            enc_id = f"ENC-{case_id}"
+            extracted_facts = extractor.extract_from_document(
+                document=parsed_doc,
+                patient_id=pat_id,
+                encounter_id=enc_id,
+            )
+
+            # Check provenance locations
+            locations = {f.source_location for f in extracted_facts if f.source_location}
+            expected_locations = set(case_data.get("expected_provenance_locations", []))
+            locations_valid = expected_locations.issubset(locations)
+            assertions_details.append({
+                "assertion": "page_provenance_accuracy",
+                "passed": locations_valid,
+                "observed_locations": list(locations),
+            })
+            if locations_valid:
+                passed_count += 1
+
+            # Build ledger with historical facts + extracted document facts
+            historical_raw = case_data.get("patient_profile", {}).get("historical_facts", [])
+            historical_models = []
+            for idx, h in enumerate(historical_raw):
+                historical_models.append(
+                    ClinicalFactModel(
+                        id=f"FACT-HIST-{idx+1}",
+                        patient_id=pat_id,
+                        concept=h["concept"],
+                        value=h["value"],
+                        unit=h.get("unit"),
+                        fact_type=h["fact_type"],
+                        status=h["status"],
+                        source_type=h["source_type"],
+                        source_id="HIST-EHR-001",
+                    )
+                )
+
+            ledger = ClinicalContextLedger(encounter_id=enc_id)
+            ledger.add_facts(historical_models)
+            ledger.add_facts(extracted_facts)
+
+            # Evaluate unresolved conflicts
+            conflicts_count = len(ledger.unresolved_conflicts)
+            exp_conflicts = case_data.get("expected_unresolved_conflicts_count", 0)
+            conflicts_valid = conflicts_count >= exp_conflicts
+            assertions_details.append({
+                "assertion": "unresolved_conflicts_surfaced",
+                "passed": conflicts_valid,
+                "conflicts_count": conflicts_count,
+            })
+            if conflicts_valid:
+                passed_count += 1
+
+            # Compute Patient Context Diff
+            diff_engine = PatientContextDiffEngine()
+            diff_resp = diff_engine.compute_diff(
+                encounter_id=enc_id,
+                historical_facts=historical_models,
+                current_facts=extracted_facts,
+            )
+
+            exp_changed = case_data.get("expected_changed_concept")
+            changed_valid = True
+            if exp_changed:
+                changed_valid = any(
+                    ch.current.concept == exp_changed or ch.previous.concept == exp_changed
+                    for ch in diff_resp.data.changed_facts
+                )
+
+            assertions_details.append({
+                "assertion": "context_diff_evolution_detection",
+                "passed": changed_valid,
+                "changed_concepts": [ch.current.concept for ch in diff_resp.data.changed_facts],
+            })
+            if changed_valid:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=2.5,
+                details=assertions_details,
+            )
+
+        # Branch 5: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"

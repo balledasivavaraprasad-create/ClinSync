@@ -54,6 +54,9 @@ class ModelGateway:
         fallback_choice = os.getenv("LLM_FALLBACK_PROVIDER", "none").lower()
         if fallback_provider is not None:
             self.fallback = fallback_provider
+        elif primary_provider is not None:
+            # When an explicit primary provider (e.g. test mock) is supplied without fallback, do not fall back to remote
+            self.fallback = None
         elif fallback_choice == "groq":
             self.fallback = GroqProvider()
         else:

@@ -1,0 +1,38 @@
+{
+  "case_id": "CASE-DOCUMENT-DIFF-008",
+  "title": "Document Provenance Extraction & Patient Context Diff Evaluation",
+  "test_type": "document_diff_evaluation",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-008",
+    "name": "Robin Chen",
+    "age": 58,
+    "gender": "male",
+    "historical_facts": [
+      {
+        "concept": "blood_pressure",
+        "value": "120/80",
+        "unit": "mmHg",
+        "fact_type": "investigation",
+        "status": "historical_recorded",
+        "source_type": "HISTORICAL_EHR"
+      },
+      {
+        "concept": "allergy",
+        "value": "Penicillin",
+        "fact_type": "allergy",
+        "status": "historical_recorded",
+        "source_type": "HISTORICAL_EHR"
+      }
+    ]
+  },
+  "document": {
+    "document_id": "DOC-CASE-008",
+    "filename": "discharge_summary.pdf",
+    "mime_type": "application/pdf",
+    "content": "--- Page 1 ---\nDiagnosis: Hypertension\nBlood Pressure: 145/92\n\f--- Page 2 ---\nMedications: Amoxicillin 500mg\nHbA1c: 6.4%"
+  },
+  "expected_page_count": 2,
+  "expected_provenance_locations": ["Page 1", "Page 2"],
+  "expected_unresolved_conflicts_count": 1,
+  "expected_changed_concept": "blood_pressure"
+}
