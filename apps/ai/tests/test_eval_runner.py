@@ -10,10 +10,13 @@ def test_eval_runner_on_golden_cases():
     runner = EvalRunner()
     report = runner.run_all()
 
-    assert report.total_cases >= 11
+    assert report.total_cases >= 18
     assert report.failed_cases == 0
     assert report.passed_cases == report.total_cases
     assert report.pass_rate_pct == 100.0
+    assert report.citation_grounding_score_pct >= 95.0
+    assert report.emergency_bypass_count == 0
+    assert report.trace_redaction_compliance_pct == 100.0
 
     case_ids = {r.case_id for r in report.results}
     assert "CASE-ROUTINE-001" in case_ids
@@ -27,6 +30,9 @@ def test_eval_runner_on_golden_cases():
     assert "CASE-RETRIEVAL-CITATION-009" in case_ids
     assert "CASE-ROUTING-GUARDRAIL-010" in case_ids
     assert "CASE-ADVERSARIAL-TRIAGE-011" in case_ids
+    assert "CASE-TRACE-REDACTION-016" in case_ids
+    assert "CASE-EMERGENCY-BYPASS-017" in case_ids
+    assert "CASE-GROUNDING-BENCHMARK-018" in case_ids
 
     first_result = report.results[0]
     assert first_result.case_id == "CASE-ROUTINE-001"

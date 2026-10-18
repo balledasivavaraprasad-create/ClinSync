@@ -1,0 +1,62 @@
+{
+  "case_id": "CASE-GROUNDING-BENCHMARK-018",
+  "title": "Comprehensive Golden Grounding Benchmark & Zero Fabrication Assertion",
+  "test_type": "comprehensive_grounding_benchmark",
+  "description": "Evaluates full-stack clinical context synthesis across multiple historical documents, patient statements, and contradictory records to verify >= 95% citation grounding score and complete absence of hallucinated facts.",
+  "encounter_id": "ENC-BENCH-018",
+  "patient_id": "PAT-BENCH-018",
+  "patient_name": "Eleanor Vance",
+  "chief_complaint": "Persistent fatigue, joint stiffness, and bilateral wrist swelling",
+  "current_facts": [
+    {
+      "id": "FACT-018-01",
+      "concept": "bilateral wrist swelling",
+      "value": "present for 3 weeks with morning stiffness > 1 hour",
+      "fact_type": "symptom",
+      "status": "reported",
+      "source_id": "INTAKE-STMT-01",
+      "source_type": "PATIENT_VOICE"
+    },
+    {
+      "id": "FACT-018-02",
+      "concept": "rheumatoid factor",
+      "value": "elevated at 48 IU/mL",
+      "fact_type": "investigation",
+      "status": "extracted_unverified",
+      "source_id": "DOC-LAB-018",
+      "source_type": "UPLOADED_DOCUMENT"
+    },
+    {
+      "id": "FACT-018-03",
+      "concept": "methotrexate",
+      "value": "15 mg weekly discontinued 2 weeks ago due to nausea",
+      "fact_type": "medication",
+      "status": "reported",
+      "source_id": "INTAKE-STMT-02",
+      "source_type": "PATIENT_FORM"
+    }
+  ],
+  "historical_facts": [
+    {
+      "id": "FACT-018-H01",
+      "concept": "rheumatoid arthritis",
+      "value": "diagnosed 2022",
+      "fact_type": "condition",
+      "status": "historical_recorded",
+      "source_id": "EHR-HIST-018",
+      "source_type": "HISTORICAL_EHR"
+    },
+    {
+      "id": "FACT-018-H02",
+      "concept": "methotrexate",
+      "value": "15 mg weekly active prescription",
+      "fact_type": "medication",
+      "status": "historical_recorded",
+      "source_id": "EHR-HIST-018",
+      "source_type": "HISTORICAL_EHR"
+    }
+  ],
+  "expected_minimum_grounding_score_pct": 95.0,
+  "expected_conflict_concepts": ["methotrexate"],
+  "forbidden_hallucinated_facts": ["prednisone", "hydroxychloroquine", "lupus nephritis", "cardiac murmur"]
+}

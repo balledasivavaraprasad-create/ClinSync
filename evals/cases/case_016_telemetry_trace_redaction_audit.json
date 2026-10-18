@@ -1,0 +1,29 @@
+{
+  "case_id": "CASE-TRACE-REDACTION-016",
+  "title": "Comprehensive Telemetry Trace Redaction and PHI Audit",
+  "test_type": "telemetry_trace_redaction_audit",
+  "description": "Verifies that TraceManager and telemetry interceptors redact 100% of sensitive PII, PHI, and credentials across prompts, outputs, error messages, and metadata.",
+  "synthetic_events": [
+    {
+      "step_name": "kiosk_intake_dob_verification",
+      "prompt": "Patient provided SSN 999-12-3456 and personal phone 555-432-1098 with email jane.doe@healthnet.org",
+      "output": "Candidate record verified for DOB: 1985-04-20 and MRN: MRN-9920144",
+      "error": null,
+      "metadata": {
+        "contact_email": "jane.doe@healthnet.org",
+        "emergency_contact_phone": "555-432-1098"
+      }
+    },
+    {
+      "step_name": "model_provider_error_handling",
+      "prompt": "Summarize patient encounter with auth key gsk_abcdef1234567890123456789012345678901234",
+      "output": "",
+      "error": "Failed contacting provider with bearer token Bearer sk-ant-api03-abcdef123456789012345678901234567890",
+      "metadata": {
+        "auth_header": "Bearer secret_token_xyz1234567890"
+      }
+    }
+  ],
+  "expected_unredacted_violations": 0,
+  "expected_redaction_compliance_pct": 100.0
+}

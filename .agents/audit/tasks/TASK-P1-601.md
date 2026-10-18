@@ -2,7 +2,7 @@
 - **Owner**: person-1 (Frontend / Product Experience)
 - **Branch**: `feat/p1-601-visual-qa`
 - **Workstream**: Frontend & Product Experience (`apps/web/**`)
-- **Status**: IMPLEMENTED / VERIFIED
+- **Status**: INTEGRATED
 
 ## Goal and Acceptance Criteria
 - [x] Visual QA verified across tablet viewports (1024x768 landscape, 768x1024 portrait, 1280x800 wide) and standard desktop workstation (1440x900).

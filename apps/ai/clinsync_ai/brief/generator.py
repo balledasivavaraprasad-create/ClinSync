@@ -78,6 +78,17 @@ class DoctorBriefGenerator:
                 if uncertain_note not in missing:
                     missing.append(uncertain_note)
 
+        # Auto-detect concept contradictions between current encounter and historical records
+        hist_by_concept = {h.concept.lower().strip(): h for h in hist_facts}
+        for curr in current_facts:
+            c_key = curr.concept.lower().strip()
+            if c_key in hist_by_concept:
+                prev = hist_by_concept[c_key]
+                if prev.value.strip().lower() != curr.value.strip().lower():
+                    conflict_str = f"Clinical contradiction in {curr.concept}: current '{curr.value}' vs historical record '{prev.value}'"
+                    if conflict_str not in conflicts:
+                        conflicts.append(conflict_str)
+
         # 3. Assemble prompt for Gemini primary generation
         facts_manifest = "\n".join([
             f"- [{f.id}] ({f.source_type}/{f.status}) {f.concept}: {f.value} (source_id: {f.source_id})"
