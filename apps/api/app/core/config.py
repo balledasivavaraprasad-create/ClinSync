@@ -34,6 +34,15 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
+    # Document Storage & Safe Ingestion
+    STORAGE_DIR: str = "storage/documents"
+    MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
+    ALLOWED_MIME_TYPES: list[str] = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+    ]
+
     # AI Model Providers (Configured server-side)
     LLM_PROVIDER: str = "gemini"
     GEMINI_API_KEY: str = ""

@@ -164,7 +164,8 @@ class EvalRunner:
 
 
         return ModelGateway(
-            primary_provider=FakeModelProvider(canned_structured=fake_response)
+            primary_provider=FakeModelProvider(canned_structured=fake_response),
+            fallback_provider=None,
         )
 
     def run_case_file(self, case_path: Path) -> CaseEvalResult:
@@ -311,7 +312,209 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 4: Standard, urgent, and provider failure fallback cases
+        # Branch 4: Document ingestion, provenance extraction, and patient context diff
+        if case_data.get("test_type") == "document_diff_evaluation":
+            from clinsync_ai.clinical_context.diff import PatientContextDiffEngine
+            from clinsync_ai.clinical_context.ledger import ClinicalContextLedger
+            from clinsync_ai.documents.extractor import DocumentFactExtractor
+            from clinsync_ai.documents.parser import DocumentParser
+            from clinsync_ai.graph.state import ClinicalFactModel
+
+            gw = self.gateway
+            parser = DocumentParser()
+            doc_info = case_data["document"]
+            parsed_doc = parser.parse(
+                document_id=doc_info["document_id"],
+                filename=doc_info["filename"],
+                mime_type=doc_info["mime_type"],
+                content=doc_info["content"],
+            )
+
+            # Check page count
+            pages_valid = parsed_doc.total_pages == case_data.get("expected_page_count", 1)
+            assertions_details.append({
+                "assertion": "document_page_segmentation",
+                "passed": pages_valid,
+                "total_pages": parsed_doc.total_pages,
+            })
+            if pages_valid:
+                passed_count += 1
+
+            # Extract facts from document
+            extractor = DocumentFactExtractor(gateway=gw)
+            pat_id = case_data.get("patient_profile", {}).get("patient_id", "PAT-001")
+            enc_id = f"ENC-{case_id}"
+            extracted_facts = extractor.extract_from_document(
+                document=parsed_doc,
+                patient_id=pat_id,
+                encounter_id=enc_id,
+            )
+
+            # Check provenance locations
+            locations = {f.source_location for f in extracted_facts if f.source_location}
+            expected_locations = set(case_data.get("expected_provenance_locations", []))
+            locations_valid = expected_locations.issubset(locations)
+            assertions_details.append({
+                "assertion": "page_provenance_accuracy",
+                "passed": locations_valid,
+                "observed_locations": list(locations),
+            })
+            if locations_valid:
+                passed_count += 1
+
+            # Build ledger with historical facts + extracted document facts
+            historical_raw = case_data.get("patient_profile", {}).get("historical_facts", [])
+            historical_models = []
+            for idx, h in enumerate(historical_raw):
+                historical_models.append(
+                    ClinicalFactModel(
+                        id=f"FACT-HIST-{idx+1}",
+                        patient_id=pat_id,
+                        concept=h["concept"],
+                        value=h["value"],
+                        unit=h.get("unit"),
+                        fact_type=h["fact_type"],
+                        status=h["status"],
+                        source_type=h["source_type"],
+                        source_id="HIST-EHR-001",
+                    )
+                )
+
+            ledger = ClinicalContextLedger(encounter_id=enc_id)
+            ledger.add_facts(historical_models)
+            ledger.add_facts(extracted_facts)
+
+            # Evaluate unresolved conflicts
+            conflicts_count = len(ledger.unresolved_conflicts)
+            exp_conflicts = case_data.get("expected_unresolved_conflicts_count", 0)
+            conflicts_valid = conflicts_count >= exp_conflicts
+            assertions_details.append({
+                "assertion": "unresolved_conflicts_surfaced",
+                "passed": conflicts_valid,
+                "conflicts_count": conflicts_count,
+            })
+            if conflicts_valid:
+                passed_count += 1
+
+            # Compute Patient Context Diff
+            diff_engine = PatientContextDiffEngine()
+            diff_resp = diff_engine.compute_diff(
+                encounter_id=enc_id,
+                historical_facts=historical_models,
+                current_facts=extracted_facts,
+            )
+
+            exp_changed = case_data.get("expected_changed_concept")
+            changed_valid = True
+            if exp_changed:
+                changed_valid = any(
+                    ch.current.concept == exp_changed or ch.previous.concept == exp_changed
+                    for ch in diff_resp.data.changed_facts
+                )
+
+            assertions_details.append({
+                "assertion": "context_diff_evolution_detection",
+                "passed": changed_valid,
+                "changed_concepts": [ch.current.concept for ch in diff_resp.data.changed_facts],
+            })
+            if changed_valid:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=2.5,
+                details=assertions_details,
+            )
+
+        # Branch 5: LlamaIndex retrieval, patient isolation, and citation integrity
+        if case_data.get("test_type") == "retrieval_citation_evaluation":
+            from clinsync_ai.documents.parser import DocumentParser
+            from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex
+            from clinsync_ai.retrieval.citation_linker import CitationLinker
+
+            parser = DocumentParser()
+            doc_info = case_data["document"]
+            parsed_doc = parser.parse(
+                document_id=doc_info["document_id"],
+                filename=doc_info["filename"],
+                mime_type=doc_info["mime_type"],
+                content=doc_info["content"],
+            )
+
+            primary_pat_id = case_data["primary_patient"]["patient_id"]
+            other_pat_id = case_data["other_patient"]["patient_id"]
+
+            index = ClinicalDocumentIndex()
+            index.index_parsed_document(
+                document=parsed_doc,
+                patient_id=primary_pat_id,
+            )
+
+            # Assertion 1: Targeted document retrieval with page provenance
+            retrieval_hits = True
+            for q_spec in case_data.get("search_queries", []):
+                hits = index.search(query=q_spec["query"], patient_id=primary_pat_id)
+                if not hits or hits[0].page_number != q_spec["expected_page"]:
+                    retrieval_hits = False
+                    break
+
+            assertions_details.append({
+                "assertion": "page_provenance_retrieval_accuracy",
+                "passed": retrieval_hits,
+            })
+            if retrieval_hits:
+                passed_count += 1
+
+            # Assertion 2: Strict cross-patient isolation (zero leakage to other patient)
+            other_patient_hits = index.search(query="Asthma", patient_id=other_pat_id)
+            cross_patient_isolated = len(other_patient_hits) == 0
+            assertions_details.append({
+                "assertion": "cross_patient_isolation_enforced",
+                "passed": cross_patient_isolated,
+                "other_patient_hits_count": len(other_patient_hits),
+            })
+            if cross_patient_isolated:
+                passed_count += 1
+
+            # Assertion 3: Citation grounding & hallucination refusal
+            linker = CitationLinker(index=index)
+            claims = [
+                {"claim": c["claim"], "source_id": c["source_id"]}
+                for c in case_data.get("claims_to_verify", [])
+            ]
+            verify_rep = linker.verify_citations(claims=claims, patient_id=primary_pat_id)
+
+            expected_grounded_count = sum(1 for c in case_data.get("claims_to_verify", []) if c.get("expected_grounded"))
+            expected_fabricated_count = sum(1 for c in case_data.get("claims_to_verify", []) if not c.get("expected_grounded"))
+
+            citation_valid = (
+                len(verify_rep.grounded_citations) == expected_grounded_count and
+                len(verify_rep.fabricated_citation_ids) == expected_fabricated_count
+            )
+            assertions_details.append({
+                "assertion": "citation_grounding_and_fabrication_refusal",
+                "passed": citation_valid,
+                "grounded_count": len(verify_rep.grounded_citations),
+                "fabricated_ids": verify_rep.fabricated_citation_ids,
+            })
+            if citation_valid:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.8,
+                details=assertions_details,
+            )
+
+        # Branch 6: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"

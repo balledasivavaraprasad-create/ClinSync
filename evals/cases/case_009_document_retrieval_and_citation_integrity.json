@@ -1,0 +1,44 @@
+{
+  "case_id": "CASE-RETRIEVAL-CITATION-009",
+  "title": "LlamaIndex Document Retrieval, Patient Isolation, and Citation Integrity Benchmark",
+  "test_type": "retrieval_citation_evaluation",
+  "primary_patient": {
+    "patient_id": "SYNTH-PAT-009",
+    "name": "Sarah Miller",
+    "age": 42
+  },
+  "other_patient": {
+    "patient_id": "SYNTH-PAT-999-OTHER",
+    "name": "Alex Vance"
+  },
+  "document": {
+    "document_id": "DOC-CASE-009",
+    "filename": "pulmonary_assessment.pdf",
+    "mime_type": "application/pdf",
+    "content": "--- Page 1 ---\nDiagnosis: Moderate Persistent Asthma\nSpirometry FEV1: 72% predicted\n\f--- Page 2 ---\nPrescribed: Fluticasone-Salmeterol 250/50 mcg inhaler BID\nAllergies: NKDA\nPeak Flow: 380 L/min"
+  },
+  "search_queries": [
+    {
+      "query": "Asthma",
+      "expected_page": 1,
+      "expected_doc_id": "DOC-CASE-009"
+    },
+    {
+      "query": "Fluticasone",
+      "expected_page": 2,
+      "expected_doc_id": "DOC-CASE-009"
+    }
+  ],
+  "claims_to_verify": [
+    {
+      "claim": "Asthma FEV1 72%",
+      "source_id": "DOC-CASE-009",
+      "expected_grounded": true
+    },
+    {
+      "claim": "Patient had lung resection surgery",
+      "source_id": "DOC-UNINDEXED-999",
+      "expected_grounded": false
+    }
+  ]
+}

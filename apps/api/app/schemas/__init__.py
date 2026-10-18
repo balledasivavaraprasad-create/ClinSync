@@ -2,6 +2,12 @@
 
 from app.schemas.audit import AuditEvent, AuditEventResponse
 from app.schemas.common import ResponseEnvelope
+from app.schemas.document import (
+    DocumentStatus,
+    DocumentStatusData,
+    DocumentStatusResponse,
+    DocumentUploadRequest,
+)
 from app.schemas.encounter import (
     CreateEncounterRequest,
     Encounter,
@@ -23,6 +29,14 @@ from app.schemas.intake import (
     IntakeAnswerRequest,
     IntakeStateData,
     IntakeStateResponse,
+)
+from app.schemas.ledger import (
+    ChangedFact,
+    ConflictingFactDetail,
+    DiffData,
+    DiffResponse,
+    LedgerData,
+    LedgerResponse,
 )
 from app.schemas.patient import (
     Patient,
@@ -61,4 +75,14 @@ __all__ = [
     "IntakeAnswerRequest",
     "IntakeStateData",
     "IntakeStateResponse",
+    "DocumentUploadRequest",
+    "DocumentStatus",
+    "DocumentStatusData",
+    "DocumentStatusResponse",
+    "LedgerData",
+    "LedgerResponse",
+    "ChangedFact",
+    "ConflictingFactDetail",
+    "DiffData",
+    "DiffResponse",
 ]
