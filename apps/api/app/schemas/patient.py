@@ -50,6 +50,9 @@ class PatientContextData(BaseModel):
     patient_id: str
     display_name: str
     historical_facts: list[ClinicalFact] = Field(default_factory=list)
+    allergies: list[ClinicalFact] = Field(default_factory=list)
+    active_medications: list[ClinicalFact] = Field(default_factory=list)
+    recent_conditions: list[ClinicalFact] = Field(default_factory=list)
 
 
 class PatientContextResponse(ResponseEnvelope[PatientContextData]):

@@ -249,3 +249,101 @@ def test_patient_data_isolation(client: TestClient, db_session: Session) -> None
     p2_facts = db_session.query(ClinicalFact).filter(ClinicalFact.patient_id == p2.id).all()
     assert len(p2_facts) == 1
     assert p2_facts[0].value == "Patient Two Symptoms"
+
+
+def test_create_encounter_with_empty_confirmation_token_returns_400(
+    client: TestClient, db_session: Session
+) -> None:
+    """Empty confirmation token is rejected with 400 VALIDATION_ERROR."""
+    patient = Patient(
+        id=generate_uuid(),
+        display_name="Confirmed Token Test",
+        date_of_birth=date(1989, 3, 12),
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient)
+    db_session.commit()
+
+    response = client.post(
+        "/api/v1/encounters",
+        json={
+            "patient_id": patient.id,
+            "identity_confirmation_id": "   ",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION_ERROR"
+
+
+def test_save_intake_answer_with_frontend_alias_format(
+    client: TestClient, db_session: Session
+) -> None:
+    """Intake endpoint accepts question_id/transcription aliases from web client."""
+    patient = Patient(
+        id=generate_uuid(),
+        display_name="Alias Patient",
+        date_of_birth=date(1994, 9, 10),
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient)
+    db_session.flush()
+
+    encounter = Encounter(
+        id=generate_uuid(),
+        patient_id=patient.id,
+        status="IN_PROGRESS",
+        intake_status="IN_PROGRESS",
+    )
+    db_session.add(encounter)
+    db_session.commit()
+
+    response = client.post(
+        f"/api/v1/encounters/{encounter.id}/answers",
+        json={
+            "question_id": "chief_complaint",
+            "transcription": "Sudden sharp abdominal pain in right lower quadrant",
+            "input_modality": "voice",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["turn_count"] == 1
+    assert len(data["extracted_facts"]) == 1
+    assert data["extracted_facts"][0]["concept"] == "chief_complaint"
+    assert data["extracted_facts"][0]["source_type"] == "PATIENT_VOICE"
+    assert data["current_step"] == 1
+    assert data["intake_complete"] is False
+
+
+def test_save_intake_answer_on_completed_encounter_fails_400(
+    client: TestClient, db_session: Session
+) -> None:
+    """Completed encounter rejects new intake answers."""
+    patient = Patient(
+        id=generate_uuid(),
+        display_name="Finished Patient",
+        date_of_birth=date(1980, 1, 1),
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient)
+    db_session.flush()
+
+    encounter = Encounter(
+        id=generate_uuid(),
+        patient_id=patient.id,
+        status="COMPLETED",
+        intake_status="COMPLETED",
+    )
+    db_session.add(encounter)
+    db_session.commit()
+
+    response = client.post(
+        f"/api/v1/encounters/{encounter.id}/answers",
+        json={
+            "field_key": "chief_complaint",
+            "raw_response": "Should not be accepted",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION_ERROR"
+    assert "not accepting intake answers" in response.json()["message"]

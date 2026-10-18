@@ -47,8 +47,7 @@ def lookup_candidates(
     response_model=IdentityConfirmResponse,
     summary="Confirm patient identity",
     description=(
-        "Confirm identity candidate using secondary confirmation "
-        "before records can be accessed."
+        "Confirm identity candidate using secondary confirmation before records can be accessed."
     ),
 )
 def confirm_identity(

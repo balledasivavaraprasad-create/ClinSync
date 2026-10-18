@@ -22,10 +22,10 @@
 | Workstream | Owner | Status | Branch / PR | Evidence | Blocker |
 |---|---|---|---|---|---|
 | Phase 0: G0 Repository & Contracts Foundation | Person 2 | VERIFIED | `main` | `docs/DEPENDENCY_GRAPH.md`, openapi.json validated, CI governance passing | None |
-| TASK-P1-101: Web App Shell & Design Tokens | Person 1 | READY | `feat/p1-web-shell` | Contract mock & module boundaries mapped | None |
+| TASK-P1-101: Web App Shell & Design Tokens | Person 1 | INTEGRATED | `main` | 31 web tests pass, design tokens & layout shell integrated | None |
 | TASK-P2-101: FastAPI App Core & SQLite | Person 2 | INTEGRATED | `main` | 12 tests pass, Alembic lifecycle verified, error schema conforms | None |
 | TASK-P3-101: Model Gateway & Offline Evals | Person 3 | INTEGRATED | `main` | 14 tests pass, Gemini/Groq gateway, guardrails, eval runner verified | None |
-| TASK-P2-201: Patient APIs & Identity Gating | Person 2 | VERIFIED | `feat/p2-patient-api` | 28 tests pass, candidate masking, DOB gate, encounter answers verified | None |
+| TASK-P2-201: Patient APIs & Identity Gating | Person 2 | VERIFIED | `feat/p2-patient-api` | 34 tests pass, candidate masking, DOB gate, encounter answers verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.

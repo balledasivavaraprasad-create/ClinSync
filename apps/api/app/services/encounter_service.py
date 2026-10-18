@@ -230,10 +230,18 @@ class EncounterService:
             next_question = None
             db.commit()
 
+        fact_schema = ClinicalFactSchema.model_validate(fact)
+        all_fact_schemas = [ClinicalFactSchema.model_validate(f) for f in all_facts]
+        is_complete = encounter.intake_status == "COMPLETED"
+
         return IntakeStateData(
             encounter_id=encounter.id,
             turn_count=turn_count,
             status=encounter.intake_status,
             next_question=next_question,
-            extracted_facts=[ClinicalFactSchema.model_validate(f) for f in all_facts],
+            extracted_facts=all_fact_schemas,
+            current_step=turn_count,
+            total_steps=5,
+            extracted_facts_this_turn=[fact_schema],
+            intake_complete=is_complete,
         )

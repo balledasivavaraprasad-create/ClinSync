@@ -67,6 +67,9 @@ class PatientService:
                     candidate_id=p.id,
                     display_name_masked=mask_display_name(p.display_name),
                     confidence_score=0.92 if not search_hint else 0.96,
+                    masked_name=mask_display_name(p.display_name),
+                    dob_year=p.date_of_birth.year if p.date_of_birth else None,
+                    contact_hint=p.contact_hint,
                 )
             )
         return candidates
@@ -75,7 +78,7 @@ class PatientService:
     def confirm_identity(
         db: Session,
         candidate_id: str,
-        date_of_birth: date,
+        date_of_birth: Optional[date],
         consent_accepted: bool,
     ) -> IdentityConfirmData:
         """Perform secondary verification (DOB check) before authorizing record access."""
@@ -84,6 +87,13 @@ class PatientService:
                 status_code=400,
                 code=ErrorCode.VALIDATION_ERROR,
                 message="Patient consent must be accepted to confirm identity.",
+            )
+
+        if not date_of_birth:
+            raise ClinSyncAppException(
+                status_code=400,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Date of birth is required to confirm identity.",
             )
 
         patient = db.query(Patient).filter(Patient.id == candidate_id).first()
@@ -127,6 +137,8 @@ class PatientService:
             patient_id=patient.id,
             identity_confirmation_id=confirmation_token,
             patient_display_name=patient.display_name,
+            display_name=patient.display_name,
+            identity_status="CONFIRMED",
         )
 
     @staticmethod
@@ -161,10 +173,18 @@ class PatientService:
             .all()
         )
 
+        fact_schemas = [ClinicalFactSchema.model_validate(f) for f in facts]
+        allergies = [f for f in fact_schemas if f.fact_type == "allergy"]
+        meds = [f for f in fact_schemas if f.fact_type == "medication"]
+        conditions = [f for f in fact_schemas if f.fact_type == "condition"]
+
         return PatientContextData(
             patient_id=patient.id,
             display_name=patient.display_name,
-            historical_facts=[ClinicalFactSchema.model_validate(f) for f in facts],
+            historical_facts=fact_schemas,
+            allergies=allergies,
+            active_medications=meds,
+            recent_conditions=conditions,
         )
 
     @staticmethod

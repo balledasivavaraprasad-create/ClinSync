@@ -234,3 +234,116 @@ def test_manual_registration_fallback(client: TestClient) -> None:
     assert res_data["display_name"] == "Marcus Aurelius"
     assert res_data["identity_status"] == "CONFIRMED"
     assert res_data["id"] is not None
+
+
+def test_ambiguous_identity_multiple_candidates_returned(
+    client: TestClient, db_session: Session
+) -> None:
+    """Ambiguous search hint returns multiple masked candidates without exposing medical data."""
+    p1 = Patient(
+        id=generate_uuid(),
+        display_name="John Alexander Smith",
+        date_of_birth=date(1985, 3, 15),
+        contact_hint="john.smith@demo.local",
+        identity_status="CANDIDATE",
+    )
+    p2 = Patient(
+        id=generate_uuid(),
+        display_name="Johnathan Robert Smith",
+        date_of_birth=date(1990, 8, 20),
+        contact_hint="jrobert.smith@demo.local",
+        identity_status="CANDIDATE",
+    )
+    db_session.add_all([p1, p2])
+    db_session.commit()
+
+    response = client.post(
+        "/api/v1/identity/candidates",
+        json={"biometric_consent": True, "search_hint": "Smith"},
+    )
+    assert response.status_code == 200
+    candidates = response.json()["data"]["candidates"]
+    assert len(candidates) >= 2
+    for c in candidates:
+        assert "Smith" not in c["display_name_masked"]
+        assert c["candidate_id"] in [p1.id, p2.id]
+
+
+def test_confirm_identity_missing_dob_returns_400(client: TestClient, db_session: Session) -> None:
+    """Missing date of birth returns 400 VALIDATION_ERROR."""
+    patient = Patient(
+        id=generate_uuid(),
+        display_name="Candidate Without DOB",
+        date_of_birth=date(1982, 11, 5),
+        identity_status="CANDIDATE",
+    )
+    db_session.add(patient)
+    db_session.commit()
+
+    response = client.post(
+        "/api/v1/identity/confirm",
+        json={
+            "candidate_id": patient.id,
+            "consent_accepted": True,
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION_ERROR"
+
+
+def test_patient_context_includes_categorized_slices(
+    client: TestClient, db_session: Session
+) -> None:
+    """Context response groups facts into allergies, active_medications, and recent_conditions."""
+    patient = Patient(
+        id=generate_uuid(),
+        display_name="Categorized Patient",
+        date_of_birth=date(1980, 5, 20),
+        identity_status="CONFIRMED",
+    )
+    db_session.add(patient)
+    db_session.flush()
+
+    f1 = ClinicalFact(
+        id=generate_uuid(),
+        patient_id=patient.id,
+        concept="allergy",
+        value="Sulfa Drugs",
+        fact_type="allergy",
+        status="doctor_confirmed",
+        source_type="HISTORICAL_EHR",
+        source_id="ehr_sulfa",
+    )
+    f2 = ClinicalFact(
+        id=generate_uuid(),
+        patient_id=patient.id,
+        concept="medication",
+        value="Metformin 500mg",
+        fact_type="medication",
+        status="historical_recorded",
+        source_type="HISTORICAL_EHR",
+        source_id="ehr_metformin",
+    )
+    f3 = ClinicalFact(
+        id=generate_uuid(),
+        patient_id=patient.id,
+        concept="condition",
+        value="Type 2 Diabetes",
+        fact_type="condition",
+        status="doctor_confirmed",
+        source_type="HISTORICAL_EHR",
+        source_id="ehr_t2d",
+    )
+    db_session.add_all([f1, f2, f3])
+    db_session.commit()
+
+    response = client.get(f"/api/v1/patients/{patient.id}/context")
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert len(data["historical_facts"]) == 3
+    assert len(data["allergies"]) == 1
+    assert data["allergies"][0]["value"] == "Sulfa Drugs"
+    assert len(data["active_medications"]) == 1
+    assert data["active_medications"][0]["value"] == "Metformin 500mg"
+    assert len(data["recent_conditions"]) == 1
+    assert data["recent_conditions"][0]["value"] == "Type 2 Diabetes"
