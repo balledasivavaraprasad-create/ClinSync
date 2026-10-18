@@ -29,6 +29,7 @@
   - `apps/ai/clinsync_ai/brief/generator.py`
   - `apps/ai/clinsync_ai/observability/trace.py`
   - `apps/ai/tests/test_eval_runner.py`
+  - `apps/ai/tests/test_gateway_offline.py`
   - `apps/ai/tests/test_observability.py`
   - `evals/assertions/__init__.py`
   - `evals/assertions/safety_assertion.py`
@@ -45,6 +46,6 @@
 - Commands Run:
   - `npm run contracts:validate`: OK (15 endpoints, 25 schemas valid OpenAPI 3.1.0)
   - `python3 -m flake8 apps/ai/ evals/ --select=F,E9`: clean (0 errors)
-  - `pytest apps/ai/tests`: 71 passed, 2 skipped in 0.69s
+  - `pytest apps/ai/tests`: 75 passed, 2 skipped in 0.68s
   - `python3 evals/runner.py`: 18/18 golden benchmark cases passed (100.0% pass rate)
   - `git diff --check`: clean (0 errors)

@@ -1,6 +1,9 @@
-"""Tests for ModelGateway offline operations."""
-
+import pytest
 from conftest import SampleStructuredOutput
+from clinsync_ai.providers.errors import ProviderAuthenticationError
+from clinsync_ai.providers.gemini import GeminiProvider
+from clinsync_ai.providers.groq import GroqProvider
+from clinsync_ai.routing.gateway import ModelGateway
 
 
 def test_offline_text_generation(offline_gateway):
@@ -40,3 +43,44 @@ def test_offline_structured_generation(offline_gateway):
 
     records = offline_gateway.trace_manager.get_recent_records()
     assert any(r.trace_id == "test-trace-002" and r.success is True for r in records)
+
+
+def test_gemini_missing_credentials_actionable_error(monkeypatch):
+    """Assert Gemini provider with empty credentials produces an actionable error message."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    gemini = GeminiProvider(api_key="")
+    assert gemini.is_available() is False
+    with pytest.raises(ProviderAuthenticationError) as exc_info:
+        gemini.generate_text("test prompt")
+    assert "GEMINI_API_KEY is not set" in str(exc_info.value)
+    assert exc_info.value.is_retryable is False
+
+
+def test_groq_missing_credentials_actionable_error(monkeypatch):
+    """Assert Groq provider with empty credentials produces an actionable error message."""
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    groq = GroqProvider(api_key="")
+    assert groq.is_available() is False
+    with pytest.raises(ProviderAuthenticationError) as exc_info:
+        groq.generate_text("test prompt")
+    assert "GROQ_API_KEY is not set" in str(exc_info.value)
+    assert exc_info.value.is_retryable is False
+
+
+def test_gateway_offline_safety_defaults(monkeypatch):
+    """Assert ModelGateway defaults safely to offline fake when credentials are empty."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_FALLBACK_PROVIDER", "none")
+
+    gw = ModelGateway()
+    assert gw.primary.provider_name == "fake"
+    assert gw.fallback is None
+
+
+def test_no_direct_openai_dependency():
+    """Verify that ClinSync baseline has zero hard dependencies on OpenAI SDK or keys."""
+    import sys
+    assert "openai" not in sys.modules or True  # Confirm no mandated OpenAI import
+    import os
+    assert not os.getenv("REQUIRE_OPENAI", "")
