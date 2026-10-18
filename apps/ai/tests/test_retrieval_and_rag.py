@@ -1,10 +1,10 @@
 """Tests for LlamaIndex-backed clinical document indexing, retrieval, and citation verification."""
 
 import pytest
-from clinsync_ai.documents.parser import DocumentParser, ParsedDocument
 from clinsync_ai.documents.extractor import DocumentFactExtractor
-from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex
+from clinsync_ai.documents.parser import DocumentParser, ParsedDocument
 from clinsync_ai.retrieval.citation_linker import CitationLinker
+from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex
 
 
 @pytest.fixture
@@ -159,7 +159,7 @@ def test_citation_linker_catches_fabricated_citations(sample_parsed_document):
 
 
 def test_document_extractor_marks_ocr_uncertainty():
-    """Assert extracted facts with low confidence or uncertainty markers receive status='uncertain'."""
+    """Assert facts with low confidence or OCR markers receive status='uncertain'."""
     parser = DocumentParser()
     content = (
         "--- Page 1 ---\n"
