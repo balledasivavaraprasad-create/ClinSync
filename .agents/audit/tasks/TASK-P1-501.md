@@ -2,7 +2,7 @@
 - **Owner**: person-1 (Frontend / Product Experience)
 - **Branch**: `feat/p1-501-doctor-console`
 - **Workstream**: Frontend & Product Experience (`apps/web/**`)
-- **Status**: IMPLEMENTED / VERIFIED
+- **Status**: INTEGRATED
 
 ## Goal and Acceptance Criteria
 - [x] Doctor queue/dashboard built displaying scheduled patient consultations with triage priority indicators (URGENT, ELEVATED, ROUTINE) and status tags.

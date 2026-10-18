@@ -36,6 +36,7 @@
 | TASK-P1-401: Appointment & Scheduling UI | Person 1 | INTEGRATED | `main` | 93 web tests pass, specialty routing, backend slots, atomic booking verified | None |
 | TASK-P2-501: Doctor Queue, Consultation & Approval Persistence | Person 2 | INTEGRATED | `main` | 97 tests pass, queue retrieval & priority, brief synthesis with citations, doctor sign-off & audit logging verified | None |
 | TASK-P3-501: Evidence-Backed Doctor Brief & Optional Audio Summary | Person 3 | INTEGRATED | `main` | 70 tests pass, 15/15 golden benchmark evals pass, zero fabricated citations, audio graceful degradation verified | None |
+| TASK-P1-501: Doctor Console, Briefing UI & Audio Player | Person 1 | INTEGRATED | `main` | 117 web tests pass, anti-wrong-patient safeguard, scannable queue, audio player & sign-off verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
