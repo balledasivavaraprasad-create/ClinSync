@@ -26,6 +26,8 @@ coverage/
 *.sqlite
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
 storage/
 uploads/
 data/local/
