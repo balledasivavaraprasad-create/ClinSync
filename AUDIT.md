@@ -30,6 +30,8 @@
 | TASK-P3-201: LangGraph Intake & Evals | Person 3 | INTEGRATED | `main` | 36 tests pass, intake graph, bounded turns, evals verified | None |
 | TASK-P2-301: Document Storage, Ledger & Diff APIs | Person 2 | INTEGRATED | `main` | 59 tests pass, safe upload, sha256 checksum, ledger & diff verified | None |
 | TASK-P3-301: Document Extraction, Ledger & Diff Engine | Person 3 | INTEGRATED | `main` | 51 tests pass, 9 evals pass, LlamaIndex retrieval, provenance & diff verified | None |
+| TASK-P1-301: Document Upload, Clinical Ledger & Context Diff UI | Person 1 | INTEGRATED | `main` | 69 web tests pass, drag-and-drop, provenance styling, conflict alert verified | None |
+| TASK-P3-401: Specialty Routing & Triage Guardrails | Person 3 | INTEGRATED | `main` | 63 tests pass, 11/11 golden benchmark evals pass, acute red flag triage guardrail verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
