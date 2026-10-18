@@ -69,6 +69,7 @@ class IntakeState(BaseModel):
     status: WorkflowStatus = "IN_PROGRESS"
     turn_count: int = 0
     max_turns: int = 5
+    input_modality: Literal["VOICE", "TOUCH_TEXT"] = "VOICE"
 
     # Clinical fields tracking
     chief_complaint: str | None = None

@@ -23,6 +23,7 @@ def test_eval_runner_on_golden_cases():
     assert "CASE-INVALID-SCHEMA-004" in case_ids
     assert "CASE-FALLBACK-005" in case_ids
     assert "CASE-INTAKE-WORKFLOW-006" in case_ids
+    assert "CASE-INTAKE-CONFLICT-007" in case_ids
 
     first_result = report.results[0]
     assert first_result.case_id == "CASE-ROUTINE-001"

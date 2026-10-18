@@ -80,6 +80,7 @@ class AdaptiveIntakeService:
         encounter_id: str,
         patient_statement: str,
         patient_id: str = "PATIENT-DEMO-001",
+        input_modality: str = "VOICE",
     ) -> IntakeTurnResponse:
         """Advance intake workflow by one patient turn and return contract response."""
         req_id = f"req-{uuid.uuid4().hex[:12]}"
@@ -90,6 +91,7 @@ class AdaptiveIntakeService:
             state=state,
             patient_input=patient_statement,
             gateway=self.gateway,
+            input_modality=input_modality,
         )
         self._sessions[encounter_id] = updated_state
 
@@ -115,6 +117,7 @@ class AdaptiveIntakeService:
             encounter_id=encounter_id,
             patient_statement=request.raw_response,
             patient_id=patient_id,
+            input_modality=request.input_modality,
         )
 
     def get_session(self, encounter_id: str) -> IntakeState | None:

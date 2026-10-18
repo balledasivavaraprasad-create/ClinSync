@@ -287,6 +287,20 @@ class EvalRunner:
             if concepts_present:
                 passed_count += 1
 
+            if "expected_conflicting_fields" in case_data:
+                conflicts_match = True
+                for exp_conf in case_data["expected_conflicting_fields"]:
+                    if exp_conf not in session.conflicting_fields:
+                        conflicts_match = False
+                        break
+                assertions_details.append({
+                    "assertion": "conflicting_fields_detected",
+                    "passed": conflicts_match,
+                    "conflicting_fields": session.conflicting_fields,
+                })
+                if conflicts_match:
+                    passed_count += 1
+
             total_assertions = len(assertions_details)
             return CaseEvalResult(
                 case_id=case_id,

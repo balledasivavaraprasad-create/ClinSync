@@ -76,6 +76,7 @@ def advance_intake_turn(
     state: IntakeState,
     patient_input: str,
     gateway: ModelGateway | None = None,
+    input_modality: str = "VOICE",
 ) -> IntakeState:
     """Execute a single conversational turn in the LangGraph intake workflow."""
     app = build_intake_workflow(gateway=gateway)
@@ -83,6 +84,7 @@ def advance_intake_turn(
     # Prepare turn input
     current_state = state.model_copy(deep=True)
     current_state.last_patient_input = patient_input
+    current_state.input_modality = input_modality
     if patient_input.strip():
         current_state.dialog_history.append({"role": "patient", "content": patient_input})
 
