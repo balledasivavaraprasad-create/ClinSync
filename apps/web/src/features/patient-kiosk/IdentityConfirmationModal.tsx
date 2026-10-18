@@ -12,10 +12,12 @@ import {
   HelpCircle,
   CheckCircle2,
   Lock,
+  Users,
 } from 'lucide-react';
 
 interface IdentityConfirmationModalProps {
   candidate?: IdentityCandidate;
+  candidates?: IdentityCandidate[];
   onConfirmed: (confirmation: IdentityConfirmResponse['data']) => void;
   onCancel: () => void;
   onRouteToStaff: () => void;
@@ -23,23 +25,35 @@ interface IdentityConfirmationModalProps {
 
 export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps> = ({
   candidate,
+  candidates,
   onConfirmed,
   onCancel,
   onRouteToStaff,
 }) => {
+  // If candidates array provided, use first as default
+  const candidateList = candidates && candidates.length > 0 ? candidates : candidate ? [candidate] : [
+    {
+      candidate_id: 'cand_demo_001',
+      masked_name: 'E. J***son',
+      dob_year: 1982,
+      contact_hint: '(***) ***-4821',
+    },
+    {
+      candidate_id: 'cand_demo_002',
+      masked_name: 'M. P***el',
+      dob_year: 1968,
+      contact_hint: '(***) ***-8812',
+    },
+  ];
+
+  const [selectedCandidateIndex, setSelectedCandidateIndex] = useState<number>(0);
   const [dob, setDob] = useState<string>('');
   const [consentGiven, setConsentGiven] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uncertainState, setUncertainState] = useState<boolean>(false);
 
-  // If no candidate provided, fallback to standard mock candidate
-  const currentCandidate: IdentityCandidate = candidate || {
-    candidate_id: 'cand_synth_001',
-    masked_name: 'E*** J***',
-    dob_year: 1984,
-    contact_hint: '(***) ***-4821',
-  };
+  const currentCandidate = candidateList[selectedCandidateIndex] || candidateList[0];
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +67,16 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
 
     if (!consentGiven) {
       setErrorMessage('Consent to electronic triage intake is required to proceed.');
+      return;
+    }
+
+    // Verify year matches candidate record
+    const enteredYear = parseInt(dob.split('-')[0], 10);
+    if (!isNaN(enteredYear) && currentCandidate.dob_year && enteredYear !== currentCandidate.dob_year) {
+      setUncertainState(true);
+      setErrorMessage(
+        `Uncertain Identity: The birth year entered (${enteredYear}) does not match this candidate record (${currentCandidate.dob_year}). Please re-verify your Date of Birth or proceed to the reception desk for staff assistance.`
+      );
       return;
     }
 
@@ -101,7 +125,38 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
 
         <form onSubmit={handleConfirm}>
           <CardContent className="space-y-5 px-6 sm:px-8">
-            {/* Masked Candidate Card */}
+            {/* Multiple Candidate Selector if > 1 */}
+            {candidateList.length > 1 && (
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-600 flex items-center">
+                  <Users className="w-3.5 h-3.5 mr-1 text-teal-600" />
+                  Multiple Match Candidates Found. Please select your record:
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  {candidateList.map((cand, idx) => (
+                    <button
+                      key={cand.candidate_id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCandidateIndex(idx);
+                        setErrorMessage(null);
+                        setUncertainState(false);
+                      }}
+                      className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                        selectedCandidateIndex === idx
+                          ? 'border-teal-600 bg-teal-50/70 text-teal-950 font-bold ring-2 ring-teal-500/20'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <div className="truncate">{cand.masked_name}</div>
+                      <div className="text-[11px] text-slate-500 font-normal">Born {cand.dob_year}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Selected Masked Candidate Card */}
             <div
               data-testid="masked-candidate-card"
               className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between"
@@ -150,7 +205,11 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                   data-testid="dob-input"
                   type="date"
                   value={dob}
-                  onChange={(e) => setDob(e.target.value)}
+                  onChange={(e) => {
+                    setDob(e.target.value);
+                    setErrorMessage(null);
+                    setUncertainState(false);
+                  }}
                   placeholder="YYYY-MM-DD"
                   className="w-full text-base py-3 pl-10"
                   required
@@ -158,7 +217,7 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                 <Calendar className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
               </div>
               <span className="text-xs text-slate-500">
-                Example: 1984-05-12 (Enter full birth date as registered in your records)
+                Example: {currentCandidate.dob_year}-05-12 (Enter full birth date as registered in your records)
               </span>
             </div>
 
@@ -181,19 +240,26 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
               <div
                 role="alert"
                 data-testid="identity-error-alert"
-                className="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-lg text-xs flex items-start space-x-2"
+                className={`p-3.5 rounded-lg text-xs flex items-start space-x-2 border ${
+                  uncertainState
+                    ? 'bg-amber-50 border-amber-300 text-amber-900'
+                    : 'bg-rose-50 border-rose-200 text-rose-900'
+                }`}
               >
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 ${uncertainState ? 'text-amber-600' : 'text-rose-600'}`} />
                 <div className="flex-1">
-                  <span className="font-semibold block">Verification Failed</span>
+                  <span className="font-semibold block">
+                    {uncertainState ? 'Uncertain Identity State' : 'Verification Failed'}
+                  </span>
                   <span>{errorMessage}</span>
                   {uncertainState && (
-                    <div className="mt-2 pt-2 border-t border-rose-200 flex items-center justify-between">
-                      <span className="text-rose-800">Need staff assistance instead?</span>
+                    <div className="mt-2 pt-2 border-t border-amber-200 flex items-center justify-between">
+                      <span className="text-amber-800">Need reception staff to look up your chart?</span>
                       <button
                         type="button"
+                        data-testid="uncertain-staff-link"
                         onClick={onRouteToStaff}
-                        className="font-bold underline text-rose-900 hover:text-rose-950"
+                        className="font-bold underline text-amber-900 hover:text-amber-950 cursor-pointer"
                       >
                         Go to Reception Desk
                       </button>

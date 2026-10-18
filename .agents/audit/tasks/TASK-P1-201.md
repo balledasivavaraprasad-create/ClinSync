@@ -15,7 +15,7 @@
 - [x] Emergency red-flag symptom detector triggering prominent Urgent Clinical Escalation Screen on high-risk keywords (e.g. chest pain, shortness of breath).
 - [x] Inactivity timeout warning (45s countdown) and answer retention ensuring answers are never erased on communication retry.
 - [x] Intake summary screen presenting recorded facts with Clinical Context Ledger taxonomy badges.
-- [x] Comprehensive automated test suite passing (16 new tests, 47/47 tests passing across 4 suites).
+- [x] Comprehensive automated test suite passing (19 tests in kiosk suite, 50/50 tests passing across 4 suites).
 
 ## Files Created / Modified
 - `apps/web/src/features/patient-kiosk/KioskWelcome.tsx`
@@ -35,7 +35,7 @@
 - Parallel Work Allowed: Built and verified with typed mock adapter; live API integration ready for `TASK-P2-201`.
 
 ## Verification & Test Results
-- `npm --prefix apps/web test`: PASSED (47/47 passed across 4 test suites in 2.51s)
+- `npm --prefix apps/web test`: PASSED (50/50 passed across 4 test suites in 3.50s)
 - `npm --prefix apps/web run lint`: PASSED (0 errors, 0 warnings)
 - `npm --prefix apps/web run typecheck`: PASSED (0 errors)
 - `npm --prefix apps/web run build`: PASSED (built in 1.84s)

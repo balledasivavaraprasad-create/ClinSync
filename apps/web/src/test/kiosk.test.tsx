@@ -145,6 +145,56 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
       fireEvent.click(screen.getByTestId('not-me-btn'));
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
+
+    it('displays uncertain identity warning when entered birth year mismatches candidate record', async () => {
+      const onRouteToStaff = vi.fn();
+      render(
+        <IdentityConfirmationModal
+          candidate={{
+            candidate_id: 'cand_1',
+            masked_name: 'E*** J***',
+            dob_year: 1984,
+            contact_hint: '(***) ***-4821',
+          }}
+          onConfirmed={vi.fn()}
+          onCancel={vi.fn()}
+          onRouteToStaff={onRouteToStaff}
+        />
+      );
+
+      // Enter mismatched birth year
+      fireEvent.change(screen.getByTestId('dob-input'), {
+        target: { value: '2001-05-12' },
+      });
+      fireEvent.click(screen.getByTestId('confirm-identity-btn'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('identity-error-alert')).toBeInTheDocument();
+        expect(screen.getByTestId('identity-error-alert')).toHaveTextContent(/Uncertain Identity/i);
+      });
+
+      // Tap reception desk link
+      fireEvent.click(screen.getByTestId('uncertain-staff-link'));
+      expect(onRouteToStaff).toHaveBeenCalled();
+    });
+
+    it('renders candidate selector when multiple candidates match', () => {
+      render(
+        <IdentityConfirmationModal
+          candidates={[
+            { candidate_id: 'c1', masked_name: 'E. J***son', dob_year: 1982, contact_hint: '4921' },
+            { candidate_id: 'c2', masked_name: 'M. P***el', dob_year: 1968, contact_hint: '8812' },
+          ]}
+          onConfirmed={vi.fn()}
+          onCancel={vi.fn()}
+          onRouteToStaff={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText(/Multiple Match Candidates Found/i)).toBeInTheDocument();
+      expect(screen.getAllByText('E. J***son').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('M. P***el')).toBeInTheDocument();
+    });
   });
 
   describe('NewPatientForm Component', () => {
@@ -268,6 +318,31 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
       const input = screen.getByTestId('intake-answer-input') as HTMLInputElement;
       expect(input.value).toBe('Persistent dry cough');
     });
+
+    it('simulates voice recording and presents captured speech with clarification notice', async () => {
+      render(
+        <IntakeInterview
+          encounterId="enc_test_01"
+          patientName="Eleanor Johnson"
+          onComplete={vi.fn()}
+          onResetSession={vi.fn()}
+        />
+      );
+
+      // Tap microphone to start recording
+      const micBtn = screen.getByTestId('voice-record-btn');
+      fireEvent.click(micBtn);
+
+      expect(screen.getByLabelText('Stop Listening')).toBeInTheDocument();
+
+      // Tap microphone to stop recording and trigger transcription
+      fireEvent.click(micBtn);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('clarification-notice')).toBeInTheDocument();
+        expect(screen.getByText(/Speech captured/i)).toBeInTheDocument();
+      });
+    });
   });
 
   describe('AudioVisualizer Component', () => {
@@ -340,7 +415,7 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
 
       // Enter DOB and confirm
       fireEvent.change(screen.getByTestId('dob-input'), {
-        target: { value: '1984-05-12' },
+        target: { value: '1982-05-12' },
       });
       fireEvent.click(screen.getByTestId('confirm-identity-btn'));
 

@@ -141,6 +141,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const [audioState, setAudioState] = useState<'idle' | 'listening' | 'transcribing' | 'thinking'>('idle');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [micPermissionNotice, setMicPermissionNotice] = useState<string | null>(null);
+  const [clarificationNotice, setClarificationNotice] = useState<string | null>(null);
 
   // Inactivity timeout state
   const [inactivityTimer, setInactivityTimer] = useState<number>(45);
@@ -199,6 +201,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       }
       setAudioState('idle');
       setSubmissionError(null);
+      setMicPermissionNotice(null);
+      setClarificationNotice(null);
     }
   }, [currentStepIndex, answers, currentQuestion]);
 
@@ -216,9 +220,12 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
-  // Handle Voice Recording Simulation
-  const handleToggleVoice = () => {
+  // Handle Voice Recording Simulation & Permission
+  const handleToggleVoice = async () => {
     resetTimer();
+    setMicPermissionNotice(null);
+    setClarificationNotice(null);
+
     if (audioState === 'listening') {
       // Stop listening -> simulate transcription
       setAudioState('transcribing');
@@ -227,10 +234,33 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           currentQuestion.quickChips[0] || 'I have been experiencing symptoms since yesterday.';
         setCurrentResponse(simulatedVoiceText);
         setAudioState('idle');
-      }, 900);
+        setClarificationNotice(`Speech captured: "${simulatedVoiceText}". Review or tap Next Question to confirm.`);
+      }, 800);
     } else {
-      // Start listening
-      setAudioState('listening');
+      // Check microphone permission when navigator mediaDevices is available
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getUserMedia === 'function'
+      ) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach((track) => track.stop());
+          setAudioState('listening');
+        } catch (err: unknown) {
+          const isDenied =
+            err instanceof Error &&
+            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
+          if (isDenied) {
+            setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
+            setModality('touch');
+            return;
+          }
+          setAudioState('listening');
+        }
+      } else {
+        setAudioState('listening');
+      }
     }
   };
 
@@ -489,6 +519,42 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                   ? 'Listening to you... Tap to finish.'
                   : 'Tap the microphone to speak your answer.'}
               </span>
+            </div>
+          )}
+
+          {/* Microphone Permission Notice */}
+          {micPermissionNotice && (
+            <div
+              role="alert"
+              data-testid="mic-permission-notice"
+              className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs flex items-center justify-between"
+            >
+              <span>{micPermissionNotice}</span>
+              <button
+                type="button"
+                onClick={() => setMicPermissionNotice(null)}
+                className="text-amber-700 hover:text-amber-950 font-bold ml-2 text-xs cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Speech Clarification Notice */}
+          {clarificationNotice && (
+            <div
+              role="status"
+              data-testid="clarification-notice"
+              className="p-3 bg-teal-50 border border-teal-200 text-teal-900 rounded-xl text-xs flex items-center justify-between"
+            >
+              <span>{clarificationNotice}</span>
+              <button
+                type="button"
+                onClick={() => setClarificationNotice(null)}
+                className="text-teal-700 hover:text-teal-950 font-bold ml-2 text-xs cursor-pointer"
+              >
+                OK
+              </button>
             </div>
           )}
 

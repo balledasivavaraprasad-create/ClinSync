@@ -21,6 +21,7 @@ export const PatientKioskFlow: React.FC = () => {
   const [patientName, setPatientName] = useState<string>('');
   const [encounterId, setEncounterId] = useState<string>('');
   const [collectedFacts, setCollectedFacts] = useState<ClinicalFact[]>([]);
+  const [candidates, setCandidates] = useState<IdentityCandidate[]>([]);
   const [candidate, setCandidate] = useState<IdentityCandidate | undefined>(undefined);
 
   // 1. Returning patient check-in initiated
@@ -28,16 +29,18 @@ export const PatientKioskFlow: React.FC = () => {
     try {
       // Lookup candidate list from mockApi
       const res = await mockApi.lookupCandidates({});
-      const found = res.data.candidates[0];
-      setCandidate(found);
+      setCandidates(res.data.candidates);
+      setCandidate(res.data.candidates[0]);
     } catch {
       // fallback candidate if lookup fails
-      setCandidate({
-        candidate_id: 'cand_synth_001',
-        masked_name: 'E*** J***',
-        dob_year: 1984,
+      const fallback: IdentityCandidate = {
+        candidate_id: 'cand_demo_001',
+        masked_name: 'E. J***son',
+        dob_year: 1982,
         contact_hint: '(***) ***-4821',
-      });
+      };
+      setCandidates([fallback]);
+      setCandidate(fallback);
     }
     setCurrentStep('confirm-identity');
   };
@@ -112,6 +115,7 @@ export const PatientKioskFlow: React.FC = () => {
         {currentStep === 'confirm-identity' && (
           <IdentityConfirmationModal
             candidate={candidate}
+            candidates={candidates}
             onConfirmed={handleIdentityConfirmed}
             onCancel={handleResetSession}
             onRouteToStaff={handleResetSession}
