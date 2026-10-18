@@ -54,14 +54,19 @@ apps/api/
 | `GET` | `/api/v1/documents/{document_id}/status` | Query document processing status and extracted facts | Phase 3 (`TASK-P2-301`) |
 | `GET` | `/api/v1/encounters/{encounter_id}/ledger` | Authoritative Clinical Context Ledger with provenance & conflicts | Phase 3 (`TASK-P2-301`) |
 | `GET` | `/api/v1/encounters/{encounter_id}/diff` | Patient Context Diff comparing historical EHR with current facts | Phase 3 (`TASK-P2-301`) |
+| `POST` | `/api/v1/encounters/{encounter_id}/routing-review` | Deterministic safety policy & allowlisted specialty routing | Phase 4 (`TASK-P2-401`) |
+| `GET` | `/api/v1/appointments/slots` | Query seeded available appointment slots by department & date | Phase 4 (`TASK-P2-401`) |
+| `POST` | `/api/v1/appointments` | Atomically book slot within transaction (idempotent, race-safe) | Phase 4 (`TASK-P2-401`) |
 
 ## Key Engineering & Privacy Invariants
 1. **Identity Confirmation Gate**: Candidate lookup returns strictly masked display hints (`J*** D**`). Medical records and patient context are never returned until secondary factor (DOB) confirmation succeeds.
 2. **Authoritative Clinical Record**: SQLite/SQLAlchemy is the sole source of truth for patients, encounters, facts, and bookings.
 3. **Safe Storage & Immutability**: Uploaded documents (PDF, PNG, JPEG) are checked against magic bytes and size caps (10MB), stored securely on disk under stable UUIDs without executing payloads, and tracked with sha256 checksums.
 4. **Clinical Context Ledger & Diff**: Every fact retains source modality (`PATIENT_VOICE`, `PATIENT_FORM`, `UPLOADED_DOCUMENT`), source ID, status, and clinical timestamp. Diffs compute new, changed, and conflicting facts without silent reconciliation.
-5. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`), and return standard envelopes. No direct DB queries in route modules.
-6. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
+5. **Deterministic Safety Policy (Rule 10)**: Clinical model outputs cannot independently escalate or schedule emergency patients. High-risk acute red flags (ACS, respiratory distress, FAST acute stroke, anaphylaxis, massive hemorrhage, psychiatric crisis) unconditionally trigger `URGENT_ESCALATION`.
+6. **Atomic Booking & Race Safety**: Appointment booking transactions enforce database-level uniqueness constraints and idempotency checking. Concurrent duplicate booking attempts for the same slot strictly result in 1 winner (201 Created) and 409 Conflict (`SLOT_UNAVAILABLE`).
+7. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`, `RoutingService`, `AppointmentService`), and return standard envelopes. No direct DB queries in route modules.
+8. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
 
 ## Running Locally
 

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, generate_uuid
 
 if TYPE_CHECKING:
+    from app.models.appointment import Appointment
     from app.models.document import Document
     from app.models.fact import ClinicalFact
     from app.models.patient import Patient
@@ -58,4 +59,9 @@ class Encounter(Base, TimestampMixin):
         "Document",
         back_populates="encounter",
         cascade="all, delete-orphan",
+    )
+    appointment: Mapped[Optional["Appointment"]] = relationship(
+        "Appointment",
+        back_populates="encounter",
+        uselist=False,
     )
