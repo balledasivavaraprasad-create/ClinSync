@@ -8,9 +8,10 @@
 - Implemented normalized error taxonomy (`ProviderRateLimitError`, `ProviderTimeoutError`, `ProviderAuthenticationError`, `ProviderUnavailableError`, `StructuredOutputValidationError`).
 - Added input prompt injection guardrail (`PromptGuard`) to detect and block adversarial prompt attempts before model invocation.
 - Added output schema validation guardrail (`OutputSchemaGuard`) for strict Pydantic compliance.
+- Added tool policy guardrail (`ToolPolicyGuard`) enforcing least-privilege tool allowlists, parameter validation, and blocking arbitrary command execution (`eval`, `exec`, shell/SQL).
 - Implemented structured observability and telemetry manager (`TraceManager`) with Langfuse cloud integration and local in-memory fallback, with automated PII and key redaction.
-- Created synthetic evaluation framework with `EvalRunner`, golden test case (`CASE-ROUTINE-001`), and schema/groundedness assertions.
-- Added comprehensive unit tests covering offline operations, error retries, fallback switching, guardrails, and live provider verifications.
+- Created synthetic evaluation framework with `EvalRunner`, golden test cases (`CASE-ROUTINE-001`, `CASE-URGENT-002`, `CASE-ADVERSARIAL-003`), synthetic datasets, and complete assertion suite (`assert_schema_conformity`, `assert_groundedness`, `assert_no_fabricated_citations`, `assert_deterministic_escalation`, `assert_privacy_preserved`).
+- Added comprehensive unit tests covering offline operations, error retries, fallback switching, guardrails, tool authorization, advanced assertions, and live provider verifications.
 
 ## Files Created / Modified / Deleted
 - Created:
@@ -26,22 +27,41 @@
   - `apps/ai/clinsync_ai/observability/__init__.py`
   - `apps/ai/clinsync_ai/guardrails/prompt_guard.py`
   - `apps/ai/clinsync_ai/guardrails/schema_guard.py`
+  - `apps/ai/clinsync_ai/guardrails/tool_guard.py`
   - `apps/ai/clinsync_ai/guardrails/__init__.py`
   - `apps/ai/clinsync_ai/routing/gateway.py`
   - `apps/ai/clinsync_ai/routing/__init__.py`
   - `evals/cases/case_001_routine_intake.json`
+  - `evals/cases/case_002_urgent_escalation.json`
+  - `evals/cases/case_003_adversarial_injection.json`
+  - `evals/cases/case_004_invalid_structured_output.json`
+  - `evals/cases/case_005_provider_failure_fallback.json`
+  - `evals/datasets/routine_intake_synthetic.json`
+  - `evals/datasets/urgent_escalation_synthetic.json`
+  - `evals/datasets/adversarial_prompt_injection.json`
+  - `evals/datasets/medication_allergy_conflict.json`
+  - `evals/assertions/__init__.py`
   - `evals/assertions/schema_assertion.py`
   - `evals/assertions/groundedness_assertion.py`
+  - `evals/assertions/citation_assertion.py`
+  - `evals/assertions/safety_assertion.py`
+  - `evals/reports/golden_benchmark_report.json`
   - `evals/runner.py`
+  - `apps/ai/clinsync_ai/evaluators/__init__.py`
+  - `apps/ai/clinsync_ai/evaluators/schema.py`
+  - `apps/ai/clinsync_ai/evaluators/groundedness.py`
+  - `apps/ai/clinsync_ai/evaluators/latency.py`
   - `apps/ai/tests/conftest.py`
   - `apps/ai/tests/test_gateway_offline.py`
   - `apps/ai/tests/test_retries_and_fallback.py`
   - `apps/ai/tests/test_guardrails.py`
+  - `apps/ai/tests/test_tool_guard.py`
+  - `apps/ai/tests/test_advanced_assertions.py`
   - `apps/ai/tests/test_observability.py`
   - `apps/ai/tests/test_eval_runner.py`
   - `apps/ai/tests/test_live_providers.py`
   - `.agents/audit/tasks/TASK-P3-101.md`
-- Modified: None (strictly preserved Person 1 and Person 2 workspaces)
+- Modified: None outside Person 3 ownership
 - Deleted: None
 
 ## Contracts & Dependencies
@@ -51,13 +71,18 @@
 
 ## Verification & Test Results
 - Commands Run:
-  - `python3 -m pytest apps/ai/tests -v`: 16 passed in 14.04s
-  - `python3 evals/runner.py`: 1/1 golden cases passed
-  - `node packages/contracts/scripts/validate-contracts.js`: Contracts OK (15 endpoints, 25 schemas)
+  - `python3 -m pytest apps/ai/tests -v`: 24 passed in 35.76s (including live Gemini and Groq verifications)
+  - `python3 -m pytest apps/ai/tests -k "not live"`: 22 passed in 0.06s (offline suite)
+  - `python3 evals/runner.py`: 5/5 golden cases passed (100.0% pass rate, benchmark output written to `evals/reports/golden_benchmark_report.json`)
+  - `npm run contracts:validate`: Contracts OK (15 endpoints, 25 schemas)
   - `git diff --check`: 0 errors / clean whitespace
+
 
 ## Security & Safety Checks
 - Redacted / Synthetic data only verified: YES
+- Tool policy guardrail active (blocks arbitrary command/SQL execution): YES
+- Deterministic escalation assertion passed: YES
+- Citation grounding assertion active: YES
 - No raw patient PII in traces: YES (Regex masking for SSN, phone, keys)
 - No secrets committed: YES (`.env` ignored)
 

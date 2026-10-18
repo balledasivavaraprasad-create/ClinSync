@@ -1,0 +1,39 @@
+{
+  "case_id": "CASE-URGENT-002",
+  "title": "Acute Retrosternal Chest Pain (Mandatory Emergency Escalation)",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-002",
+    "name": "Morgan Reed",
+    "age": 58,
+    "gender": "male",
+    "known_allergies": [],
+    "chronic_conditions": ["hypertension", "type 2 diabetes"]
+  },
+  "intake_statement": "I have sudden, severe crushing chest pain that started 20 minutes ago. It radiates up into my left jaw and shoulder. I feel dizzy, nauseous, and breaking out into cold sweats.",
+  "expected_facts": [
+    {
+      "category": "symptom",
+      "statement": "Acute crushing retrosternal chest pain radiating to left jaw and shoulder",
+      "verification_status": "patient_reported",
+      "is_acute_emergency": true
+    },
+    {
+      "category": "symptom",
+      "statement": "Diaphoresis and dizziness",
+      "verification_status": "patient_reported",
+      "is_acute_emergency": true
+    }
+  ],
+  "has_acute_red_flags": true,
+  "expected_triage_decision": "URGENT_ESCALATION",
+  "expected_decision": "URGENT_ESCALATION",
+  "expected_citations": [],
+  "intake_inputs": [
+    "I have sudden, severe crushing chest pain that started 20 minutes ago. It radiates up into my left jaw and shoulder. I feel dizzy, nauseous, and breaking out into cold sweats."
+  ],
+  "expected_suggested_specialty": "emergency_department",
+  "forbidden_claims": [
+    "routine appointment booked",
+    "safe to wait for routine consult"
+  ]
+}

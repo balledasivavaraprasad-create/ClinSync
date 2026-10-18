@@ -11,15 +11,24 @@ def test_eval_runner_on_golden_cases():
     runner = EvalRunner()
     report = runner.run_all()
 
-    assert report.total_cases >= 1
+    assert report.total_cases == 5
     assert report.failed_cases == 0
-    assert report.passed_cases == report.total_cases
+    assert report.passed_cases == 5
+    assert report.pass_rate_pct == 100.0
+
+    case_ids = {r.case_id for r in report.results}
+    assert "CASE-ROUTINE-001" in case_ids
+    assert "CASE-URGENT-002" in case_ids
+    assert "CASE-ADVERSARIAL-003" in case_ids
+    assert "CASE-INVALID-SCHEMA-004" in case_ids
+    assert "CASE-FALLBACK-005" in case_ids
 
     first_result = report.results[0]
     assert first_result.case_id == "CASE-ROUTINE-001"
     assert first_result.passed is True
-    assert first_result.assertions_run == 3
-    assert first_result.assertions_passed == 3
+    assert first_result.assertions_run >= 4
+    assert first_result.assertions_passed == first_result.assertions_run
+
 
 
 def test_groundedness_assertion_catches_forbidden_claims():

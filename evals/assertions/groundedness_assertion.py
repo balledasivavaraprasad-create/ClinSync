@@ -12,9 +12,11 @@ class GroundednessAssertionResult(BaseModel):
 
 
 def assert_groundedness(
-    generated_text: str,
+    generated_text: str | None = None,
     forbidden_claims: list[str] | None = None,
     required_keywords: list[str] | None = None,
+    claims: list[str] | None = None,
+    verified_facts: list[str] | None = None,
 ) -> GroundednessAssertionResult:
     """Assert that generated output does not include ungrounded/forbidden claims and covers key facts."""
     text_lower = (generated_text or "").lower()
@@ -30,6 +32,14 @@ def assert_groundedness(
         for req in required_keywords:
             if req.lower() not in text_lower:
                 missing_expected.append(req)
+
+    # Check ungrounded claims against verified ledger facts if provided
+    if claims and verified_facts is not None:
+        verified_lower = [vf.lower() for vf in verified_facts]
+        for c in claims:
+            # Check if claim is supported by any verified fact
+            if not any(vf in c.lower() or c.lower() in vf for vf in verified_lower):
+                missing_expected.append(f"Ungrounded claim: '{c}' not found in verified facts.")
 
     passed = len(forbidden_hits) == 0 and len(missing_expected) == 0
     details = "Groundedness checks passed." if passed else "Groundedness violations detected."

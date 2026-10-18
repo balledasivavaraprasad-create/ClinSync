@@ -74,7 +74,7 @@ class GroqProvider(ModelProvider):
         system_instruction: str | None = None,
         model: str | None = None,
         temperature: float = 0.2,
-        max_tokens: int = 1024,
+        max_tokens: int = 512,
         timeout: float = 30.0,
     ) -> ModelResponse:
         client = self._get_client()

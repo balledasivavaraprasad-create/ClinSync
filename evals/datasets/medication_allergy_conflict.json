@@ -1,0 +1,10 @@
+[
+  {
+    "dataset_id": "DS-ALLERGY-001",
+    "patient": "SYNTH-PAT-201",
+    "historical_allergy": "Penicillin (anaphylaxis)",
+    "conflicting_prescription_candidate": "Amoxicillin 500mg oral",
+    "expected_conflict_status": "HIGH_SEVERITY_ALLERGY_CONTRAINDICATION",
+    "requires_hard_stop": true
+  }
+]

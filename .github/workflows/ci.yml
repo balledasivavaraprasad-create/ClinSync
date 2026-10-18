@@ -99,12 +99,12 @@ jobs:
         if: steps.detect.outputs.enabled == 'true'
         shell: bash
         run: |
-          if [[ -f package-lock.json ]]; then
-            npm ci
-          elif [[ -f apps/web/package-lock.json ]]; then
-            cd apps/web && npm ci
-          else
+          if [[ -f apps/web/package-lock.json ]]; then
+            cd apps/web && (npm ci || npm install)
+          elif [[ -f apps/web/package.json ]]; then
             cd apps/web && npm install
+          elif [[ -f package-lock.json ]]; then
+            npm ci || npm install
           fi
       - name: Lint web
         if: steps.detect.outputs.enabled == 'true'
@@ -146,10 +146,11 @@ jobs:
         run: |
           cd apps/api
           python -m pip install --upgrade pip
-          if [[ -f pyproject.toml ]]; then
-            python -m pip install -e '.[dev]' || python -m pip install . || true
-          elif [[ -f requirements.txt ]]; then
+          if [[ -f requirements.txt ]]; then
             python -m pip install -r requirements.txt
+          fi
+          if [[ -f pyproject.toml ]]; then
+            python -m pip install -e '.[dev]' || python -m pip install -e .
           fi
           python -m pip install pytest
       - name: Run API tests
@@ -186,12 +187,14 @@ jobs:
         run: |
           cd apps/ai
           python -m pip install --upgrade pip
-          if [[ -f pyproject.toml ]]; then
-            python -m pip install -e '.[dev]' || python -m pip install . || true
-          elif [[ -f requirements.txt ]]; then
+          if [[ -f requirements.txt ]]; then
             python -m pip install -r requirements.txt
           fi
+          if [[ -f pyproject.toml ]]; then
+            python -m pip install -e '.[dev]' || python -m pip install -e .
+          fi
           python -m pip install pytest
+
       - name: Run AI tests
         if: steps.detect.outputs.enabled == 'true'
         shell: bash
