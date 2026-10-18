@@ -1,5 +1,13 @@
 """Schema exports."""
 
+from app.schemas.appointment import (
+    AppointmentSlotSchema,
+    BookingData,
+    BookingRequest,
+    BookingResponse,
+    SlotsData,
+    SlotsResponse,
+)
 from app.schemas.audit import AuditEvent, AuditEventResponse
 from app.schemas.common import ResponseEnvelope
 from app.schemas.document import (
@@ -45,6 +53,7 @@ from app.schemas.patient import (
     PatientRegistrationRequest,
     PatientResponse,
 )
+from app.schemas.routing import DecisionResult, DecisionResultResponse
 
 __all__ = [
     "ResponseEnvelope",
@@ -85,4 +94,12 @@ __all__ = [
     "ConflictingFactDetail",
     "DiffData",
     "DiffResponse",
+    "DecisionResult",
+    "DecisionResultResponse",
+    "AppointmentSlotSchema",
+    "SlotsData",
+    "SlotsResponse",
+    "BookingRequest",
+    "BookingData",
+    "BookingResponse",
 ]

@@ -32,6 +32,7 @@
 | TASK-P3-301: Document Extraction, Ledger & Diff Engine | Person 3 | INTEGRATED | `main` | 51 tests pass, 9 evals pass, LlamaIndex retrieval, provenance & diff verified | None |
 | TASK-P1-301: Document Upload, Clinical Ledger & Context Diff UI | Person 1 | INTEGRATED | `main` | 69 web tests pass, drag-and-drop, provenance styling, conflict alert verified | None |
 | TASK-P3-401: Specialty Routing & Triage Guardrails | Person 3 | INTEGRATED | `main` | 63 tests pass, 11/11 golden benchmark evals pass, acute red flag triage guardrail verified | None |
+| TASK-P2-401: Safety Gates & Appointment Scheduling APIs | Person 2 | VERIFIED | `feat/p2-scheduling-api` | 87 tests pass, acute red flag triage, allowlisted routing, atomic slot booking & concurrency verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -44,8 +45,8 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [x] A sample PDF/image can be attached and extracted facts retain source metadata.
 - [x] Clinical Context Ledger distinguishes reported, extracted-unverified, historical and doctor-confirmed facts.
 - [x] Patient Context Diff shows meaningful new/changed/historical/conflicting context.
-- [ ] Deterministic demo policy routes a predefined high-risk scenario to the configured escalation path.
-- [ ] Routine scenario books a seeded slot; conflicting booking is rejected.
+- [x] Deterministic demo policy routes a predefined high-risk scenario to the configured escalation path.
+- [x] Routine scenario books a seeded slot; conflicting booking is rejected.
 - [ ] Doctor queue shows the encounter and source-linked brief; audio has a safe text fallback.
 - [x] Golden tests include invalid model output, unsupported source claims and prompt injection.
 - [ ] Gemini generation adapter works with `GEMINI_API_KEY` and has schema/output validation.
