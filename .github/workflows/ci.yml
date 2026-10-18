@@ -99,12 +99,12 @@ jobs:
         if: steps.detect.outputs.enabled == 'true'
         shell: bash
         run: |
-          if [[ -f package-lock.json ]]; then
-            npm ci
-          elif [[ -f apps/web/package-lock.json ]]; then
-            cd apps/web && npm ci
-          else
+          if [[ -f apps/web/package-lock.json ]]; then
+            cd apps/web && (npm ci || npm install)
+          elif [[ -f apps/web/package.json ]]; then
             cd apps/web && npm install
+          elif [[ -f package-lock.json ]]; then
+            npm ci || npm install
           fi
       - name: Lint web
         if: steps.detect.outputs.enabled == 'true'
