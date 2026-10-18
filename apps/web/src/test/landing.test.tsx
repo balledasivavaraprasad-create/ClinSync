@@ -86,4 +86,24 @@ describe('ClinSync Landing Page & Prototype Integration Suite', () => {
     // Returns to landing page
     expect(screen.getByText(/Pre-consultation intelligence/i)).toBeInTheDocument();
   });
+
+  it('toggles between dark and light modes on the landing page', () => {
+    const handleLaunch = vi.fn();
+    render(
+      <App />
+    );
+
+    const themeToggleBtn = screen.getByTestId('landing-theme-toggle');
+    expect(themeToggleBtn).toBeInTheDocument();
+
+    const initialTheme = document.documentElement.getAttribute('data-theme');
+    fireEvent.click(themeToggleBtn);
+
+    const toggledTheme = document.documentElement.getAttribute('data-theme');
+    expect(toggledTheme).not.toBe(initialTheme);
+
+    // Toggle back
+    fireEvent.click(themeToggleBtn);
+    expect(document.documentElement.getAttribute('data-theme')).toBe(initialTheme);
+  });
 });

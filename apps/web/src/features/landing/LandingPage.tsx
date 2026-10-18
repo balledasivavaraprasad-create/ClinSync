@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './landing.css';
 import { initLandingInteractions } from './landingInteractions';
+import { useTheme } from '../../lib/theme';
 
 export interface LandingPageProps {
   onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa') => void;
@@ -9,6 +10,7 @@ export interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLogin }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { toggleTheme, isDark } = useTheme();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -88,6 +90,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
             <a href="#architecture">Architecture</a>
           </nav>
           <div className="nav__actions">
+            {/* Theme Toggle Button: Dark & Light Modes */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="theme-toggle"
+              id="themeToggle"
+              aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
+              data-cursor="theme"
+              data-testid="landing-theme-toggle"
+            >
+              <span className="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              </span>
+              <span className="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              </span>
+            </button>
+
             <button
               onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('doctor'))}
               className="btn btn--ghost"
@@ -157,6 +190,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         <a href="#brief">Doctor Brief</a>
         <a href="#evidence">Evidence</a>
         <a href="#architecture">Architecture</a>
+        <div className="mobile-menu__row">
+          <span>Theme Mode ({isDark ? 'Dark' : 'Light'})</span>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="theme-toggle theme-toggle--inline"
+            aria-label="Toggle theme mode"
+            data-testid="landing-theme-toggle-mobile"
+          >
+            {isDark ? 'Switch to Light' : 'Switch to Dark'}
+          </button>
+        </div>
         <button
           onClick={() => onLaunchApp('kiosk')}
           className="mobile-menu__cta"

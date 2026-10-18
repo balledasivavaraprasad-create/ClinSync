@@ -35,8 +35,10 @@ export function initLandingInteractions(
 
   document.body.classList.add('clinsync-landing-active', 'is-loading');
 
-  // Set theme to light by default matching the reference site
-  document.documentElement.setAttribute('data-theme', 'light');
+  // Maintain active theme preference from ThemeProvider if set; fallback to light if unset
+  if (!document.documentElement.getAttribute('data-theme')) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
 
   const cleanupFns: Array<() => void> = [];
 
@@ -737,6 +739,5 @@ export function initLandingInteractions(
   return () => {
     cleanupFns.forEach((fn) => fn());
     document.body.classList.remove('clinsync-landing-active', 'is-loading', 'is-ready');
-    document.documentElement.removeAttribute('data-theme');
   };
 }
