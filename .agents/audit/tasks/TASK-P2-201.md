@@ -3,7 +3,8 @@
 - **Owner**: Person 2 (Backend & Integration Captain)
 - **Branch**: `feat/p2-patient-api`
 - **Workstream**: Backend & API (`apps/api/**`)
-- **Status**: IMPLEMENTED / VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main` (commit `b0947f4`)
 
 ## Goal and Acceptance Criteria
 - [x] Candidate lookup returns masked suggestions with zero medical history (`POST /api/v1/identity/candidates`).
