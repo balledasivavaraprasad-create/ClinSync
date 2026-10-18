@@ -1,0 +1,30 @@
+{
+  "case_id": "CASE-INTAKE-CONFLICT-007",
+  "title": "Conflicting Clinical Statements Across Turns (Rule 11)",
+  "test_type": "multi_turn_intake",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-007",
+    "name": "Jordan Lee",
+    "age": 45,
+    "gender": "female",
+    "known_allergies": ["penicillin"],
+    "chronic_conditions": []
+  },
+  "max_turns": 4,
+  "turns": [
+    {
+      "turn": 1,
+      "input": "I have been having a mild headache for 2 days",
+      "expected_status": "IN_PROGRESS"
+    },
+    {
+      "turn": 2,
+      "input": "Actually, my chief problem today is a severe rash on my legs and I took amoxicillin",
+      "expected_status": "IN_PROGRESS"
+    }
+  ],
+  "expected_final_status": "IN_PROGRESS",
+  "expected_emergency_detected": false,
+  "expected_extracted_concepts": ["chief_complaint"],
+  "expected_conflicting_fields": ["chief_complaint"]
+}

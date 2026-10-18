@@ -226,7 +226,92 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 3: Standard, urgent, and provider failure fallback cases
+        # Branch 3: Multi-turn LangGraph adaptive intake workflow
+        if case_data.get("test_type") == "multi_turn_intake":
+            from clinsync_ai.intake.service import AdaptiveIntakeService
+            gw = self.gateway or self._get_case_gateway(case_id, case_data)
+            service = AdaptiveIntakeService(gateway=gw)
+            enc_id = f"ENC-{case_id}"
+            pat_id = case_data.get("patient_profile", {}).get("patient_id", "PAT-001")
+            turns = case_data.get("turns", [])
+
+            all_turns_valid = True
+            for t_item in turns:
+                res = service.advance(
+                    encounter_id=enc_id,
+                    patient_statement=t_item["input"],
+                    patient_id=pat_id,
+                )
+                exp_turn_status = t_item.get("expected_status")
+                if exp_turn_status and res.status != exp_turn_status:
+                    all_turns_valid = False
+
+            session = service.get_session(enc_id)
+            final_status_matches = (session.status == case_data.get("expected_final_status"))
+            emergency_matches = (session.emergency_detected == case_data.get("expected_emergency_detected", False))
+
+            concepts_present = True
+            for exp_concept in case_data.get("expected_extracted_concepts", []):
+                if exp_concept not in session.known_fields:
+                    concepts_present = False
+                    break
+
+            assertions_details.append({
+                "assertion": "turn_status_progression",
+                "passed": all_turns_valid,
+            })
+            if all_turns_valid:
+                passed_count += 1
+
+            assertions_details.append({
+                "assertion": "final_workflow_status",
+                "passed": final_status_matches,
+                "status": session.status,
+            })
+            if final_status_matches:
+                passed_count += 1
+
+            assertions_details.append({
+                "assertion": "emergency_flag_conformance",
+                "passed": emergency_matches,
+                "emergency_detected": session.emergency_detected,
+            })
+            if emergency_matches:
+                passed_count += 1
+
+            assertions_details.append({
+                "assertion": "extracted_clinical_concepts",
+                "passed": concepts_present,
+                "known_fields": list(session.known_fields.keys()),
+            })
+            if concepts_present:
+                passed_count += 1
+
+            if "expected_conflicting_fields" in case_data:
+                conflicts_match = True
+                for exp_conf in case_data["expected_conflicting_fields"]:
+                    if exp_conf not in session.conflicting_fields:
+                        conflicts_match = False
+                        break
+                assertions_details.append({
+                    "assertion": "conflicting_fields_detected",
+                    "passed": conflicts_match,
+                    "conflicting_fields": session.conflicting_fields,
+                })
+                if conflicts_match:
+                    passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=2.0,
+                details=assertions_details,
+            )
+
+        # Branch 4: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"

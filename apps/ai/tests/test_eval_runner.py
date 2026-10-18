@@ -11,9 +11,9 @@ def test_eval_runner_on_golden_cases():
     runner = EvalRunner()
     report = runner.run_all()
 
-    assert report.total_cases == 5
+    assert report.total_cases >= 6
     assert report.failed_cases == 0
-    assert report.passed_cases == 5
+    assert report.passed_cases == report.total_cases
     assert report.pass_rate_pct == 100.0
 
     case_ids = {r.case_id for r in report.results}
@@ -22,6 +22,8 @@ def test_eval_runner_on_golden_cases():
     assert "CASE-ADVERSARIAL-003" in case_ids
     assert "CASE-INVALID-SCHEMA-004" in case_ids
     assert "CASE-FALLBACK-005" in case_ids
+    assert "CASE-INTAKE-WORKFLOW-006" in case_ids
+    assert "CASE-INTAKE-CONFLICT-007" in case_ids
 
     first_result = report.results[0]
     assert first_result.case_id == "CASE-ROUTINE-001"

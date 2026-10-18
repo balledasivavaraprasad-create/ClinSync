@@ -24,26 +24,56 @@ apps/api/
 │   ├── api/
 │   │   └── v1/
 │   │       ├── router.py       # API v1 central router aggregating all endpoints
-│   │       └── routes/         # Thin route handlers (encounters, identity, slots, etc.)
+│   │       └── routes/         # Thin route handlers (encounters, identity, health, patients)
 │   ├── core/                   # Central settings, logging, structured error handlers
-│   ├── auth/                   # Hospital/doctor authentication & tenant/encounter tokens
 │   ├── db/                     # SQLAlchemy session, engine lifecycle, SQLite pragma config
-│   ├── models/                 # SQLAlchemy ORM models (Patient, Encounter, Fact, Slot)
+│   ├── models/                 # SQLAlchemy ORM models (Patient, Encounter, ClinicalFact, AuditEvent)
 │   ├── schemas/                # Pydantic v2 schemas conforming to API contracts
-│   ├── repositories/           # Data access layer isolating DB queries from business logic
-│   ├── services/               # Core business services (booking, policy, identity, facts)
-│   ├── dependencies/           # FastAPI dependency injection providers (db, auth, services)
+│   ├── services/               # Core business services (PatientService, EncounterService)
+│   ├── dependencies/           # FastAPI dependency injection providers (db, request_id)
 │   └── audit/                  # Append-only audit logger for sensitive actions
 ├── migrations/                 # Alembic migration scripts
 └── tests/
-    ├── unit/                   # Unit tests for policy rules and business logic
-    ├── integration/            # SQLite transaction, concurrency, and repository tests
+    ├── unit/                   # Unit tests for models, config, and error handlers
+    ├── integration/            # SQLite lifecycle, identity flow, and encounter flow tests
     └── contract/               # API contract conformity tests against openapi.json
 ```
 
-## Key Engineering Rules
-1. **Authoritative Clinical Record**: SQLite/SQLAlchemy is the sole source of truth for patients, encounters, facts, and bookings.
-2. **Thin Routes, Heavy Services**: Route handlers parse requests, call services, and return responses. No database queries in route handlers.
-3. **Transaction Safety**: Slot booking must execute inside an explicit atomic transaction with conflict rejection (`SLOT_UNAVAILABLE`).
-4. **Deterministic Gatekeeper**: LLMs suggest facts; deterministic backend policies enforce clinical escalation, permissions, and booking.
+## Implemented API Endpoints (Phase 1 & Phase 2)
+
+| Method | Endpoint | Description | Phase / Gate |
+|---|---|---|---|
+| `GET` | `/api/v1/health` | Service health, DB connectivity, version check | Phase 1 (`TASK-P2-101`) |
+| `POST` | `/api/v1/identity/candidates` | Candidate lookup with masked names (no clinical history) | Phase 2 (`TASK-P2-201`) |
+| `POST` | `/api/v1/identity/confirm` | Secondary verification (DOB); issues confirmation token | Phase 2 (`TASK-P2-201`) |
+| `GET` | `/api/v1/patients/{patient_id}/context` | Authorized patient clinical context (blocked if unconfirmed) | Phase 2 (`TASK-P2-201`) |
+| `POST` | `/api/v1/patients/register` | Non-biometric manual patient registration fallback | Phase 2 (`TASK-P2-201`) |
+| `POST` | `/api/v1/encounters` | Create persistent encounter requiring confirmed patient | Phase 2 (`TASK-P2-201`) |
+| `POST` | `/api/v1/encounters/{encounter_id}/answers` | Save intake turn, extract facts into ClinicalFact ledger | Phase 2 (`TASK-P2-201`) |
+
+## Key Engineering & Privacy Invariants
+1. **Identity Confirmation Gate**: Candidate lookup returns strictly masked display hints (`J*** D**`). Medical records and patient context are never returned until secondary factor (DOB) confirmation succeeds.
+2. **Authoritative Clinical Record**: SQLite/SQLAlchemy is the sole source of truth for patients, encounters, facts, and bookings.
+3. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`), and return standard envelopes. No direct DB queries in route modules.
+4. **Clinical Context Provenance**: Every extracted fact retains source modality (`PATIENT_VOICE` vs `PATIENT_FORM`), source ID, status (`reported`), and clinical timestamp.
 5. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
+
+## Running Locally
+
+```bash
+# Start FastAPI development server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Run database migrations
+alembic upgrade head
+```
+
+## Running Tests & Linters
+
+```bash
+# Run complete test suite (unit, integration, and contract tests)
+python -m pytest apps/api/tests -v
+
+# Run linter
+python -m ruff check apps/api
+```
