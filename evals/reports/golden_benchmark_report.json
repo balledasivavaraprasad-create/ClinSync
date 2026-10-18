@@ -1,13 +1,13 @@
 {
-  "timestamp_utc": "2026-10-18T13:01:44.164875+00:00",
+  "timestamp_utc": "2026-10-18T13:11:48.622631+00:00",
   "total_cases": 15,
   "passed_cases": 15,
   "failed_cases": 0,
   "pass_rate_pct": 100.0,
   "latency_summary_ms": {
     "min_ms": 0.05,
-    "avg_ms": 1.96,
-    "max_ms": 12.58
+    "avg_ms": 1.95,
+    "max_ms": 12.57
   },
   "provider_failure_count": 0,
   "results": [
@@ -97,7 +97,7 @@
             "INSTRUCTION_OVERRIDE",
             "SYSTEM_DIRECTIVE_INJECTION"
           ],
-          "reason": "Detected adversarial patterns: SYSTEM_DIRECTIVE_INJECTION, INSTRUCTION_OVERRIDE"
+          "reason": "Detected adversarial patterns: INSTRUCTION_OVERRIDE, SYSTEM_DIRECTIVE_INJECTION"
         }
       ]
     },
@@ -125,7 +125,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 12.58,
+      "duration_ms": 12.57,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -345,9 +345,9 @@
           "decision": "URGENT_ESCALATION",
           "reason_codes": [
             "ACUTE_RED_FLAG_DETECTED",
-            "ACUTE_RESPIRATORY_DISTRESS",
+            "ACUTE_CORONARY_SYNDROME_SUSPECTED",
             "CHEST_PAIN_EMERGENCY",
-            "ACUTE_CORONARY_SYNDROME_SUSPECTED"
+            "ACUTE_RESPIRATORY_DISTRESS"
           ]
         },
         {

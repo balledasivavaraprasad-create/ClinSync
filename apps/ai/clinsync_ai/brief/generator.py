@@ -75,6 +75,10 @@ class DoctorBriefGenerator:
                 conflict_note = f"Conflicting claim [{f.id}]: {f.concept} = {f.value} (Source: {f.source_type})"
                 if conflict_note not in conflicts:
                     conflicts.append(conflict_note)
+            elif f.status == "uncertain":
+                uncertain_note = f"Uncertain clinical statement [{f.id}]: {f.concept} = {f.value} (Unverified)"
+                if uncertain_note not in missing:
+                    missing.append(uncertain_note)
 
         # 3. Assemble prompt for Gemini primary generation
         facts_manifest = "\n".join([
@@ -129,39 +133,55 @@ class DoctorBriefGenerator:
                 conflicts=conflicts,
                 all_facts=all_facts,
             )
+            if getattr(self.gateway, "trace_manager", None):
+                self.gateway.trace_manager.record_step(
+                    trace_id=tid,
+                    step_name="doctor_brief_generation_fallback",
+                    provider=generation_provider,
+                    model=generation_model,
+                    latency_ms=1.0,
+                    prompt="deterministic_synthesis",
+                    output=parsed_output.summary_text,
+                    fallback_used=True,
+                )
 
         # 5. Extract citations and enforce zero-hallucination guardrail
         valid_citations: list[Citation] = []
         seen_fact_ids: set[str] = set()
+        valid_source_index: dict[str, ClinicalFactModel] = {f.source_id: f for f in all_facts if f.source_id}
+
+        def _try_add_citation(ident: str) -> None:
+            clean = ident.strip()
+            if clean in valid_fact_index and clean not in seen_fact_ids:
+                f_obj = valid_fact_index[clean]
+                valid_citations.append(Citation(
+                    fact_id=f_obj.id,
+                    source_id=f_obj.source_id,
+                    source_type=f_obj.source_type,
+                    concept=f_obj.concept,
+                    excerpt=f"{f_obj.concept}: {f_obj.value}",
+                ))
+                seen_fact_ids.add(clean)
+            elif clean in valid_source_index:
+                f_obj = valid_source_index[clean]
+                if f_obj.id not in seen_fact_ids:
+                    valid_citations.append(Citation(
+                        fact_id=f_obj.id,
+                        source_id=f_obj.source_id,
+                        source_type=f_obj.source_type,
+                        concept=f_obj.concept,
+                        excerpt=f"{f_obj.concept}: {f_obj.value}",
+                    ))
+                    seen_fact_ids.add(f_obj.id)
 
         # Check citations explicitly cited in output
         for cid in parsed_output.cited_fact_ids:
-            clean_id = cid.strip()
-            if clean_id in valid_fact_index and clean_id not in seen_fact_ids:
-                f_obj = valid_fact_index[clean_id]
-                valid_citations.append(Citation(
-                    fact_id=f_obj.id,
-                    source_id=f_obj.source_id,
-                    source_type=f_obj.source_type,
-                    concept=f_obj.concept,
-                    excerpt=f"{f_obj.concept}: {f_obj.value}",
-                ))
-                seen_fact_ids.add(clean_id)
+            _try_add_citation(cid)
 
-        # Also discover inline bracket citations e.g. [FACT-123] in summary text
+        # Also discover inline bracket citations e.g. [FACT-123] or [DOC-001] in summary text
         inline_ids = re.findall(r"\[([a-zA-Z0-9_-]+)\]", parsed_output.summary_text)
         for iid in inline_ids:
-            clean_id = iid.strip()
-            if clean_id in valid_fact_index and clean_id not in seen_fact_ids:
-                f_obj = valid_fact_index[clean_id]
-                valid_citations.append(Citation(
-                    fact_id=f_obj.id,
-                    source_id=f_obj.source_id,
-                    source_type=f_obj.source_type,
-                    concept=f_obj.concept,
-                    excerpt=f"{f_obj.concept}: {f_obj.value}",
-                ))
-                seen_fact_ids.add(clean_id)
+            _try_add_citation(iid)
 
         # If model cited zero citations, attach citations from all validated facts
         if not valid_citations and all_facts:

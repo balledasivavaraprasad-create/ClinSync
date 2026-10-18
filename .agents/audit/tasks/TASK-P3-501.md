@@ -59,6 +59,8 @@
   - `pytest apps/ai/tests`: 70 passed, 2 skipped in 0.81s
   - `pytest apps/ai/tests/test_doctor_brief.py -v`: 7 passed in 0.01s
   - `python3 evals/runner.py`: 15/15 golden benchmark cases passed (100.0% pass rate)
-  - `pytest apps/api/tests`: 59 passed
-  - `npm --prefix apps/web test`: 50 passed
+  - `pytest apps/api/tests`: 87 passed in 0.86s
+  - `npm --prefix apps/web test`: 93 passed in 2.42s
+  - `npm --prefix apps/web run build`: built cleanly in 775ms
+  - `python3 apps/ai/scripts/emit_langfuse_traces.py`: live pipeline verified with Langfuse Cloud trace emission (17 citations grounded)
   - `git diff --check`: clean (0 errors)

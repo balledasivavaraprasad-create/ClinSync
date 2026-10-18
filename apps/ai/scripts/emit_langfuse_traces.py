@@ -16,6 +16,7 @@ if str(repo_root) not in sys.path:
 from dotenv import load_dotenv
 load_dotenv(repo_root / ".env")
 
+from clinsync_ai.brief.service import DoctorBriefService
 from clinsync_ai.documents.extractor import DocumentFactExtractor
 from clinsync_ai.documents.parser import DocumentParser
 from clinsync_ai.intake.service import AdaptiveIntakeService
@@ -102,12 +103,30 @@ def run_live_telemetry_demo():
     print(f"    -> Recommended Department: {decision.data.recommended_department_id}")
     print(f"    -> Reason Codes: {decision.data.reason_codes}")
 
-    # 5. Flush all traces to Langfuse Collector
-    print("\n[5] Flushing Telemetry to Langfuse Cloud...")
+    # 5. Evidence-Backed Doctor Brief & Audio Summary (Task 5)
+    print("\n[5] Generating Evidence-Backed Doctor Brief & Audio Summary...")
+    brief_svc = DoctorBriefService(gateway=gw, trace_manager=tm)
+    brief_resp = brief_svc.generate_brief(
+        encounter_id=encounter_id,
+        patient_id=patient_id,
+        patient_name="Eleanor Johnson",
+        chief_complaint="Worsening dry cough and mild chest tightness for 4 days",
+        current_facts=turn1.extracted_facts + turn2.extracted_facts + doc_facts,
+        historical_facts=[],
+        unresolved_conflicts=[],
+        missing_information=["Immunization history not recorded in EHR"],
+    )
+    print(f"    -> Summary: \"{brief_resp.data.summary_text[:110]}...\"")
+    print(f"    -> Evidence Citations Count: {len(brief_resp.data.citations)}")
+    print(f"    -> Audio Status: {brief_resp.data.audio_status}")
+    print(f"    -> Spoken Script Duration: ~{brief_resp.data.estimated_speech_seconds}s")
+
+    # 6. Flush all traces to Langfuse Collector
+    print("\n[6] Flushing Telemetry to Langfuse Cloud...")
     tm.flush()
     print("    -> Flush complete.")
 
-    # 6. Display direct trace URLs
+    # 7. Display direct trace URLs
     print("\n" + "=" * 65)
     print(" LIVE LANGFUSE TRACES GENERATED:")
     print("=" * 65)
