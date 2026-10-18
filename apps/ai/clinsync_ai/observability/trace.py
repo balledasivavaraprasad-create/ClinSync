@@ -23,6 +23,15 @@ def redact_sensitive_text(text: str) -> str:
     return masked
 
 
+def _format_trace_id(tid: str) -> str:
+    """Format trace ID into a valid 32-character lowercase hex string required by Langfuse."""
+    import hashlib
+    clean = re.sub(r"[^0-9a-fA-F]", "", tid).lower()
+    if len(clean) == 32:
+        return clean
+    return hashlib.md5(tid.encode("utf-8")).hexdigest()
+
+
 class TraceRecord(BaseModel):
     """Structured record of an individual AI invocation or workflow step."""
     trace_id: str
@@ -120,23 +129,44 @@ class TraceManager:
         # Emit to Langfuse if configured
         if self._langfuse_client:
             try:
-                self._langfuse_client.trace(
-                    id=trace_id,
-                    name=step_name,
-                    metadata={"provider": provider, "model": model, "fallback": fallback_used, **(metadata or {})},
-                ).generation(
-                    name=step_name,
-                    model=model,
-                    input=redact_sensitive_text(prompt),
-                    output=redact_sensitive_text(output),
-                    usage={
-                        "input": prompt_tokens,
-                        "output": completion_tokens,
-                        "total": prompt_tokens + completion_tokens,
-                    },
-                    level="ERROR" if not success else "DEFAULT",
-                    status_message=record.error,
-                )
+                valid_trace_id = _format_trace_id(trace_id)
+                if hasattr(self._langfuse_client, "start_observation"):
+                    obs = self._langfuse_client.start_observation(
+                        trace_context={"trace_id": valid_trace_id},
+                        name=step_name,
+                        as_type="generation",
+                        model=model,
+                        input=redact_sensitive_text(prompt),
+                        output=redact_sensitive_text(output),
+                        metadata={"provider": provider, "model": model, "fallback": fallback_used, **(metadata or {})},
+                        usage_details={
+                            "input": prompt_tokens,
+                            "output": completion_tokens,
+                            "total": prompt_tokens + completion_tokens,
+                        },
+                        level="ERROR" if not success else "DEFAULT",
+                        status_message=record.error,
+                    )
+                    if hasattr(obs, "end"):
+                        obs.end()
+                elif hasattr(self._langfuse_client, "trace"):
+                    self._langfuse_client.trace(
+                        id=trace_id,
+                        name=step_name,
+                        metadata={"provider": provider, "model": model, "fallback": fallback_used, **(metadata or {})},
+                    ).generation(
+                        name=step_name,
+                        model=model,
+                        input=redact_sensitive_text(prompt),
+                        output=redact_sensitive_text(output),
+                        usage={
+                            "input": prompt_tokens,
+                            "output": completion_tokens,
+                            "total": prompt_tokens + completion_tokens,
+                        },
+                        level="ERROR" if not success else "DEFAULT",
+                        status_message=record.error,
+                    )
             except Exception as exc:
                 logger.debug(f"Langfuse dispatch error: {exc}")
 

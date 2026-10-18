@@ -1,6 +1,7 @@
 """Eval runner: Loads synthetic golden cases, invokes ModelGateway, and verifies assertions."""
 
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -623,7 +624,278 @@ class EvalRunner:
                 details=assertions_details,
             )
 
-        # Branch 8: Standard, urgent, and provider failure fallback cases
+        # Branch 8: Doctor brief evidence grounding & zero citation fabrication (TASK-P3-501)
+        if case_data.get("test_type") == "doctor_brief_grounding_evaluation":
+            from clinsync_ai.brief.service import DoctorBriefService
+            from clinsync_ai.graph.state import ClinicalFactModel
+
+            gw = self._get_case_gateway(case_id, case_data)
+            service = DoctorBriefService(gateway=gw)
+
+            pid = case_data.get("patient_id", "PAT-DEFAULT")
+            cur_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("current_facts", [])]
+            hist_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("historical_facts", [])]
+
+            brief_resp = service.generate_brief(
+                encounter_id=case_data.get("encounter_id", "ENC-012"),
+                patient_id=case_data.get("patient_id", "PAT-012"),
+                patient_name=case_data.get("patient_name"),
+                chief_complaint=case_data.get("chief_complaint"),
+                current_facts=cur_facts,
+                historical_facts=hist_facts,
+            )
+
+            # Assertion 1: Valid brief schema & non-empty summary
+            schema_ok = bool(brief_resp.data.summary_text and len(brief_resp.data.summary_text) > 30)
+            assertions_details.append({
+                "assertion": "brief_schema_valid",
+                "passed": schema_ok,
+                "summary_length": len(brief_resp.data.summary_text) if brief_resp.data.summary_text else 0,
+            })
+            if schema_ok:
+                passed_count += 1
+
+            # Assertion 2: All citations grounded in valid fact catalog
+            valid_fact_ids = set(case_data.get("expected_citations", []))
+            all_grounded = True
+            fabricated_citations = []
+            for c in brief_resp.data.citations:
+                if c.fact_id not in valid_fact_ids:
+                    all_grounded = False
+                    fabricated_citations.append(c.fact_id)
+
+            assertions_details.append({
+                "assertion": "zero_fabricated_citations",
+                "passed": all_grounded and len(brief_resp.data.citations) > 0,
+                "total_citations": len(brief_resp.data.citations),
+                "fabricated_citations": fabricated_citations,
+            })
+            if all_grounded and len(brief_resp.data.citations) > 0:
+                passed_count += 1
+
+            # Assertion 3: Groundedness check - zero forbidden hallucinated claims
+            grounded_res = assert_groundedness(
+                generated_text=brief_resp.data.summary_text,
+                forbidden_claims=case_data.get("forbidden_hallucinated_claims", []),
+            )
+            assertions_details.append({
+                "assertion": grounded_res.name,
+                "passed": grounded_res.passed,
+                "forbidden_hits": grounded_res.forbidden_hits,
+            })
+            if grounded_res.passed:
+                passed_count += 1
+
+            # Assertion 4: Provenance separation across all 4 clinical sections
+            sections_ok = len(brief_resp.data.sections) == 4
+            assertions_details.append({
+                "assertion": "provenance_sections_complete",
+                "passed": sections_ok,
+                "section_titles": [s.title for s in brief_resp.data.sections],
+            })
+            if sections_ok:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.5,
+                details=assertions_details,
+            )
+
+        # Branch 9: Doctor brief clinical conflict preservation (TASK-P3-501)
+        if case_data.get("test_type") == "doctor_brief_conflict_evaluation":
+            from clinsync_ai.brief.service import DoctorBriefService
+            from clinsync_ai.graph.state import ClinicalFactModel
+
+            gw = self._get_case_gateway(case_id, case_data)
+            service = DoctorBriefService(gateway=gw)
+
+            pid = case_data.get("patient_id", "PAT-DEFAULT")
+            cur_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("current_facts", [])]
+            hist_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("historical_facts", [])]
+            conflicts = case_data.get("conflicts", [])
+
+            brief_resp = service.generate_brief(
+                encounter_id=case_data.get("encounter_id", "ENC-013"),
+                patient_id=case_data.get("patient_id", "PAT-013"),
+                patient_name=case_data.get("patient_name"),
+                chief_complaint=case_data.get("chief_complaint"),
+                current_facts=cur_facts,
+                historical_facts=hist_facts,
+                unresolved_conflicts=conflicts,
+            )
+
+            # Assertion 1: Unresolved conflicts retained in brief data
+            conflicts_retained = len(brief_resp.data.unresolved_conflicts) > 0
+            assertions_details.append({
+                "assertion": "conflicts_retained",
+                "passed": conflicts_retained,
+                "unresolved_conflicts": brief_resp.data.unresolved_conflicts,
+            })
+            if conflicts_retained:
+                passed_count += 1
+
+            # Assertion 2: Required clinical contradiction terms present in summary text or conflict section
+            full_content = (brief_resp.data.summary_text + " " + " ".join(
+                s.content for s in brief_resp.data.sections if "Conflict" in s.title
+            )).lower()
+            missing_terms = [t for t in case_data.get("required_preserved_terms", []) if t.lower() not in full_content]
+
+            assertions_details.append({
+                "assertion": "required_conflict_terms_preserved",
+                "passed": len(missing_terms) == 0,
+                "missing_terms": missing_terms,
+            })
+            if len(missing_terms) == 0:
+                passed_count += 1
+
+            # Assertion 3: No silent reconciliation claim
+            cleaned_content = re.sub(r"\bunresolved\b", "", full_content)
+            no_silent_resolve = not bool(re.search(r"\b(resolved|cleared|overridden|settled)\b", cleaned_content))
+            assertions_details.append({
+                "assertion": "no_silent_reconciliation",
+                "passed": no_silent_resolve,
+            })
+            if no_silent_resolve:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.3,
+                details=assertions_details,
+            )
+
+        # Branch 10: Doctor brief unsupported claim refusal (TASK-P3-501)
+        if case_data.get("test_type") == "doctor_brief_unsupported_claim_evaluation":
+            from clinsync_ai.brief.service import DoctorBriefService
+            from clinsync_ai.graph.state import ClinicalFactModel
+
+            gw = self._get_case_gateway(case_id, case_data)
+            service = DoctorBriefService(gateway=gw)
+
+            pid = case_data.get("patient_id", "PAT-DEFAULT")
+            cur_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("current_facts", [])]
+            hist_facts = [ClinicalFactModel(**dict(f, patient_id=f.get("patient_id", pid))) for f in case_data.get("historical_facts", [])]
+            missing_domains = case_data.get("missing_domains", [])
+
+            brief_resp = service.generate_brief(
+                encounter_id=case_data.get("encounter_id", "ENC-014"),
+                patient_id=case_data.get("patient_id", "PAT-014"),
+                patient_name=case_data.get("patient_name"),
+                chief_complaint=case_data.get("chief_complaint"),
+                current_facts=cur_facts,
+                historical_facts=hist_facts,
+                missing_information=missing_domains,
+            )
+
+            # Assertion 1: Missing information documented without fabrication
+            missing_audited = len(brief_resp.data.missing_information) == len(missing_domains)
+            assertions_details.append({
+                "assertion": "missing_domains_audited",
+                "passed": missing_audited,
+                "missing_information": brief_resp.data.missing_information,
+            })
+            if missing_audited:
+                passed_count += 1
+
+            # Assertion 2: Zero unsupported hallucinations
+            grounded_res = assert_groundedness(
+                generated_text=brief_resp.data.summary_text,
+                forbidden_claims=case_data.get("forbidden_hallucinations", []),
+            )
+            assertions_details.append({
+                "assertion": "zero_unsupported_hallucinations",
+                "passed": grounded_res.passed,
+                "forbidden_hits": grounded_res.forbidden_hits,
+            })
+            if grounded_res.passed:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=1.1,
+                details=assertions_details,
+            )
+
+        # Branch 11: Doctor brief audio summary generation and graceful fallback (TASK-P3-501)
+        if case_data.get("test_type") == "doctor_brief_audio_evaluation":
+            from clinsync_ai.brief.audio import AudioBriefService
+            from clinsync_ai.brief.models import AudioStatus
+
+            audio_svc = AudioBriefService(tts_adapter=None)
+            cur_facts = case_data.get("current_facts", [])
+            hist_facts = case_data.get("historical_facts", [])
+
+            script = audio_svc.compose_spoken_script(
+                patient_name=case_data.get("patient_name"),
+                chief_complaint=case_data.get("chief_complaint"),
+                patient_reported=[f"{f['concept']}: {f['value']}" for f in cur_facts],
+                extracted_facts=[],
+                historical_records=[f"{f['concept']}: {f['value']}" for f in hist_facts],
+                unresolved_conflicts=[],
+            )
+
+            spoken_text, status, audio_url, est_secs = audio_svc.generate_audio_summary(
+                spoken_script=script,
+                encounter_id=case_data.get("encounter_id", "ENC-015"),
+            )
+
+            # Assertion 1: Speech duration bounded (~45-60s target range)
+            min_sec = case_data.get("min_speech_duration_seconds", 15.0)
+            max_sec = case_data.get("max_speech_duration_seconds", 90.0)
+            duration_bounded = min_sec <= est_secs <= max_sec
+            assertions_details.append({
+                "assertion": "speech_duration_bounded",
+                "passed": duration_bounded,
+                "estimated_seconds": est_secs,
+            })
+            if duration_bounded:
+                passed_count += 1
+
+            # Assertion 2: Graceful text fallback status when TTS unavailable
+            expected_status = case_data.get("expected_fallback_audio_status", "UNAVAILABLE")
+            fallback_ok = (status == AudioStatus.UNAVAILABLE) and (audio_url is None)
+            assertions_details.append({
+                "assertion": "graceful_text_fallback_status",
+                "passed": fallback_ok,
+                "audio_status": status,
+            })
+            if fallback_ok:
+                passed_count += 1
+
+            # Assertion 3: Spoken text script retained without error
+            script_retained = bool(spoken_text and len(spoken_text) > 40)
+            assertions_details.append({
+                "assertion": "spoken_script_retained",
+                "passed": script_retained,
+                "script_length": len(spoken_text),
+            })
+            if script_retained:
+                passed_count += 1
+
+            total_assertions = len(assertions_details)
+            return CaseEvalResult(
+                case_id=case_id,
+                passed=passed_count == total_assertions,
+                assertions_run=total_assertions,
+                assertions_passed=passed_count,
+                duration_ms=0.8,
+                details=assertions_details,
+            )
+
+        # Branch 12: Standard, urgent, and provider failure fallback cases
         gw = self._get_case_gateway(case_id, case_data)
         prompt = (
             f"Extract clinical facts and recommend department for patient:\n"

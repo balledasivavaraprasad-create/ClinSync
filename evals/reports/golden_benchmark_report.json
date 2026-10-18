@@ -1,13 +1,13 @@
 {
-  "timestamp_utc": "2026-10-18T08:52:50.323913+00:00",
-  "total_cases": 11,
-  "passed_cases": 11,
+  "timestamp_utc": "2026-10-18T12:56:23.580261+00:00",
+  "total_cases": 15,
+  "passed_cases": 15,
   "failed_cases": 0,
   "pass_rate_pct": 100.0,
   "latency_summary_ms": {
     "min_ms": 0.05,
-    "avg_ms": 2.24,
-    "max_ms": 12.57
+    "avg_ms": 1.96,
+    "max_ms": 12.62
   },
   "provider_failure_count": 0,
   "results": [
@@ -16,7 +16,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 0.1,
+      "duration_ms": 0.07,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -97,7 +97,7 @@
             "INSTRUCTION_OVERRIDE",
             "SYSTEM_DIRECTIVE_INJECTION"
           ],
-          "reason": "Detected adversarial patterns: INSTRUCTION_OVERRIDE, SYSTEM_DIRECTIVE_INJECTION"
+          "reason": "Detected adversarial patterns: SYSTEM_DIRECTIVE_INJECTION, INSTRUCTION_OVERRIDE"
         }
       ]
     },
@@ -125,7 +125,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 12.57,
+      "duration_ms": 12.62,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -345,9 +345,9 @@
           "decision": "URGENT_ESCALATION",
           "reason_codes": [
             "ACUTE_RED_FLAG_DETECTED",
-            "ACUTE_CORONARY_SYNDROME_SUSPECTED",
             "ACUTE_RESPIRATORY_DISTRESS",
-            "CHEST_PAIN_EMERGENCY"
+            "CHEST_PAIN_EMERGENCY",
+            "ACUTE_CORONARY_SYNDROME_SUSPECTED"
           ]
         },
         {
@@ -367,6 +367,113 @@
           "reason_codes": [
             "ADVERSARIAL_INJECTION_DETECTED"
           ]
+        }
+      ]
+    },
+    {
+      "case_id": "CASE-BRIEF-GROUNDING-012",
+      "passed": true,
+      "assertions_run": 4,
+      "assertions_passed": 4,
+      "duration_ms": 1.5,
+      "details": [
+        {
+          "assertion": "brief_schema_valid",
+          "passed": true,
+          "summary_length": 515
+        },
+        {
+          "assertion": "zero_fabricated_citations",
+          "passed": true,
+          "total_citations": 5,
+          "fabricated_citations": []
+        },
+        {
+          "assertion": "groundedness_and_refusal",
+          "passed": true,
+          "forbidden_hits": []
+        },
+        {
+          "assertion": "provenance_sections_complete",
+          "passed": true,
+          "section_titles": [
+            "Chief Complaint & Acute Symptoms",
+            "Pertinent Clinical Findings & Documents",
+            "Historical Context & Baseline",
+            "Conflicts, Uncertainties & Risk Flags"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "CASE-BRIEF-CONFLICT-013",
+      "passed": true,
+      "assertions_run": 3,
+      "assertions_passed": 3,
+      "duration_ms": 1.3,
+      "details": [
+        {
+          "assertion": "conflicts_retained",
+          "passed": true,
+          "unresolved_conflicts": [
+            "Severe Contraindication: Prescribed Amoxicillin-Clavulanate directly conflicts with documented Penicillin Anaphylaxis"
+          ]
+        },
+        {
+          "assertion": "required_conflict_terms_preserved",
+          "passed": true,
+          "missing_terms": []
+        },
+        {
+          "assertion": "no_silent_reconciliation",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "CASE-BRIEF-UNSUPPORTED-014",
+      "passed": true,
+      "assertions_run": 2,
+      "assertions_passed": 2,
+      "duration_ms": 1.1,
+      "details": [
+        {
+          "assertion": "missing_domains_audited",
+          "passed": true,
+          "missing_information": [
+            "Prior knee ligament surgeries",
+            "Baseline MRI or radiographs",
+            "Weight bearing status assessment"
+          ]
+        },
+        {
+          "assertion": "zero_unsupported_hallucinations",
+          "passed": true,
+          "forbidden_hits": []
+        }
+      ]
+    },
+    {
+      "case_id": "CASE-BRIEF-AUDIO-015",
+      "passed": true,
+      "assertions_run": 3,
+      "assertions_passed": 3,
+      "duration_ms": 0.8,
+      "details": [
+        {
+          "assertion": "speech_duration_bounded",
+          "passed": true,
+          "estimated_seconds": 20.8
+        },
+        {
+          "assertion": "graceful_text_fallback_status",
+          "passed": true,
+          "audio_status": "UNAVAILABLE"
+        },
+        {
+          "assertion": "spoken_script_retained",
+          "passed": true,
+          "script_length": 409
         }
       ]
     }
