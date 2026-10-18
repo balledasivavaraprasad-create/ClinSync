@@ -9,6 +9,7 @@ import { AppointmentSchedulingHub } from '../appointments/AppointmentSchedulingH
 import { KioskLayout } from '../../layouts/KioskLayout';
 import { mockApi } from '../../lib/api/mockAdapter';
 import type { IdentityCandidate, ClinicalFact, Encounter } from '../../lib/api/types';
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './languages';
 
 export type KioskFlowStep =
   | 'welcome'
@@ -29,6 +30,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
   const [collectedFacts, setCollectedFacts] = useState<ClinicalFact[]>([]);
   const [candidates, setCandidates] = useState<IdentityCandidate[]>([]);
   const [candidate, setCandidate] = useState<IdentityCandidate | undefined>(undefined);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('en');
 
   // 1. Returning patient check-in initiated
   const handleSelectReturning = async () => {
@@ -60,9 +62,11 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
     setPatientName(confirmation.display_name);
 
     try {
+      const localeCode =
+        SUPPORTED_LANGUAGES.find((l) => l.code === selectedLanguage)?.localeCode || 'en-US';
       const encounterRes = await mockApi.createEncounter({
         patient_id: confirmation.patient_id,
-        intake_language: 'en-US',
+        intake_language: localeCode,
       });
       setEncounterId(encounterRes.data.id);
     } catch {
@@ -109,6 +113,8 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
           <KioskWelcome
             onSelectReturning={handleSelectReturning}
             onSelectNew={() => setCurrentStep('new-patient')}
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
             onEmergencyEscalation={() => {
               // Direct emergency escalation
               setEncounterId(`enc_emerg_${Date.now()}`);
