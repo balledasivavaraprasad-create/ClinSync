@@ -2,7 +2,8 @@
 - **Owner**: person-1 (Frontend / Product Experience)
 - **Branch**: `feat/p1-401-appointment-ui`
 - **Workstream**: Frontend & Product Experience (`apps/web/**`)
-- **Status**: IMPLEMENTED / VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main`
 
 ## Goal and Acceptance Criteria
 - [x] Specialty/slot selection and confirmation states built using frozen canonical OpenAPI schema.

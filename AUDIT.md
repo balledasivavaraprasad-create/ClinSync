@@ -33,6 +33,7 @@
 | TASK-P1-301: Document Upload, Clinical Ledger & Context Diff UI | Person 1 | INTEGRATED | `main` | 69 web tests pass, drag-and-drop, provenance styling, conflict alert verified | None |
 | TASK-P3-401: Specialty Routing & Triage Guardrails | Person 3 | INTEGRATED | `main` | 63 tests pass, 11/11 golden benchmark evals pass, acute red flag triage guardrail verified | None |
 | TASK-P2-401: Safety Gates & Appointment Scheduling APIs | Person 2 | INTEGRATED | `main` | 87 tests pass, acute red flag triage, allowlisted routing, atomic slot booking & concurrency verified | None |
+| TASK-P1-401: Appointment & Scheduling UI | Person 1 | INTEGRATED | `main` | 93 web tests pass, specialty routing, backend slots, atomic booking verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
