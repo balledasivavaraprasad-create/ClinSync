@@ -15,7 +15,9 @@ dependencies = [
     "tenacity>=8.2.0",
     "python-dotenv>=1.0.0",
     "langfuse>=2.0.0",
+    "langgraph>=0.2.0",
 ]
+
 
 [project.optional-dependencies]
 dev = [

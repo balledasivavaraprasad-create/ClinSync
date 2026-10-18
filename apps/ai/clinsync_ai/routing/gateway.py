@@ -45,7 +45,7 @@ class ModelGateway:
         llm_choice = os.getenv("LLM_PROVIDER", "gemini").lower()
         if primary_provider is not None:
             self.primary = primary_provider
-        elif llm_choice == "mock" or llm_choice == "fake":
+        elif llm_choice in ("mock", "fake") or not os.getenv("GEMINI_API_KEY"):
             self.primary = FakeModelProvider()
         else:
             self.primary = GeminiProvider()

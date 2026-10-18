@@ -1,0 +1,34 @@
+{
+  "case_id": "CASE-INTAKE-WORKFLOW-006",
+  "title": "Multi-Turn Adaptive Intake and Bounded Termination",
+  "test_type": "multi_turn_intake",
+  "patient_profile": {
+    "patient_id": "SYNTH-PAT-006",
+    "name": "Morgan Davis",
+    "age": 36,
+    "gender": "non-binary",
+    "known_allergies": [],
+    "chronic_conditions": []
+  },
+  "max_turns": 4,
+  "turns": [
+    {
+      "turn": 1,
+      "input": "I have had an earache since yesterday morning",
+      "expected_status": "IN_PROGRESS"
+    },
+    {
+      "turn": 2,
+      "input": "The pain is about 5 out of 10 and feels sharp",
+      "expected_status": "IN_PROGRESS"
+    },
+    {
+      "turn": 3,
+      "input": "No other symptoms and no allergies, that is all",
+      "expected_status": "COMPLETED"
+    }
+  ],
+  "expected_final_status": "COMPLETED",
+  "expected_emergency_detected": false,
+  "expected_extracted_concepts": ["chief_complaint", "duration_onset", "severity_progression"]
+}

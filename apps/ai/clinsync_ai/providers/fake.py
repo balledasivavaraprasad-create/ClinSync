@@ -111,8 +111,12 @@ class FakeModelProvider(ModelProvider):
 
         raw_str = ""
         try:
-            if isinstance(self.canned_structured, BaseModel):
+            if isinstance(self.canned_structured, response_schema):
                 parsed = self.canned_structured
+                raw_str = parsed.model_dump_json()
+            elif isinstance(self.canned_structured, BaseModel):
+                data = self.canned_structured.model_dump()
+                parsed = response_schema.model_validate(data)
                 raw_str = parsed.model_dump_json()
             elif isinstance(self.canned_structured, dict):
                 raw_str = json.dumps(self.canned_structured)

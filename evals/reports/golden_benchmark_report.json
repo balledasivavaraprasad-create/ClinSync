@@ -1,13 +1,13 @@
 {
-  "timestamp_utc": "2026-10-18T07:00:34.198558+00:00",
-  "total_cases": 5,
-  "passed_cases": 5,
+  "timestamp_utc": "2026-10-18T07:16:10.106635+00:00",
+  "total_cases": 6,
+  "passed_cases": 6,
   "failed_cases": 0,
   "pass_rate_pct": 100.0,
   "latency_summary_ms": {
-    "min_ms": 0.05,
-    "avg_ms": 2.73,
-    "max_ms": 12.57
+    "min_ms": 0.06,
+    "avg_ms": 2.61,
+    "max_ms": 12.59
   },
   "provider_failure_count": 0,
   "results": [
@@ -55,7 +55,7 @@
       "passed": true,
       "assertions_run": 4,
       "assertions_passed": 4,
-      "duration_ms": 0.05,
+      "duration_ms": 0.06,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -97,7 +97,7 @@
             "INSTRUCTION_OVERRIDE",
             "SYSTEM_DIRECTIVE_INJECTION"
           ],
-          "reason": "Detected adversarial patterns: INSTRUCTION_OVERRIDE, SYSTEM_DIRECTIVE_INJECTION"
+          "reason": "Detected adversarial patterns: SYSTEM_DIRECTIVE_INJECTION, INSTRUCTION_OVERRIDE"
         }
       ]
     },
@@ -125,7 +125,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 12.57,
+      "duration_ms": 12.59,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -156,6 +156,38 @@
           "passed": true,
           "model_used": "fake-model-v1",
           "details": "Verified successful failover to secondary provider."
+        }
+      ]
+    },
+    {
+      "case_id": "CASE-INTAKE-WORKFLOW-006",
+      "passed": true,
+      "assertions_run": 4,
+      "assertions_passed": 4,
+      "duration_ms": 2.0,
+      "details": [
+        {
+          "assertion": "turn_status_progression",
+          "passed": true
+        },
+        {
+          "assertion": "final_workflow_status",
+          "passed": true,
+          "status": "COMPLETED"
+        },
+        {
+          "assertion": "emergency_flag_conformance",
+          "passed": true,
+          "emergency_detected": false
+        },
+        {
+          "assertion": "extracted_clinical_concepts",
+          "passed": true,
+          "known_fields": [
+            "chief_complaint",
+            "duration_onset",
+            "severity_progression"
+          ]
         }
       ]
     }
