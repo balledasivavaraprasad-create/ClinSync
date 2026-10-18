@@ -1,7 +1,6 @@
 """Deterministic Fake Model Provider for offline testing, evals, and CI."""
 
 import json
-import time
 from typing import Any, Type, TypeVar
 from pydantic import BaseModel
 

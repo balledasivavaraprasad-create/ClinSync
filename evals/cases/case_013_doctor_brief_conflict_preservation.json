@@ -1,0 +1,38 @@
+{
+  "case_id": "CASE-BRIEF-CONFLICT-013",
+  "title": "Doctor Brief Clinical Conflict Preservation and Contradiction Visibility",
+  "test_type": "doctor_brief_conflict_evaluation",
+  "patient_id": "PAT-SYNTH-ELEANOR",
+  "patient_name": "Eleanor Johnson",
+  "encounter_id": "ENC-BRIEF-013",
+  "chief_complaint": "Acute pharyngitis and fever",
+  "current_facts": [
+    {
+      "id": "FACT-013-01",
+      "concept": "candidate_prescription",
+      "value": "Amoxicillin-Clavulanate 875mg PO BID recommended by clinic",
+      "source_type": "PATIENT_VOICE",
+      "status": "conflicting",
+      "source_id": "ENC-BRIEF-013"
+    }
+  ],
+  "historical_facts": [
+    {
+      "id": "FACT-013-02",
+      "concept": "critical_allergy",
+      "value": "Penicillin (Severe Anaphylaxis / Laryngeal Edema)",
+      "source_type": "HISTORICAL_EHR",
+      "status": "historical_recorded",
+      "source_id": "EHR-HIST-RECORDS"
+    }
+  ],
+  "conflicts": [
+    "Severe Contraindication: Prescribed Amoxicillin-Clavulanate directly conflicts with documented Penicillin Anaphylaxis"
+  ],
+  "required_preserved_terms": [
+    "Contraindication",
+    "Amoxicillin",
+    "Penicillin",
+    "Anaphylaxis"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "case_id": "CASE-BRIEF-GROUNDING-012",
+  "title": "Evidence-Backed Doctor Brief Grounding and Citation Integrity",
+  "test_type": "doctor_brief_grounding_evaluation",
+  "patient_id": "PAT-SYNTH-ELEANOR",
+  "patient_name": "Eleanor Johnson",
+  "encounter_id": "ENC-BRIEF-012",
+  "chief_complaint": "Persistent productive cough, nocturnal wheezing, and progressive dyspnea",
+  "current_facts": [
+    {
+      "id": "FACT-012-01",
+      "concept": "chief_complaint",
+      "value": "Persistent productive cough and nocturnal wheezing",
+      "source_type": "PATIENT_VOICE",
+      "status": "reported",
+      "source_id": "ENC-BRIEF-012"
+    },
+    {
+      "id": "FACT-012-02",
+      "concept": "vital_sign_spo2",
+      "value": "95% on ambient air",
+      "source_type": "UPLOADED_DOCUMENT",
+      "status": "extracted_unverified",
+      "source_id": "DOC-PULM-EVAL-01"
+    },
+    {
+      "id": "FACT-012-03",
+      "concept": "spirometry_fev1",
+      "value": "68% of predicted value",
+      "source_type": "UPLOADED_DOCUMENT",
+      "status": "extracted_unverified",
+      "source_id": "DOC-PULM-EVAL-01"
+    }
+  ],
+  "historical_facts": [
+    {
+      "id": "FACT-012-04",
+      "concept": "past_diagnosis",
+      "value": "Moderate Persistent Asthma diagnosed 2021",
+      "source_type": "HISTORICAL_EHR",
+      "status": "historical_recorded",
+      "source_id": "EHR-HIST-2021"
+    },
+    {
+      "id": "FACT-012-05",
+      "concept": "active_medication",
+      "value": "Budesonide-Formoterol 160/4.5 mcg 2 puffs BID",
+      "source_type": "HISTORICAL_EHR",
+      "status": "historical_recorded",
+      "source_id": "EHR-HIST-2021"
+    }
+  ],
+  "forbidden_hallucinated_claims": [
+    "Patient underwent coronary artery bypass surgery",
+    "Prescribed Warfarin 5mg daily",
+    "Type 2 Diabetes with neuropathy",
+    "DOC-FAKE-HOSPITAL-999"
+  ],
+  "expected_citations": [
+    "FACT-012-01",
+    "FACT-012-02",
+    "FACT-012-03",
+    "FACT-012-04",
+    "FACT-012-05"
+  ]
+}

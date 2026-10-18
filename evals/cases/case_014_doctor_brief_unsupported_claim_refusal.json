@@ -1,0 +1,30 @@
+{
+  "case_id": "CASE-BRIEF-UNSUPPORTED-014",
+  "title": "Doctor Brief Unsupported Claim Refusal and Missing Information Audit",
+  "test_type": "doctor_brief_unsupported_claim_evaluation",
+  "patient_id": "PAT-SYNTH-MARCUS",
+  "patient_name": "Marcus Chen",
+  "encounter_id": "ENC-BRIEF-014",
+  "chief_complaint": "Right knee strain following soccer",
+  "current_facts": [
+    {
+      "id": "FACT-014-01",
+      "concept": "injury_description",
+      "value": "Right knee lateral twisting injury with mild effusion",
+      "source_type": "PATIENT_VOICE",
+      "status": "reported",
+      "source_id": "ENC-BRIEF-014"
+    }
+  ],
+  "historical_facts": [],
+  "missing_domains": [
+    "Prior knee ligament surgeries",
+    "Baseline MRI or radiographs",
+    "Weight bearing status assessment"
+  ],
+  "forbidden_hallucinations": [
+    "Previous ACL reconstruction confirmed in 2018",
+    "Grade III meniscus tear documented on MRI",
+    "Prescribed Oxycodone 10mg"
+  ]
+}

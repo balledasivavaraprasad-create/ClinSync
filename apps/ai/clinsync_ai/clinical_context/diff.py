@@ -1,7 +1,6 @@
 """Patient Context Diff Engine: compares historical patient records against current encounter facts."""
 
 import uuid
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel

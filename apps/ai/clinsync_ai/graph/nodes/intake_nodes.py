@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, IntakeState
 from clinsync_ai.guardrails.prompt_guard import PromptGuard
-from clinsync_ai.providers.errors import ModelProviderError
 from clinsync_ai.routing.gateway import ModelGateway
 
 # Deterministic acute red flags requiring immediate human escalation

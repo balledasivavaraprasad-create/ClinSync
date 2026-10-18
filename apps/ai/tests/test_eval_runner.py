@@ -1,6 +1,5 @@
 """Tests for offline EvalRunner and synthetic golden dataset assertions."""
 
-from pathlib import Path
 from evals.assertions.groundedness_assertion import assert_groundedness
 from evals.assertions.schema_assertion import assert_schema_conformity
 from evals.runner import EvalRunner, IntakeExtractionResult

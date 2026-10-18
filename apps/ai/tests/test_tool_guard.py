@@ -3,7 +3,6 @@
 import pytest
 from pydantic import BaseModel
 from clinsync_ai.guardrails.tool_guard import (
-    DEFAULT_ALLOWED_TOOLS,
     ToolDefinition,
     ToolPolicyGuard,
     ToolPolicyViolationError,

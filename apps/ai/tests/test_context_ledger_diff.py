@@ -1,6 +1,5 @@
 """Unit tests for ClinicalContextLedger and PatientContextDiffEngine (TASK-P3-301)."""
 
-import pytest
 from clinsync_ai.clinical_context.diff import PatientContextDiffEngine
 from clinsync_ai.clinical_context.ledger import ClinicalContextLedger
 from clinsync_ai.graph.state import ClinicalFactModel

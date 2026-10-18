@@ -1,6 +1,5 @@
 """Allowlisted hospital department catalog and specialty mapping rules for ClinSync."""
 
-from typing import Any
 from pydantic import BaseModel, Field
 
 

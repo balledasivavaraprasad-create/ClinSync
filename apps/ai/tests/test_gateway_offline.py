@@ -1,9 +1,6 @@
 """Tests for ModelGateway offline operations."""
 
-import pytest
 from conftest import SampleStructuredOutput
-from clinsync_ai.providers.fake import FakeModelProvider
-from clinsync_ai.routing.gateway import ModelGateway
 
 
 def test_offline_text_generation(offline_gateway):
