@@ -38,6 +38,7 @@
 | TASK-P3-501: Evidence-Backed Doctor Brief & Optional Audio Summary | Person 3 | INTEGRATED | `main` | 70 tests pass, 15/15 golden benchmark evals pass, zero fabricated citations, audio graceful degradation verified | None |
 | TASK-P1-501: Doctor Console, Briefing UI & Audio Player | Person 1 | INTEGRATED | `main` | 117 web tests pass, anti-wrong-patient safeguard, scannable queue, audio player & sign-off verified | None |
 | TASK-P3-601: Golden AI Evaluation Suite, Grounding Benchmarks & Trace Auditing | Person 3 | INTEGRATED | `main` | 75 tests pass, 18/18 golden benchmark evals pass (100%), citation grounding score 100%, zero emergency bypass, trace PHI redaction verified | None |
+| TASK-P1-601: Visual QA, Tablet Responsiveness & Accessibility Auditing | Person 1 | INTEGRATED | `main` | 137 web tests pass, tablet viewports, >=48px touch targets, high contrast, reduced-motion & screen reader audit verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -60,7 +61,7 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 - [x] No direct OpenAI provider/key is present in the baseline.
 - [x] CI passes on the integrated branch (governance check verified).
 - [ ] The system can be started and demo data reset from a clean checkout.
-- [ ] UI screenshot review covers main and failure states.
+- [x] UI screenshot review covers main and failure states.
 - [x] Known mocks, deferred features and non-validated behavior are documented.
 
 ## Integration checkpoints
