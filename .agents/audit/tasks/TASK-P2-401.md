@@ -3,7 +3,8 @@
 - **Owner**: Person 2 (Backend & Integration Captain)
 - **Branch**: `feat/p2-scheduling-api`
 - **Workstream**: Backend & API (`apps/api/**`)
-- **Status**: VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main` (commit `87729b8`)
 - **Depends On**: `TASK-P2-301` (INTEGRATED)
 - **Informs / Unblocks**: `TASK-P1-401` (Appointment & Scheduling UI), `TASK-P2-501` (Doctor Queue & Consultation)
 
