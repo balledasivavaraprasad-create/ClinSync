@@ -39,7 +39,7 @@ apps/api/
     └── contract/               # API contract conformity tests against openapi.json
 ```
 
-## Implemented API Endpoints (Phase 1 & Phase 2)
+## Implemented API Endpoints (Phase 1, Phase 2 & Phase 3)
 
 | Method | Endpoint | Description | Phase / Gate |
 |---|---|---|---|
@@ -50,13 +50,18 @@ apps/api/
 | `POST` | `/api/v1/patients/register` | Non-biometric manual patient registration fallback | Phase 2 (`TASK-P2-201`) |
 | `POST` | `/api/v1/encounters` | Create persistent encounter requiring confirmed patient | Phase 2 (`TASK-P2-201`) |
 | `POST` | `/api/v1/encounters/{encounter_id}/answers` | Save intake turn, extract facts into ClinicalFact ledger | Phase 2 (`TASK-P2-201`) |
+| `POST` | `/api/v1/encounters/{encounter_id}/documents` | Upload/register document with MIME/size checks and sha256 | Phase 3 (`TASK-P2-301`) |
+| `GET` | `/api/v1/documents/{document_id}/status` | Query document processing status and extracted facts | Phase 3 (`TASK-P2-301`) |
+| `GET` | `/api/v1/encounters/{encounter_id}/ledger` | Authoritative Clinical Context Ledger with provenance & conflicts | Phase 3 (`TASK-P2-301`) |
+| `GET` | `/api/v1/encounters/{encounter_id}/diff` | Patient Context Diff comparing historical EHR with current facts | Phase 3 (`TASK-P2-301`) |
 
 ## Key Engineering & Privacy Invariants
 1. **Identity Confirmation Gate**: Candidate lookup returns strictly masked display hints (`J*** D**`). Medical records and patient context are never returned until secondary factor (DOB) confirmation succeeds.
 2. **Authoritative Clinical Record**: SQLite/SQLAlchemy is the sole source of truth for patients, encounters, facts, and bookings.
-3. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`), and return standard envelopes. No direct DB queries in route modules.
-4. **Clinical Context Provenance**: Every extracted fact retains source modality (`PATIENT_VOICE` vs `PATIENT_FORM`), source ID, status (`reported`), and clinical timestamp.
-5. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
+3. **Safe Storage & Immutability**: Uploaded documents (PDF, PNG, JPEG) are checked against magic bytes and size caps (10MB), stored securely on disk under stable UUIDs without executing payloads, and tracked with sha256 checksums.
+4. **Clinical Context Ledger & Diff**: Every fact retains source modality (`PATIENT_VOICE`, `PATIENT_FORM`, `UPLOADED_DOCUMENT`), source ID, status, and clinical timestamp. Diffs compute new, changed, and conflicting facts without silent reconciliation.
+5. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`), and return standard envelopes. No direct DB queries in route modules.
+6. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
 
 ## Running Locally
 
