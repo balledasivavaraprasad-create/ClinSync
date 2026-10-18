@@ -88,7 +88,6 @@ describe('ClinSync Landing Page & Prototype Integration Suite', () => {
   });
 
   it('toggles between dark and light modes on the landing page', () => {
-    const handleLaunch = vi.fn();
     render(
       <App />
     );
