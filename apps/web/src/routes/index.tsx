@@ -12,6 +12,7 @@ import { SuccessState } from '../components/shared/SuccessState';
 import { DoctorConsoleLayout } from '../layouts/DoctorConsoleLayout';
 import { PatientKioskFlow } from '../features/patient-kiosk/PatientKioskFlow';
 import { LedgerDiffHub } from '../features/patient-context/LedgerDiffHub';
+import { AppointmentSchedulingHub } from '../features/appointments/AppointmentSchedulingHub';
 import { mockApi } from '../lib/api/mockAdapter';
 import { mockDoctorQueue, mockCitations } from '../lib/api/mockData';
 import {
@@ -20,10 +21,13 @@ import {
   Tablet,
   Database,
   FileSpreadsheet,
+  Calendar,
 } from 'lucide-react';
 
 export const MainView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'kiosk' | 'ledger' | 'doctor' | 'showroom' | 'mock-api'>('kiosk');
+  const [activeTab, setActiveTab] = useState<
+    'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api'
+  >('kiosk');
   const [sliderVal, setSliderVal] = useState<number>(4);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [inputVal, setInputVal] = useState<string>('Eleanor Johnson');
@@ -50,9 +54,9 @@ export const MainView: React.FC = () => {
         <div className="flex items-center space-x-2">
           <span className="font-bold text-white tracking-wide">CLINSYNC</span>
           <span className="text-xs bg-brand-600/30 text-teal-300 border border-teal-500/40 px-2 py-0.5 rounded font-mono">
-            G3 Clinical Ledger & Diff
+            G4 Appointments & Scheduling UI
           </span>
-          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-301</span>
+          <span className="text-xs text-slate-400 hidden sm:inline">• TASK-P1-401</span>
         </div>
 
         {/* View Switcher Tabs */}
@@ -80,6 +84,19 @@ export const MainView: React.FC = () => {
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>Ledger & Diff</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('appointments')}
+            data-testid="tab-appointments"
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center space-x-1.5 ${
+              activeTab === 'appointments'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Appointments (G4)</span>
           </button>
 
           <button
@@ -129,6 +146,13 @@ export const MainView: React.FC = () => {
         {activeTab === 'ledger' && (
           <div className="p-6 md:p-8">
             <LedgerDiffHub />
+          </div>
+        )}
+
+        {/* 3. APPOINTMENTS TAB (G4) */}
+        {activeTab === 'appointments' && (
+          <div className="p-6 md:p-8">
+            <AppointmentSchedulingHub />
           </div>
         )}
 

@@ -201,6 +201,7 @@ export interface AppointmentSlot {
   start_at: string;
   end_at: string;
   available: boolean;
+  status?: 'AVAILABLE' | 'HOLD' | 'BOOKED';
 }
 
 export interface SlotsResponse {
@@ -220,9 +221,12 @@ export interface BookingRequest {
 export interface BookingResponse {
   data: {
     booking_id: string;
-    slot: AppointmentSlot;
+    slot_id?: string;
+    slot?: AppointmentSlot;
+    start_at?: string;
+    doctor_id?: string;
     confirmed_at: string;
-    status: 'CONFIRMED' | 'FAILED';
+    status: 'CONFIRMED' | 'FAILED' | string;
   };
   request_id: string;
 }

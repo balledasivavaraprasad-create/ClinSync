@@ -185,12 +185,31 @@ export const mockApi = {
 
   // 10. POST /encounters/{encounter_id}/routing-review
   async reviewRouting(encounterId: string): Promise<DecisionResultResponse> {
+    let decision: 'ROUTINE_SCHEDULING' | 'HUMAN_REVIEW' | 'URGENT_ESCALATION' | 'UNABLE_TO_DETERMINE' =
+      'ROUTINE_SCHEDULING';
+    let reasonCodes = ['CARDIOLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+    let recDept: string | null = 'dept_cardiology';
+
+    if (encounterId.includes('urgent') || encounterId.includes('emerg')) {
+      decision = 'URGENT_ESCALATION';
+      reasonCodes = ['CHEST_PAIN_RED_FLAG', 'HIGH_ACUITY_TRIAGE'];
+      recDept = null;
+    } else if (encounterId.includes('review') || encounterId.includes('conflict')) {
+      decision = 'HUMAN_REVIEW';
+      reasonCodes = ['MEDICATION_RECONCILIATION_REQUIRED', 'CONTRADICTORY_TIMELINE'];
+      recDept = 'dept_internal_med';
+    } else if (encounterId.includes('undetermined')) {
+      decision = 'UNABLE_TO_DETERMINE';
+      reasonCodes = ['INSUFFICIENT_CLINICAL_SYMPTOMS'];
+      recDept = null;
+    }
+
     return {
       data: {
         encounter_id: encounterId,
-        decision: 'ROUTINE_SCHEDULING',
-        reason_codes: ['CARDIOLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'],
-        recommended_department_id: 'dept_cardiology',
+        decision,
+        reason_codes: reasonCodes,
+        recommended_department_id: recDept,
         policy_version: '2026.10-demo-policy-v1',
         evaluated_at: new Date().toISOString(),
       },
@@ -199,11 +218,19 @@ export const mockApi = {
   },
 
   // 11. GET /appointments/slots
-  async getSlots(departmentId: string): Promise<SlotsResponse> {
+  async getSlots(departmentId: string, date?: string): Promise<SlotsResponse> {
+    let slots = departmentId
+      ? mockSlots.filter((s) => s.department_id === departmentId)
+      : mockSlots;
+
+    if (date) {
+      slots = slots.filter((s) => s.start_at.startsWith(date));
+    }
+
     return {
       data: {
-        department_id: departmentId,
-        slots: mockSlots,
+        department_id: departmentId || 'all',
+        slots,
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
@@ -211,15 +238,29 @@ export const mockApi = {
 
   // 12. POST /appointments
   async bookAppointment(req: BookingRequest): Promise<BookingResponse> {
+    if (req.idempotency_key === 'simulate_conflict') {
+      const err = new Error('IDEMPOTENCY_CONFLICT');
+      // @ts-expect-error custom error property
+      err.code = 'IDEMPOTENCY_CONFLICT';
+      throw err;
+    }
+
     const slot = mockSlots.find((s) => s.slot_id === req.slot_id);
-    if (!slot || !slot.available) {
-      throw new Error('SLOT_UNAVAILABLE');
+    const isAvailable = slot?.status ? slot.status === 'AVAILABLE' : slot?.available;
+    if (!slot || !isAvailable) {
+      const err = new Error('SLOT_UNAVAILABLE');
+      // @ts-expect-error custom error property
+      err.code = 'SLOT_UNAVAILABLE';
+      throw err;
     }
 
     return {
       data: {
         booking_id: `bkg_${Date.now()}`,
-        slot: { ...slot, available: false },
+        slot_id: slot.slot_id,
+        doctor_id: slot.doctor_id,
+        start_at: slot.start_at,
+        slot: { ...slot, available: false, status: 'BOOKED' },
         confirmed_at: new Date().toISOString(),
         status: 'CONFIRMED',
       },

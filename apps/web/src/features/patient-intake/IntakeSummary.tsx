@@ -17,6 +17,7 @@ interface IntakeSummaryProps {
   facts: ClinicalFact[];
   onStartNewSession: () => void;
   onProceedToDocuments?: () => void;
+  onProceedToScheduling?: () => void;
 }
 
 export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
@@ -26,6 +27,7 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
   facts,
   onStartNewSession,
   onProceedToDocuments,
+  onProceedToScheduling,
 }) => {
   // Fallback demo facts if none returned from mock turn
   const displayFacts: ClinicalFact[] = facts.length > 0 ? facts : [
@@ -128,7 +130,7 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
           <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl text-teal-900 text-xs flex items-start space-x-2.5 mt-4">
             <Sparkles className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
             <span>
-              Your symptoms are ready for clinician review. In Phase 3, you can attach medical documents or proceed to appointment booking.
+              Your symptoms are ready for clinician review. You can attach medical documents or proceed directly to clinic appointment booking.
             </span>
           </div>
         </CardContent>
@@ -141,28 +143,32 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
             className="w-full sm:w-auto text-slate-600"
           >
             <RotateCcw className="w-4 h-4 mr-1.5" />
-            Finish & Return to Welcome
+            Finish & Return
           </Button>
 
-          {onProceedToDocuments ? (
-            <Button
-              variant="primary"
-              onClick={onProceedToDocuments}
-              data-testid="proceed-to-documents-btn"
-              className="w-full sm:w-auto"
-            >
-              Proceed to Document Upload (G3)
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              disabled
-              title="Phase 3: Document upload and appointment booking"
-              className="w-full sm:w-auto bg-slate-400 text-white cursor-not-allowed"
-            >
-              Proceed to Documents (G3)
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            {onProceedToDocuments && (
+              <Button
+                variant="outline"
+                onClick={onProceedToDocuments}
+                data-testid="proceed-to-documents-btn"
+                className="w-full sm:w-auto text-teal-800 border-teal-300 hover:bg-teal-50"
+              >
+                Upload Documents
+              </Button>
+            )}
+
+            {onProceedToScheduling && (
+              <Button
+                variant="primary"
+                onClick={onProceedToScheduling}
+                data-testid="proceed-to-scheduling-btn"
+                className="w-full sm:w-auto"
+              >
+                Book Appointment (G4)
+              </Button>
+            )}
+          </div>
         </CardFooter>
       </Card>
     </div>
