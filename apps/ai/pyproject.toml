@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "langfuse>=2.0.0",
     "langgraph>=0.2.0",
+    "llama-index-core>=0.10.0",
 ]
 
 

@@ -63,6 +63,8 @@
   - `.agents/audit/tasks/TASK-P3-301.md`
 - Modified (Person 3 permitted paths only):
   - `apps/ai/clinsync_ai/routing/gateway.py`
+  - `apps/ai/clinsync_ai/retrieval/indexer.py`
+  - `apps/ai/pyproject.toml`
   - `apps/ai/tests/test_eval_runner.py`
   - `evals/runner.py`
   - `evals/reports/golden_benchmark_report.json`

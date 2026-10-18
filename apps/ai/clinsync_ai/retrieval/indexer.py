@@ -5,7 +5,22 @@ import re
 from typing import Any
 from pydantic import BaseModel, Field
 
-from llama_index.core import Document
+try:
+    from llama_index.core import Document
+except ImportError:
+    class Document:  # type: ignore
+        """Fallback Document representation when llama-index-core is not installed."""
+        def __init__(
+            self,
+            text: str = "",
+            metadata: dict[str, Any] | None = None,
+            id_: str | None = None,
+            **kwargs: Any,
+        ):
+            self.text = text
+            self.metadata = metadata or {}
+            self.id_ = id_
+
 from clinsync_ai.documents.parser import ParsedDocument
 
 
