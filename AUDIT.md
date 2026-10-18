@@ -26,8 +26,9 @@
 | TASK-P2-101: FastAPI App Core & SQLite | Person 2 | INTEGRATED | `main` | 12 tests pass, Alembic lifecycle verified, error schema conforms | None |
 | TASK-P3-101: Model Gateway & Offline Evals | Person 3 | INTEGRATED | `main` | 14 tests pass, Gemini/Groq gateway, guardrails, eval runner verified | None |
 | TASK-P2-201: Patient APIs & Identity Gating | Person 2 | INTEGRATED | `main` | 34 tests pass, candidate masking, DOB gate, encounter answers verified | None |
+| TASK-P1-201: Kiosk Intake & Registration UI | Person 1 | INTEGRATED | `main` | Voice/kiosk wizard, DOB modal, review summary passing | None |
 | TASK-P3-201: LangGraph Intake & Evals | Person 3 | INTEGRATED | `main` | 36 tests pass, intake graph, bounded turns, evals verified | None |
-| TASK-P2-301: Document Storage, Ledger & Diff APIs | Person 2 | VERIFIED | `feat/p2-document-api` | 59 tests pass, safe upload, sha256 checksum, ledger & diff verified | None |
+| TASK-P2-301: Document Storage, Ledger & Diff APIs | Person 2 | INTEGRATED | `main` | 59 tests pass, safe upload, sha256 checksum, ledger & diff verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.

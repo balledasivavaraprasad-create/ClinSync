@@ -3,7 +3,8 @@
 - **Owner**: Person 2 (Backend & Integration Captain)
 - **Branch**: `feat/p2-document-api`
 - **Workstream**: Backend & API (`apps/api/**`)
-- **Status**: VERIFIED
+- **Status**: INTEGRATED
+- **Merged Into**: `main` (commit `10e4b63`)
 - **Depends On**: `TASK-P2-201` (INTEGRATED)
 
 ## Goal and Acceptance Criteria
