@@ -19,6 +19,9 @@
 ## Files Created / Modified
 - `apps/web/src/test/visual-qa.test.tsx`
 - `apps/web/src/features/patient-kiosk/KioskWelcome.tsx`
+- `apps/web/src/features/visual-qa/VisualQADashboard.tsx`
+- `apps/web/src/features/visual-qa/index.ts`
+- `apps/web/src/routes/index.tsx`
 - `.agents/audit/visual/TASK-P1-601/VISUAL_AUDIT_REPORT.md`
 - `.agents/audit/tasks/TASK-P1-601.md`
 

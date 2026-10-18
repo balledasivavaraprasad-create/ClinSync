@@ -14,6 +14,7 @@ import { PatientKioskFlow } from '../features/patient-kiosk/PatientKioskFlow';
 import { LedgerDiffHub } from '../features/patient-context/LedgerDiffHub';
 import { AppointmentSchedulingHub } from '../features/appointments/AppointmentSchedulingHub';
 import { DoctorDashboardHub } from '../features/doctor-dashboard/DoctorDashboardHub';
+import { VisualQADashboard } from '../features/visual-qa';
 import { mockApi } from '../lib/api/mockAdapter';
 import { mockDoctorQueue } from '../lib/api/mockData';
 import {
@@ -23,11 +24,12 @@ import {
   Database,
   FileSpreadsheet,
   Calendar,
+  Eye,
 } from 'lucide-react';
 
 export const MainView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api'
+    'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa'
   >('kiosk');
   const [sliderVal, setSliderVal] = useState<number>(4);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -135,6 +137,19 @@ export const MainView: React.FC = () => {
           >
             <Database className="w-3.5 h-3.5" />
             <span>Mock API (15/15)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('visual-qa')}
+            data-testid="tab-visual-qa"
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center space-x-1.5 ${
+              activeTab === 'visual-qa'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Visual QA (G6)</span>
           </button>
         </div>
       </div>
@@ -599,6 +614,9 @@ export const MainView: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* 4. VISUAL QA (G6) TAB */}
+        {activeTab === 'visual-qa' && <VisualQADashboard />}
       </div>
     </div>
   );
