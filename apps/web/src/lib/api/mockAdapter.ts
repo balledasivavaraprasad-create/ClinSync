@@ -25,6 +25,7 @@ import type {
 import {
   mockCandidates,
   mockClinicalFacts,
+  mockMarcusClinicalFacts,
   mockSlots,
   mockDoctorQueue,
   mockCitations,
@@ -148,10 +149,13 @@ export const mockApi = {
 
   // 8. GET /encounters/{encounter_id}/ledger
   async getLedger(encounterId: string): Promise<LedgerResponse> {
+    const facts =
+      encounterId === 'enc_demo_002' ? mockMarcusClinicalFacts : mockClinicalFacts;
+
     return {
       data: {
         encounter_id: encounterId,
-        facts: mockClinicalFacts,
+        facts,
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
@@ -159,6 +163,19 @@ export const mockApi = {
 
   // 9. GET /encounters/{encounter_id}/diff
   async getDiff(encounterId: string): Promise<DiffResponse> {
+    if (encounterId === 'enc_demo_002') {
+      return {
+        data: {
+          encounter_id: encounterId,
+          new_facts: [mockMarcusClinicalFacts[0]],
+          changed_facts: [],
+          conflicting_facts: [],
+          unresolved_count: 0,
+        },
+        request_id: `req_${Math.random().toString(36).substring(7)}`,
+      };
+    }
+
     return {
       data: {
         encounter_id: encounterId,
@@ -281,6 +298,35 @@ export const mockApi = {
 
   // 14. GET /encounters/{encounter_id}/brief
   async getDoctorBrief(encounterId: string): Promise<DoctorBriefResponse> {
+    if (encounterId === 'enc_demo_002') {
+      return {
+        data: {
+          encounter_id: encounterId,
+          patient_name: 'Marcus Patel (52M)',
+          chief_complaint: 'Routine 6-month lipid review with stable baseline ECG',
+          clinical_summary:
+            '52-year-old male presenting for scheduled 6-month cardiovascular and lipid follow-up. Blood pressure optimal at 118/76. Baseline 12-lead ECG confirmed normal sinus rhythm without ischemic changes. Current Atorvastatin 20mg daily tolerated without myalgias.',
+          citations: [
+            {
+              citation_id: 'cite_m01',
+              fact_id: 'fact_006',
+              source_type: 'Electronic Health Record',
+              source_title: 'Annual Cardiology Progress Note.pdf',
+              source_location: 'Page 2, Section Assessment',
+              text_snippet:
+                'Cardiovascular examination unremarkable. Normal heart sounds S1/S2, no murmurs or peripheral edema.',
+            },
+          ],
+          unresolved_questions: [
+            'Confirm fasting lipid panel collection prior to visit.',
+          ],
+          audio_brief_available: true,
+          audio_brief_url: '/synthetic_audio_brief_demo.mp3',
+        },
+        request_id: `req_${Math.random().toString(36).substring(7)}`,
+      };
+    }
+
     return {
       data: {
         encounter_id: encounterId,

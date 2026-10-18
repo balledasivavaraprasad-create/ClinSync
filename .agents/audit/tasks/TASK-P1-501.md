@@ -14,7 +14,9 @@
 - [x] Integrated doctor review and approval modal (`POST /encounters/{id}/approvals`) recording physician sign-off, clinical notes, and amendment flagging.
 - [x] Multi-tab clinical workspace providing direct access to Brief & Audio, Clinical Context Ledger, Patient Context Diff, and Diagnostic Documents.
 - [x] Full error resilience with retry triggers for queue and brief loading failures.
-- [x] 22/22 unit and integration tests passing in `doctor-console.test.tsx` (115/115 passing across all 7 web test suites).
+- [x] 24/24 unit and integration tests passing in `doctor-console.test.tsx` (117/117 passing across all 7 web test suites).
+- [x] Keyboard scrubbing controls (ArrowLeft/Right/Up/Down, Home, End) added to audio player with visible focus outline.
+- [x] Safety safeguard verified: patient switching resets previous approval success banner and loads active patient's brief & ledger facts.
 
 ## Files Created / Modified
 - `apps/web/src/features/doctor-brief/AudioBriefPlayer.tsx`
@@ -24,6 +26,8 @@
 - `apps/web/src/features/doctor-dashboard/DoctorQueueList.tsx`
 - `apps/web/src/features/doctor-dashboard/DoctorDashboardHub.tsx`
 - `apps/web/src/features/doctor-dashboard/index.ts`
+- `apps/web/src/lib/api/mockAdapter.ts`
+- `apps/web/src/lib/api/mockData.ts`
 - `apps/web/src/routes/index.tsx`
 - `apps/web/src/test/doctor-console.test.tsx`
 - `.agents/audit/tasks/TASK-P1-501.md`
@@ -34,11 +38,13 @@
 - Parallel Work Allowed: Built and verified with typed mock adapter; live API integration ready for `TASK-P2-501` and `TASK-P3-501`.
 
 ## Verification & Test Results
-- `npm --prefix apps/web test`: PASSED (115/115 passed across 7 test suites in 4.88s)
+- `npm --prefix apps/web test`: PASSED (117/117 passed across 7 test suites in 6.17s)
 - `npm --prefix apps/web run lint`: PASSED (0 errors, 0 warnings)
 - `npm --prefix apps/web run typecheck`: PASSED (0 errors)
-- `npm --prefix apps/web run build`: PASSED (built in 2.90s)
+- `npm --prefix apps/web run build`: PASSED (built in 2.03s)
 - `npm run contracts:validate`: PASSED (15 endpoints, 25 schemas)
+- `pytest apps/api`: PASSED (87/87 passed in 1.76s)
+- `pytest apps/ai`: PASSED (63 passed, 2 skipped in 0.20s)
 - `git diff --check apps/web`: PASSED (Clean whitespace, 0 formatting errors)
 
 ## Security & Safety Checks

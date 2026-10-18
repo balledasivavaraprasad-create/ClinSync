@@ -160,14 +160,31 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
           })}
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar with Keyboard Scrubbing Accessibility */}
         <div
           role="progressbar"
+          tabIndex={0}
           aria-valuenow={currentTime}
           aria-valuemin={0}
           aria-valuemax={durationSeconds}
           aria-label="Audio summary progress"
-          className="w-full bg-slate-700/80 rounded-full h-2 overflow-hidden cursor-pointer"
+          data-testid="audio-progressbar"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              setCurrentTime((prev) => Math.min(durationSeconds, prev + 5));
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              setCurrentTime((prev) => Math.max(0, prev - 5));
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              setCurrentTime(0);
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              setCurrentTime(durationSeconds);
+            }
+          }}
+          className="w-full bg-slate-700/80 rounded-full h-2 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1 focus:ring-offset-slate-900"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const clickPos = (e.clientX - rect.left) / rect.width;

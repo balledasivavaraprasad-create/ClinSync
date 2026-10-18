@@ -157,16 +157,23 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
   };
 
   // Handle document open
-  const handleInspectDocument = (_sourceId: string) => {
+  const handleInspectDocument = (sourceId: string) => {
+    const isReferral =
+      sourceId.includes('referral') ||
+      sourceId.includes('progress') ||
+      sourceId === 'doc_synth_referral_02';
+
     const docItem: UploadedDocItem = {
-      id: 'doc_synth_rx_01',
-      name: 'St. Jude Pharmacy Refill Order.pdf',
+      id: sourceId || 'doc_synth_rx_01',
+      name: isReferral
+        ? 'External Referral Clinical Note.pdf'
+        : 'St. Jude Pharmacy Refill Order.pdf',
       size: 1024 * 1024 * 1.8,
       type: 'application/pdf',
       status: 'EXTRACTED',
       progress: 100,
       uploadedAt: new Date().toISOString(),
-      extractedFactIds: ['fact_003'],
+      extractedFactIds: isReferral ? ['fact_005'] : ['fact_003'],
     };
     setSelectedDoc(docItem);
     setIsDocModalOpen(true);
@@ -199,6 +206,11 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
             <h2 className="text-lg font-black text-slate-900 leading-tight mt-0.5">
               {selectedPatientName}
             </h2>
+            {activePatientItem && (
+              <p className="text-xs text-slate-500 font-medium">
+                {activePatientItem.department} • Scheduled {activePatientItem.appointment_time}
+              </p>
+            )}
           </div>
         </div>
 

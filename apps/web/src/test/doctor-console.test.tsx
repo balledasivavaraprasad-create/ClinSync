@@ -174,6 +174,38 @@ describe('TASK-P1-501: Doctor Console, Briefing UI & Audio Player Suite', () => 
       expect(screen.getByTestId('audio-transcript-fallback')).toBeInTheDocument();
     });
 
+    it('supports keyboard scrubbing controls on the progress bar', () => {
+      render(
+        <AudioBriefPlayer
+          transcriptText="Keyboard accessibility test"
+          durationSeconds={60}
+        />
+      );
+
+      const progressbar = screen.getByTestId('audio-progressbar');
+      expect(progressbar).toHaveAttribute('aria-valuenow', '0');
+
+      // ArrowRight increases by 5 seconds
+      fireEvent.keyDown(progressbar, { key: 'ArrowRight' });
+      expect(progressbar).toHaveAttribute('aria-valuenow', '5');
+
+      // ArrowUp increases by 5 seconds
+      fireEvent.keyDown(progressbar, { key: 'ArrowUp' });
+      expect(progressbar).toHaveAttribute('aria-valuenow', '10');
+
+      // ArrowLeft decreases by 5 seconds
+      fireEvent.keyDown(progressbar, { key: 'ArrowLeft' });
+      expect(progressbar).toHaveAttribute('aria-valuenow', '5');
+
+      // End sets to durationSeconds
+      fireEvent.keyDown(progressbar, { key: 'End' });
+      expect(progressbar).toHaveAttribute('aria-valuenow', '60');
+
+      // Home resets to 0
+      fireEvent.keyDown(progressbar, { key: 'Home' });
+      expect(progressbar).toHaveAttribute('aria-valuenow', '0');
+    });
+
     it('shows error notice when audio synthesis is unavailable', () => {
       render(
         <AudioBriefPlayer
@@ -354,18 +386,48 @@ describe('TASK-P1-501: Doctor Console, Briefing UI & Audio Player Suite', () => 
       expect(screen.getByTestId('doctor-brief-card')).toBeInTheDocument();
     });
 
-    it('switches between patients from the triage queue', async () => {
+    it('switches between patients from the triage queue and updates clinical brief', async () => {
       render(<DoctorDashboardHub />);
 
       await waitFor(() => {
         expect(screen.getByText('Marcus Patel')).toBeInTheDocument();
       });
 
+      // Initially Eleanor is selected
+      expect(screen.getByText('Eleanor Johnson (44F) — Clinical Brief')).toBeInTheDocument();
+
       const secondQueueItem = screen.getByTestId('queue-item-enc_demo_002');
       fireEvent.click(secondQueueItem);
 
       await waitFor(() => {
-        expect(screen.getAllByText('Marcus Patel').length).toBeGreaterThan(0);
+        expect(screen.getByText('Marcus Patel (52M) — Clinical Brief')).toBeInTheDocument();
+        expect(screen.getByText('Routine 6-month lipid review with stable baseline ECG')).toBeInTheDocument();
+      });
+    });
+
+    it('resets approval success banner when switching patients after an approval', async () => {
+      render(<DoctorDashboardHub />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('open-signoff-modal-btn')).toBeInTheDocument();
+      });
+
+      // Sign off for Eleanor
+      fireEvent.click(screen.getByTestId('open-signoff-modal-btn'));
+      fireEvent.click(screen.getByTestId('submit-approval-btn'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('approval-success-banner')).toBeInTheDocument();
+      });
+
+      // Switch to Marcus Patel
+      const secondQueueItem = screen.getByTestId('queue-item-enc_demo_002');
+      fireEvent.click(secondQueueItem);
+
+      await waitFor(() => {
+        expect(screen.getByText('Marcus Patel (52M) — Clinical Brief')).toBeInTheDocument();
+        // The previous patient's approval banner must be gone
+        expect(screen.queryByTestId('approval-success-banner')).not.toBeInTheDocument();
       });
     });
 

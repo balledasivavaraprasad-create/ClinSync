@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -50,6 +50,11 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
   const [isAudioExpanded, setIsAudioExpanded] = useState<boolean>(true);
   const [isApprovalOpen, setIsApprovalOpen] = useState<boolean>(false);
   const [recordedApproval, setRecordedApproval] = useState<ApprovalResponse['data'] | null>(null);
+
+  // Safety safeguard: Reset approval state when switching patients/encounters
+  useEffect(() => {
+    setRecordedApproval(null);
+  }, [encounterId]);
 
   // Derive known medications & allergies from facts
   const medications = facts.filter((f) => f.fact_type === 'medication');
@@ -107,7 +112,7 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
               </div>
               <CardTitle className="text-xl font-black text-slate-900 mt-1 flex items-center">
                 <User className="w-5 h-5 mr-2 text-slate-500" />
-                {patientName} — Clinical Brief
+                {brief.patient_name || patientName} — Clinical Brief
               </CardTitle>
               <CardDescription className="text-xs text-slate-600 mt-0.5 font-medium">
                 Chief Complaint: <strong className="text-slate-900">{brief.chief_complaint}</strong>
@@ -314,7 +319,12 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onInspectDocument('doc_synth_rx_01');
+                          const docId =
+                            cite.source_title.includes('Referral') ||
+                            cite.source_title.includes('Progress')
+                              ? 'doc_synth_referral_02'
+                              : 'doc_synth_rx_01';
+                          onInspectDocument(docId);
                         }}
                         className="text-xs text-blue-600 hover:text-blue-800 underline"
                       >
