@@ -39,7 +39,7 @@ apps/api/
     └── contract/               # API contract conformity tests against openapi.json
 ```
 
-## Implemented API Endpoints (Phase 1, Phase 2 & Phase 3)
+## Implemented API Endpoints (Phases 1 - 5)
 
 | Method | Endpoint | Description | Phase / Gate |
 |---|---|---|---|
@@ -57,6 +57,9 @@ apps/api/
 | `POST` | `/api/v1/encounters/{encounter_id}/routing-review` | Deterministic safety policy & allowlisted specialty routing | Phase 4 (`TASK-P2-401`) |
 | `GET` | `/api/v1/appointments/slots` | Query seeded available appointment slots by department & date | Phase 4 (`TASK-P2-401`) |
 | `POST` | `/api/v1/appointments` | Atomically book slot within transaction (idempotent, race-safe) | Phase 4 (`TASK-P2-401`) |
+| `GET` | `/api/v1/doctors/{doctor_id}/queue` | Read authorized doctor encounter queue by department & booking | Phase 5 (`TASK-P2-501`) |
+| `GET` | `/api/v1/encounters/{encounter_id}/brief` | Evidence-backed clinical brief synthesized from ledger facts | Phase 5 (`TASK-P2-501`) |
+| `POST` | `/api/v1/encounters/{encounter_id}/approvals` | Record clinical sign-off, confirm facts, append audit event | Phase 5 (`TASK-P2-501`) |
 
 ## Key Engineering & Privacy Invariants
 1. **Identity Confirmation Gate**: Candidate lookup returns strictly masked display hints (`J*** D**`). Medical records and patient context are never returned until secondary factor (DOB) confirmation succeeds.
@@ -65,8 +68,9 @@ apps/api/
 4. **Clinical Context Ledger & Diff**: Every fact retains source modality (`PATIENT_VOICE`, `PATIENT_FORM`, `UPLOADED_DOCUMENT`), source ID, status, and clinical timestamp. Diffs compute new, changed, and conflicting facts without silent reconciliation.
 5. **Deterministic Safety Policy (Rule 10)**: Clinical model outputs cannot independently escalate or schedule emergency patients. High-risk acute red flags (ACS, respiratory distress, FAST acute stroke, anaphylaxis, massive hemorrhage, psychiatric crisis) unconditionally trigger `URGENT_ESCALATION`.
 6. **Atomic Booking & Race Safety**: Appointment booking transactions enforce database-level uniqueness constraints and idempotency checking. Concurrent duplicate booking attempts for the same slot strictly result in 1 winner (201 Created) and 409 Conflict (`SLOT_UNAVAILABLE`).
-7. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`, `RoutingService`, `AppointmentService`), and return standard envelopes. No direct DB queries in route modules.
-8. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
+7. **Doctor Sign-Off & Fact Confirmation**: Doctor review transitions encounters to `DOCTOR_REVIEWED`, marks facts as `doctor_confirmed` with `reviewed_by`, applies fact corrections, and records immutable `AuditEvent` logs with `actor_role="DOCTOR"`. Unconfirmed patient encounters reject approvals with 403 `IDENTITY_NOT_CONFIRMED`.
+8. **Thin Routes, Heavy Services**: Route handlers validate input, invoke domain services (`PatientService`, `EncounterService`, `DocumentService`, `LedgerService`, `RoutingService`, `AppointmentService`, `DoctorService`), and return standard envelopes. No direct DB queries in route modules.
+9. **Zero Secret Leakage**: Redact sensitive content from structured logs; credentials reside in server environment.
 
 ## Running Locally
 

@@ -10,6 +10,17 @@ from app.schemas.appointment import (
 )
 from app.schemas.audit import AuditEvent, AuditEventResponse
 from app.schemas.common import ResponseEnvelope
+from app.schemas.doctor import (
+    ApprovalData,
+    ApprovalRequest,
+    ApprovalResponse,
+    DoctorBriefCitation,
+    DoctorBriefData,
+    DoctorBriefResponse,
+    DoctorQueueData,
+    DoctorQueueItem,
+    DoctorQueueResponse,
+)
 from app.schemas.document import (
     DocumentStatus,
     DocumentStatusData,
@@ -102,4 +113,13 @@ __all__ = [
     "BookingRequest",
     "BookingData",
     "BookingResponse",
+    "DoctorQueueItem",
+    "DoctorQueueData",
+    "DoctorQueueResponse",
+    "DoctorBriefCitation",
+    "DoctorBriefData",
+    "DoctorBriefResponse",
+    "ApprovalRequest",
+    "ApprovalData",
+    "ApprovalResponse",
 ]

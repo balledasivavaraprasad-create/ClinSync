@@ -1,7 +1,6 @@
 """Adaptive intake service orchestrating LangGraph workflow turns."""
 
 import uuid
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, IntakeState

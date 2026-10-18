@@ -2,12 +2,10 @@
 
 import re
 import uuid
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.documents.parser import DocumentPage, ParsedDocument
-from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType, SourceType
-from clinsync_ai.providers.errors import ModelProviderError
+from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType
 from clinsync_ai.routing.gateway import ModelGateway
 
 

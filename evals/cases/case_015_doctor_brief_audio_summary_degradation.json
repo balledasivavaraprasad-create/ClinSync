@@ -1,0 +1,32 @@
+{
+  "case_id": "CASE-BRIEF-AUDIO-015",
+  "title": "Doctor Brief Audio Summary Generation and Safe Graceful Fallback",
+  "test_type": "doctor_brief_audio_evaluation",
+  "patient_id": "PAT-SYNTH-ELEANOR",
+  "patient_name": "Eleanor Johnson",
+  "encounter_id": "ENC-BRIEF-015",
+  "chief_complaint": "Dyspnea on exertion and subacute cough",
+  "current_facts": [
+    {
+      "id": "FACT-015-01",
+      "concept": "chief_complaint",
+      "value": "Dyspnea on exertion and subacute dry cough",
+      "source_type": "PATIENT_VOICE",
+      "status": "reported",
+      "source_id": "ENC-BRIEF-015"
+    }
+  ],
+  "historical_facts": [
+    {
+      "id": "FACT-015-02",
+      "concept": "cardiac_history",
+      "value": "Mild mitral regurgitation on echocardiogram",
+      "source_type": "HISTORICAL_EHR",
+      "status": "historical_recorded",
+      "source_id": "EHR-CARDIOLOGY"
+    }
+  ],
+  "max_speech_duration_seconds": 90.0,
+  "min_speech_duration_seconds": 15.0,
+  "expected_fallback_audio_status": "UNAVAILABLE"
+}

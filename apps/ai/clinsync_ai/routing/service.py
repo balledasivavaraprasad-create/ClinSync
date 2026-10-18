@@ -5,11 +5,10 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
-from clinsync_ai.clinical_context.ledger import ClinicalContextLedger
 from clinsync_ai.graph.state import ClinicalFactModel
 from clinsync_ai.guardrails.triage_guard import TriageEvaluation, TriagePolicyGuard
 from clinsync_ai.routing.gateway import ModelGateway
-from clinsync_ai.routing.recommender import SpecialtyRecommendation, SpecialtyRecommender
+from clinsync_ai.routing.recommender import SpecialtyRecommender
 
 
 class DecisionResult(BaseModel):

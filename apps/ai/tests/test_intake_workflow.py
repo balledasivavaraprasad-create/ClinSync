@@ -1,6 +1,5 @@
 """Unit tests for LangGraph Adaptive Intake Workflow (TASK-P3-201)."""
 
-import pytest
 from clinsync_ai.graph.nodes.intake_nodes import (
     check_stopping_node,
     extract_facts_node,
@@ -10,7 +9,6 @@ from clinsync_ai.graph.nodes.intake_nodes import (
 from clinsync_ai.graph.state import (
     ClinicalFactModel,
     IntakeState,
-    WorkflowStatus,
 )
 from clinsync_ai.graph.workflows.intake_workflow import (
     advance_intake_turn,

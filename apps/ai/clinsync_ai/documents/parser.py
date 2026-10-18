@@ -3,7 +3,6 @@
 import base64
 import hashlib
 import re
-from typing import Any
 from pydantic import BaseModel, Field
 
 from clinsync_ai.guardrails.prompt_guard import PromptGuard

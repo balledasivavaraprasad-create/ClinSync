@@ -2,7 +2,7 @@
 
 import os
 import time
-from typing import Any, Type, TypeVar
+from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from clinsync_ai.providers.base import ModelProvider, ModelResponse, TokenUsage

@@ -6,7 +6,7 @@ import pytest
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from clinsync_ai.providers.errors import ProviderUnavailableError
+from clinsync_ai.providers.errors import ProviderRateLimitError, ProviderUnavailableError
 from clinsync_ai.providers.gemini import GeminiProvider
 from clinsync_ai.providers.groq import GroqProvider
 
@@ -38,7 +38,7 @@ def test_live_gemini_text_and_structured():
                     temperature=0.0,
                 )
                 break
-            except ProviderUnavailableError:
+            except (ProviderUnavailableError, ProviderRateLimitError):
                 if attempt == 2:
                     raise
                 time.sleep(1.0)
@@ -57,7 +57,7 @@ def test_live_gemini_text_and_structured():
                     response_schema=LiveTestSchema,
                 )
                 break
-            except ProviderUnavailableError:
+            except (ProviderUnavailableError, ProviderRateLimitError):
                 if attempt == 2:
                     raise
                 time.sleep(1.0)
@@ -65,8 +65,8 @@ def test_live_gemini_text_and_structured():
         assert parsed is not None
         assert parsed.is_working is True
         assert "Hello" in parsed.greeting
-    except ProviderUnavailableError as exc:
-        pytest.skip(f"Live Gemini service temporarily unavailable: {exc}")
+    except (ProviderUnavailableError, ProviderRateLimitError) as exc:
+        pytest.skip(f"Live Gemini service temporarily unavailable or rate-limited: {exc}")
 
 
 @pytest.mark.skipif(
@@ -78,19 +78,22 @@ def test_live_groq_fallback_text_and_structured():
     provider = GroqProvider()
     assert provider.is_available() is True
 
-    # Test text generation with max_tokens within free limit
-    text_res = provider.generate_text(
-        prompt="Say 'Groq online' and nothing else.",
-        temperature=0.0,
-        max_tokens=256,
-    )
-    assert len(text_res.text.strip()) > 0
-    assert text_res.latency_ms > 0
+    try:
+        # Test text generation with max_tokens within free limit
+        text_res = provider.generate_text(
+            prompt="Say 'Groq online' and nothing else.",
+            temperature=0.0,
+            max_tokens=256,
+        )
+        assert len(text_res.text.strip()) > 0
+        assert text_res.latency_ms > 0
 
-    # Test structured generation
-    parsed, struct_res = provider.generate_structured(
-        prompt="Return greeting 'Hello Fallback' and is_working true.",
-        response_schema=LiveTestSchema,
-    )
-    assert parsed.is_working is True
-    assert "Hello" in parsed.greeting
+        # Test structured generation
+        parsed, struct_res = provider.generate_structured(
+            prompt="Return greeting 'Hello Fallback' and is_working true.",
+            response_schema=LiveTestSchema,
+        )
+        assert parsed.is_working is True
+        assert "Hello" in parsed.greeting
+    except (ProviderUnavailableError, ProviderRateLimitError) as exc:
+        pytest.skip(f"Live Groq service temporarily unavailable or rate-limited: {exc}")
