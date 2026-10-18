@@ -35,7 +35,7 @@ export const Dialog: React.FC<DialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
@@ -44,18 +44,18 @@ export const Dialog: React.FC<DialogProps> = ({
       <div
         className={twMerge(
           clsx(
-            'relative w-full max-w-lg rounded-2xl bg-surface p-6 shadow-elevated border border-borderSubtle transition-all',
+            'relative w-full max-w-lg rounded-2xl bg-slate-900/95 backdrop-blur-2xl p-6 shadow-2xl border border-white/10 text-slate-100 transition-all shadow-black/80',
             className
           )
         )}
       >
-        <div className="flex items-start justify-between pb-4 border-b border-borderSubtle">
+        <div className="flex items-start justify-between pb-4 border-b border-white/10">
           <div>
-            <h2 id="dialog-title" className="text-xl font-semibold text-ink-primary">
+            <h2 id="dialog-title" className="text-xl font-bold text-white tracking-tight">
               {title}
             </h2>
             {description && (
-              <p id="dialog-description" className="text-sm text-ink-muted mt-1">
+              <p id="dialog-description" className="text-sm text-slate-400 mt-1">
                 {description}
               </p>
             )}
@@ -65,13 +65,12 @@ export const Dialog: React.FC<DialogProps> = ({
             size="sm"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-2 min-h-[44px] min-w-[44px] text-ink-muted hover:text-ink-primary -mr-2"
+            className="p-1 min-h-[36px] min-w-[36px] text-slate-400 hover:text-white hover:bg-white/10 rounded-lg"
           >
-            <X className="h-5 w-5" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
-
-        <div className="mt-4">{children}</div>
+        <div className="pt-4">{children}</div>
       </div>
     </div>
   );

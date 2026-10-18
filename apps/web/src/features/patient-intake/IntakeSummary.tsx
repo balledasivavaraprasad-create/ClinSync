@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import type { ClinicalFact } from '../../lib/api/types';
@@ -76,31 +75,31 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
       data-testid="intake-summary-container"
       className="w-full max-w-2xl mx-auto space-y-6"
     >
-      <Card className="shadow-lg border-teal-200 overflow-hidden">
-        <div className="h-2 bg-teal-600" />
-        <CardHeader className="text-center pt-8 pb-4">
-          <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto mb-3 border border-teal-200">
-            <CheckCircle2 className="w-8 h-8" />
+      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
+        <div className="text-center pt-8 pb-4 px-6 sm:px-8 border-b border-white/[0.06]">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mx-auto mb-3 border border-emerald-500/30 shadow-lg shadow-emerald-500/15">
+            <CheckCircle2 className="w-9 h-9" />
           </div>
-          <CardTitle className="text-2xl font-extrabold text-slate-900">
+          <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal tracking-tight">
             Intake Completed Successfully
-          </CardTitle>
-          <CardDescription className="text-sm text-slate-600 max-w-md mx-auto">
-            Thank you, <strong>{patientName}</strong> {patientId ? `(${patientId})` : ''}. Your reported symptoms have been recorded under encounter{' '}
-            <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded text-teal-800">
+          </h2>
+          <p className="text-sm text-slate-400 max-w-md mx-auto mt-1.5 leading-relaxed">
+            Thank you, <strong className="text-white">{patientName}</strong> {patientId ? `(${patientId})` : ''}. Your reported symptoms have been recorded under encounter{' '}
+            <code className="text-xs font-mono bg-white/[0.06] border border-white/10 px-2 py-0.5 rounded text-cyan-300">
               {encounterId}
             </code>
             .
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
-        <CardContent className="space-y-4 px-6 sm:px-8">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-500 flex items-center">
-              <ClipboardList className="w-4 h-4 mr-1.5 text-teal-600" />
+        <div className="space-y-4 px-6 sm:px-8 py-6">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
+            <span className="text-xs uppercase font-mono tracking-wider text-slate-400 flex items-center">
+              <ClipboardList className="w-4 h-4 mr-1.5 text-cyan-400" />
               Recorded Clinical Facts (Context Ledger)
             </span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-400 font-mono">
               {displayFacts.length} fact(s) captured
             </span>
           </div>
@@ -109,16 +108,16 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
             {displayFacts.map((fact) => (
               <div
                 key={fact.id}
-                className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 flex items-center justify-between"
+                className="p-3.5 bg-white/[0.025] rounded-xl border border-white/[0.08] flex items-center justify-between shadow-sm"
               >
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-bold text-slate-900">
+                    <span className="text-sm font-bold text-white">
                       {fact.concept}
                     </span>
-                    <span className="text-xs text-slate-500">({fact.value})</span>
+                    <span className="text-xs text-slate-400">({fact.value})</span>
                   </div>
-                  <span className="text-xs text-slate-400 block mt-0.5">
+                  <span className="text-xs text-slate-400 block mt-1 font-mono">
                     Source: {fact.source_type} • Method: {fact.extraction_method || 'direct'}
                   </span>
                 </div>
@@ -127,20 +126,20 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
             ))}
           </div>
 
-          <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl text-teal-900 text-xs flex items-start space-x-2.5 mt-4">
-            <Sparkles className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
-            <span>
+          <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-200 text-xs flex items-start space-x-2.5 mt-4">
+            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
               Your symptoms are ready for clinician review. You can attach medical documents or proceed directly to clinic appointment booking.
             </span>
           </div>
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 border-t border-slate-100 px-6 sm:px-8 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
           <Button
             variant="outline"
             onClick={onStartNewSession}
             data-testid="return-home-btn"
-            className="w-full sm:w-auto text-slate-600"
+            className="w-full sm:w-auto text-slate-300 hover:text-white border-white/10"
           >
             <RotateCcw className="w-4 h-4 mr-1.5" />
             Finish & Return
@@ -152,7 +151,7 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
                 variant="outline"
                 onClick={onProceedToDocuments}
                 data-testid="proceed-to-documents-btn"
-                className="w-full sm:w-auto text-teal-800 border-teal-300 hover:bg-teal-50"
+                className="w-full sm:w-auto text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10"
               >
                 Upload Documents
               </Button>
@@ -163,14 +162,14 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
                 variant="primary"
                 onClick={onProceedToScheduling}
                 data-testid="proceed-to-scheduling-btn"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto font-bold"
               >
                 Book Appointment (G4)
               </Button>
             )}
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

@@ -214,24 +214,24 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
   };
 
   return (
-    <Card className="shadow-sm border-slate-200" data-testid="document-upload-zone">
-      <CardHeader className="pb-3 border-b border-slate-100">
+    <Card className="shadow-lg border-white/[0.08] bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl overflow-hidden" data-testid="document-upload-zone">
+      <CardHeader className="pb-4 border-b border-white/[0.06]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center border border-cyan-500/30 shadow-inner">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold text-slate-900">
+              <CardTitle className="text-xl font-serif text-white font-normal tracking-tight">
                 Clinical Document Upload
               </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
+              <CardDescription className="text-xs text-slate-400 mt-0.5">
                 Upload prior referrals, lab reports, or medication bottles for multimodal OCR extraction
               </CardDescription>
             </div>
           </div>
-          <Badge variant="neutral" className="text-xs bg-slate-50 border-slate-200 text-slate-700">
-            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-teal-600" />
+          <Badge variant="neutral" className="text-xs bg-white/[0.05] border-white/10 text-cyan-300">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-cyan-400" />
             HIPAA-Redacted Zone
           </Badge>
         </div>
@@ -247,10 +247,10 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
             isDragging
-              ? 'border-brand-600 bg-teal-50/60 ring-2 ring-brand-500/20'
-              : 'border-slate-300 hover:border-brand-500 hover:bg-slate-50/80 bg-slate-50/40'
+              ? 'border-cyan-400 bg-cyan-500/10 ring-2 ring-cyan-500/30'
+              : 'border-white/15 hover:border-cyan-400/50 hover:bg-white/[0.04] bg-white/[0.015]'
           }`}
         >
           <input
@@ -261,16 +261,16 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
             onChange={handleFileChange}
             className="hidden"
           />
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center text-teal-700">
-              <UploadCloud className="w-6 h-6" />
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner">
+              <UploadCloud className="w-7 h-7" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-white">
                 Drag and drop your clinical documents, or{' '}
-                <span className="text-brand-600 underline">browse files</span>
+                <span className="text-cyan-400 underline font-mono">browse files</span>
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Supported formats: <strong>PDF, PNG, JPG</strong> • Maximum size: <strong>10MB</strong>
               </p>
             </div>
@@ -282,17 +282,17 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
           <div
             role="alert"
             data-testid="upload-error-alert"
-            className="p-3 bg-rose-50 border border-rose-200 text-rose-900 rounded-lg text-xs flex items-start space-x-2"
+            className="p-3.5 bg-rose-500/15 border border-rose-500/30 text-rose-200 rounded-xl text-xs flex items-start space-x-2.5"
           >
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <span className="font-semibold block">Upload Error</span>
+              <span className="font-bold block">Upload Error</span>
               <span>{uploadError}</span>
             </div>
             <button
               type="button"
               onClick={() => setUploadError(null)}
-              className="text-rose-700 hover:text-rose-900 text-xs font-bold"
+              className="text-rose-300 hover:text-white text-xs font-bold"
             >
               Dismiss
             </button>
@@ -300,16 +300,16 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
         )}
 
         {/* Uploaded Documents List */}
-        <div className="space-y-2" data-testid="uploaded-documents-list">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 px-1">
+        <div className="space-y-2.5" data-testid="uploaded-documents-list">
+          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-slate-400 px-1">
             <span>Uploaded Documents ({documents.length})</span>
-            <span className="text-slate-400">OCR & Context Fact Status</span>
+            <span>OCR & Context Fact Status</span>
           </div>
 
           {documents.length === 0 ? (
             <div
               data-testid="no-documents-placeholder"
-              className="p-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 text-xs"
+              className="p-8 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.015] text-slate-500 text-xs"
             >
               No documents uploaded for this encounter yet.
             </div>
@@ -318,11 +318,11 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
               <div
                 key={doc.id}
                 data-testid={`document-item-${doc.id}`}
-                className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-subtle hover:border-slate-300 transition-colors"
+                className="bg-white/[0.025] border border-white/[0.08] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm hover:border-cyan-400/40 transition-all"
               >
                 {/* Doc Info */}
-                <div className="flex items-center space-x-3 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center shrink-0">
+                <div className="flex items-center space-x-3.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0">
                     {doc.type === 'application/pdf' ? (
                       <FileText className="w-5 h-5" />
                     ) : (
@@ -330,10 +330,10 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate" title={doc.name}>
+                    <p className="text-sm font-semibold text-white truncate" title={doc.name}>
                       {doc.name}
                     </p>
-                    <p className="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
+                    <p className="text-xs text-slate-400 flex items-center space-x-2 mt-0.5 font-mono">
                       <span>{formatFileSize(doc.size)}</span>
                       <span>•</span>
                       <span className="flex items-center">
@@ -381,7 +381,7 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
                       size="sm"
                       onClick={() => onViewDocument(doc)}
                       data-testid={`inspect-doc-btn-${doc.id}`}
-                      className="text-xs h-8 px-2.5 text-teal-700 hover:text-teal-900 border-teal-200"
+                      className="text-xs h-8 px-2.5 text-cyan-300 hover:text-white border-cyan-500/30 hover:bg-cyan-500/10"
                     >
                       <Eye className="w-3.5 h-3.5 mr-1" />
                       View Source
@@ -395,7 +395,7 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
                       size="sm"
                       onClick={() => handleRetry(doc)}
                       data-testid={`retry-doc-btn-${doc.id}`}
-                      className="text-xs h-8 px-2.5 text-amber-700 hover:text-amber-900 border-amber-200"
+                      className="text-xs h-8 px-2.5 text-amber-300 hover:text-white border-amber-500/30 hover:bg-amber-500/10"
                     >
                       <RefreshCw className="w-3.5 h-3.5 mr-1" />
                       Retry
@@ -409,7 +409,7 @@ export const DocumentUploadZone: React.FC<DocumentUploadZoneProps> = ({
                     onClick={() => handleRemove(doc.id)}
                     data-testid={`remove-doc-btn-${doc.id}`}
                     aria-label={`Remove document ${doc.name}`}
-                    className="text-xs h-8 w-8 p-0 text-slate-400 hover:text-rose-600"
+                    className="text-xs h-8 w-8 p-0 text-slate-400 hover:text-rose-400"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>

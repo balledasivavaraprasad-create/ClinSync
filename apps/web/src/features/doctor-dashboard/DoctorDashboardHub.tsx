@@ -184,17 +184,17 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
   return (
     <div className="w-full space-y-6" data-testid="doctor-dashboard-hub">
       {/* 1. Clinician Workstation Active Context Header Banner */}
-      <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-[#080d19]/90 border border-white/[0.08] p-4 rounded-2xl shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-extrabold text-sm border border-teal-200 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center font-extrabold text-sm border border-white/20 shrink-0 shadow-md shadow-cyan-500/20">
             {selectedPatientName.slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">
                 Active Consultation Case
               </span>
-              <Badge variant="neutral" size="sm" className="font-mono text-[10px]">
+              <Badge variant="neutral" size="sm" className="font-mono text-[10px] text-slate-400 border-white/10">
                 {selectedEncounterId}
               </Badge>
               {activePatientItem?.priority === 'URGENT' && (
@@ -203,11 +203,11 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                 </Badge>
               )}
             </div>
-            <h2 className="text-lg font-black text-slate-900 leading-tight mt-0.5">
+            <h2 className="text-lg font-black text-white leading-tight mt-0.5">
               {selectedPatientName}
             </h2>
             {activePatientItem && (
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-400 font-medium">
                 {activePatientItem.department} • Scheduled {activePatientItem.appointment_time}
               </p>
             )}
@@ -217,21 +217,21 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
         {/* Anti-Wrong Patient Safeguard Confirmation & Quick Stats */}
         <div className="flex items-center space-x-3 self-end md:self-center">
           <div className="text-right hidden sm:block">
-            <span className="text-[11px] text-slate-400 block">Queue Status</span>
-            <span className="text-xs font-bold text-slate-700">
+            <span className="text-[11px] text-slate-400 font-mono block">Queue Status</span>
+            <span className="text-xs font-bold text-slate-200">
               {activePatientItem?.status === 'COMPLETED' ? (
-                <span className="text-emerald-700 flex items-center justify-end">
+                <span className="text-emerald-400 flex items-center justify-end">
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Sign-off Complete
                 </span>
               ) : activePatientItem?.status === 'IN_CONSULTATION' ? (
-                <span className="text-teal-700">In Active Consultation</span>
+                <span className="text-cyan-300">In Active Consultation</span>
               ) : (
                 'Pending Review'
               )}
             </span>
           </div>
 
-          <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+          <div className="h-8 w-px bg-white/10 hidden sm:block" />
 
           <Button
             type="button"
@@ -239,7 +239,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
             size="sm"
             onClick={() => fetchEncounterData(selectedEncounterId)}
             data-testid="refresh-encounter-btn"
-            className="text-xs min-h-[40px] text-slate-600"
+            className="text-xs min-h-[40px] text-slate-300 border-white/10 hover:bg-white/5"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isBriefLoading ? 'animate-spin' : ''}`} />
             Re-sync Case
@@ -254,14 +254,14 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
           {queueError ? (
             <div
               role="alert"
-              className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900 space-y-2 text-xs"
+              className="p-4 rounded-xl border border-rose-500/40 bg-rose-950/40 text-rose-200 space-y-2 text-xs"
             >
               <div className="flex items-center space-x-1.5 font-bold">
-                <AlertCircle className="w-4 h-4 text-rose-600" />
+                <AlertCircle className="w-4 h-4 text-rose-400" />
                 <span>Failed to load queue</span>
               </div>
               <p>{queueError}</p>
-              <Button size="sm" variant="outline" onClick={fetchQueue} className="mt-2 text-xs">
+              <Button size="sm" variant="outline" onClick={fetchQueue} className="mt-2 text-xs text-slate-300 border-white/10">
                 Retry Queue
               </Button>
             </div>
@@ -279,15 +279,15 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
         {/* Right Column: Multi-tab Clinical Workspace */}
         <div className="lg:col-span-8 space-y-4">
           {/* Sub-Navigation Tabs */}
-          <div className="flex items-center space-x-1 bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs overflow-x-auto">
+          <div className="flex items-center space-x-1 bg-[#050811]/90 p-1.5 rounded-xl border border-white/[0.08] shadow-inner overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab('brief')}
               data-testid="doc-tab-brief"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'brief'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <Stethoscope className="w-3.5 h-3.5" />
@@ -298,10 +298,10 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               type="button"
               onClick={() => setActiveTab('ledger')}
               data-testid="doc-tab-ledger"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'ledger'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -312,10 +312,10 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               type="button"
               onClick={() => setActiveTab('diff')}
               data-testid="doc-tab-diff"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'diff'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <GitCompare className="w-3.5 h-3.5" />
@@ -329,10 +329,10 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               type="button"
               onClick={() => setActiveTab('documents')}
               data-testid="doc-tab-documents"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'documents'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <UploadCloud className="w-3.5 h-3.5" />
@@ -346,23 +346,24 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               {isBriefLoading ? (
                 <div
                   data-testid="brief-loading-indicator"
-                  className="p-12 text-center text-slate-400 space-y-3 bg-white border border-slate-200 rounded-2xl"
+                  className="p-12 text-center text-slate-400 space-y-3 bg-[#080d19]/80 border border-white/[0.08] rounded-2xl"
                 >
-                  <div className="w-8 h-8 rounded-full border-2 border-brand-600 border-t-transparent animate-spin mx-auto" />
-                  <p className="text-xs font-semibold">Synthesizing evidence-backed doctor brief...</p>
+                  <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin mx-auto" />
+                  <p className="text-xs font-semibold text-slate-300">Synthesizing evidence-backed doctor brief...</p>
                 </div>
               ) : briefError ? (
                 <div
                   role="alert"
-                  className="p-6 rounded-2xl border border-rose-200 bg-rose-50 text-rose-900 text-center space-y-2"
+                  className="p-6 rounded-2xl border border-rose-500/40 bg-rose-950/40 text-rose-200 text-center space-y-2"
                 >
-                  <AlertCircle className="w-6 h-6 text-rose-600 mx-auto" />
-                  <h3 className="text-sm font-bold">Failed to load clinical brief</h3>
-                  <p className="text-xs text-rose-700">{briefError}</p>
+                  <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
+                  <h3 className="text-sm font-bold text-white">Failed to load clinical brief</h3>
+                  <p className="text-xs text-rose-200">{briefError}</p>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => fetchEncounterData(selectedEncounterId)}
+                    className="text-slate-300 border-white/10 hover:bg-white/5"
                   >
                     Retry
                   </Button>
@@ -380,7 +381,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                   onApprovalComplete={handleApprovalComplete}
                 />
               ) : (
-                <div className="p-8 text-center text-slate-400 text-xs bg-white border border-dashed rounded-2xl">
+                <div className="p-8 text-center text-slate-400 text-xs bg-[#080d19]/40 border border-white/10 border-dashed rounded-2xl">
                   No brief available for this encounter.
                 </div>
               )}

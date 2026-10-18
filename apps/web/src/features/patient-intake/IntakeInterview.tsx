@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Slider } from '../../components/ui/Slider';
@@ -338,32 +337,32 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       <div
         role="alert"
         data-testid="urgent-escalation-screen"
-        className="w-full max-w-3xl mx-auto p-8 bg-rose-50 border-4 border-rose-500 rounded-2xl shadow-xl text-center space-y-6 animate-pulse"
+        className="w-full max-w-3xl mx-auto p-8 bg-[#0a050d] border-2 border-rose-500/80 rounded-3xl shadow-[0_0_60px_rgba(244,63,94,0.25)] text-center space-y-6"
       >
-        <div className="w-20 h-20 bg-rose-200 text-rose-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
-          <AlertTriangle className="w-12 h-12" />
+        <div className="w-20 h-20 bg-rose-500/20 text-rose-400 border border-rose-500/40 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <AlertTriangle className="w-12 h-12 animate-pulse" />
         </div>
         <div className="space-y-2">
-          <span className="text-xs uppercase font-extrabold tracking-widest text-rose-800 bg-rose-200 px-3 py-1 rounded-full">
+          <span className="text-xs uppercase font-extrabold tracking-widest text-rose-300 bg-rose-500/15 border border-rose-500/30 px-3 py-1 rounded-full font-mono">
             Immediate Clinical Triage Required
           </span>
-          <h2 className="text-3xl font-extrabold text-rose-950">
+          <h2 className="text-3xl font-serif text-white tracking-tight">
             Emergency Staff Alert Triggered
           </h2>
-          <p className="text-base text-rose-800 max-w-xl mx-auto">
+          <p className="text-base text-rose-200 max-w-xl mx-auto leading-relaxed">
             {escalationReason}
           </p>
         </div>
 
-        <div className="p-4 bg-white/90 border border-rose-200 rounded-xl text-left max-w-lg mx-auto space-y-2">
-          <p className="font-bold text-sm text-slate-900 flex items-center">
-            <ShieldAlert className="w-4 h-4 text-rose-600 mr-2" />
+        <div className="p-5 bg-rose-950/40 border border-rose-500/30 rounded-2xl text-left max-w-lg mx-auto space-y-2.5 backdrop-blur-md">
+          <p className="font-bold text-sm text-white flex items-center">
+            <ShieldAlert className="w-4 h-4 text-rose-400 mr-2" />
             Patient Protocol:
           </p>
-          <ul className="text-xs text-slate-700 space-y-1 list-disc pl-5">
+          <ul className="text-xs text-rose-200/90 space-y-1.5 list-disc pl-5 leading-relaxed">
             <li>Please remain seated at this station.</li>
             <li>A triage nurse and bedside wheelchair have been dispatched.</li>
-            <li>Your station location: <strong>Kiosk Intake 01 (Encounter: {encounterId})</strong>.</li>
+            <li>Your station location: <strong className="text-white">Kiosk Intake 01 (Encounter: {encounterId})</strong>.</li>
           </ul>
         </div>
 
@@ -371,14 +370,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           <Button
             variant="outline"
             onClick={() => setIsEscalated(false)}
-            className="border-rose-300 text-rose-800 hover:bg-rose-100"
+            className="border-rose-500/40 text-rose-300 hover:bg-rose-500/20 bg-rose-950/30"
           >
             Mistake / Cancel Escalation
           </Button>
           <Button
             variant="danger"
             onClick={() => alert('Emergency buzzer re-triggered.')}
-            className="shadow-lg"
+            className="shadow-lg shadow-rose-500/25 font-bold"
           >
             Repeat Nurse Buzzer
           </Button>
@@ -390,29 +389,29 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   return (
     <div
       data-testid="intake-interview-container"
-      className="w-full max-w-3xl mx-auto space-y-4"
+      className="w-full max-w-3xl mx-auto space-y-5"
     >
       {/* Top Header: Patient & Progress */}
-      <div className="bg-white border border-slate-200 px-6 py-3.5 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+      <div className="bg-[#080d19]/80 backdrop-blur-2xl border border-white/[0.08] px-6 py-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center justify-center font-bold text-xs shadow-inner">
             {patientName.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <span className="text-xs text-slate-500 font-medium block">Intake Patient</span>
-            <span className="text-sm font-bold text-slate-900">{patientName}</span>
+            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 block">Intake Patient</span>
+            <span className="text-sm font-bold text-white">{patientName}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
           {/* Progress Bar */}
           <div className="flex flex-col items-end">
-            <span className="text-xs font-semibold text-slate-600">
+            <span className="text-xs font-semibold text-slate-300">
               Question {currentStepIndex + 1} of {INTAKE_QUESTIONS.length}
             </span>
-            <div className="w-32 bg-slate-100 rounded-full h-2 mt-1 overflow-hidden border border-slate-200">
+            <div className="w-36 bg-white/[0.06] rounded-full h-2 mt-1.5 overflow-hidden border border-white/10">
               <div
-                className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-teal-400 to-cyan-400 h-2 rounded-full transition-all duration-300 shadow-sm shadow-cyan-400/40"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -422,7 +421,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setIsResetDialogOpen(true)}
-            className="text-xs text-slate-500 hover:text-slate-800"
+            className="text-xs text-slate-400 hover:text-white"
             title="Reset Session"
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -432,40 +431,40 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       </div>
 
       {/* Main Question Card */}
-      <Card className="shadow-md border-slate-200/90 overflow-hidden">
-        <div className="h-1.5 bg-gradient-to-r from-teal-500 to-indigo-500" />
-        <CardHeader className="pt-6 pb-2">
+      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-500" />
+        <div className="pt-7 pb-3 px-6 sm:px-8 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200">
+            <span className="text-[11px] uppercase font-mono tracking-wider text-cyan-300 bg-cyan-500/15 px-3 py-1 rounded-lg border border-cyan-500/30">
               {currentQuestion.category}
             </span>
-            <span className="text-xs text-slate-400 flex items-center">
-              <Clock className="w-3.5 h-3.5 mr-1" />
+            <span className="text-xs text-slate-400 flex items-center font-mono">
+              <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
               Auto-saves answers
             </span>
           </div>
 
-          <CardTitle className="text-2xl font-extrabold text-slate-900 pt-3 leading-snug">
+          <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal pt-3 leading-snug tracking-tight">
             {currentQuestion.prompt}
-          </CardTitle>
-          <CardDescription className="text-sm text-slate-600">
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
             {currentQuestion.subtitle}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
-        <CardContent className="space-y-6 pt-4 pb-6 px-6 sm:px-8">
+        <div className="space-y-6 pt-5 pb-7 px-6 sm:px-8">
           {/* Modality Toggle Tabs */}
-          <div className="flex items-center justify-center space-x-2 bg-slate-100 p-1.5 rounded-xl max-w-xs mx-auto border border-slate-200">
+          <div className="flex items-center justify-center space-x-2 bg-[#050811] p-1.5 rounded-2xl max-w-xs mx-auto border border-white/10 shadow-inner">
             <button
               onClick={() => {
                 resetTimer();
                 setModality('voice');
               }}
               data-testid="modality-voice-btn"
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 modality === 'voice'
-                  ? 'bg-white text-teal-800 shadow-xs border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25 font-bold'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <Mic className="w-3.5 h-3.5" />
@@ -477,10 +476,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                 setModality('touch');
               }}
               data-testid="modality-touch-btn"
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 modality === 'touch'
-                  ? 'bg-white text-teal-800 shadow-xs border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25 font-bold'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <Keyboard className="w-3.5 h-3.5" />
@@ -492,7 +491,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           {modality === 'voice' && (
             <div
               data-testid="voice-interaction-area"
-              className="p-6 bg-teal-50/50 border border-teal-100 rounded-2xl flex flex-col items-center justify-center space-y-4"
+              className="p-8 bg-white/[0.02] border border-white/[0.08] rounded-2xl flex flex-col items-center justify-center space-y-4 shadow-inner"
             >
               <AudioVisualizer state={audioState} />
 
@@ -500,10 +499,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                 type="button"
                 data-testid="voice-record-btn"
                 onClick={handleToggleVoice}
-                className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 cursor-pointer focus:outline-none focus:ring-4 ${
+                className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-transform active:scale-95 cursor-pointer focus:outline-none focus:ring-4 ${
                   audioState === 'listening'
-                    ? 'bg-rose-600 hover:bg-rose-700 animate-pulse ring-rose-300'
-                    : 'bg-teal-600 hover:bg-teal-700 ring-teal-200'
+                    ? 'bg-rose-500 hover:bg-rose-600 animate-pulse ring-rose-500/30 text-white'
+                    : 'bg-cyan-500 hover:bg-cyan-400 ring-cyan-500/25 text-slate-950 font-bold shadow-cyan-500/30'
                 }`}
                 aria-label={audioState === 'listening' ? 'Stop Listening' : 'Start Speaking'}
               >
@@ -514,7 +513,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                 )}
               </button>
 
-              <span className="text-xs font-medium text-slate-600 text-center">
+              <span className="text-xs font-medium text-slate-300 text-center">
                 {audioState === 'listening'
                   ? 'Listening to you... Tap to finish.'
                   : 'Tap the microphone to speak your answer.'}
@@ -527,13 +526,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             <div
               role="alert"
               data-testid="mic-permission-notice"
-              className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs flex items-center justify-between"
+              className="p-3.5 bg-amber-500/15 border border-amber-500/30 text-amber-200 rounded-xl text-xs flex items-center justify-between"
             >
               <span>{micPermissionNotice}</span>
               <button
                 type="button"
                 onClick={() => setMicPermissionNotice(null)}
-                className="text-amber-700 hover:text-amber-950 font-bold ml-2 text-xs cursor-pointer"
+                className="text-amber-300 hover:text-amber-100 font-bold ml-2 text-xs cursor-pointer underline"
               >
                 Dismiss
               </button>
@@ -545,13 +544,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             <div
               role="status"
               data-testid="clarification-notice"
-              className="p-3 bg-teal-50 border border-teal-200 text-teal-900 rounded-xl text-xs flex items-center justify-between"
+              className="p-3.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 rounded-xl text-xs flex items-center justify-between"
             >
               <span>{clarificationNotice}</span>
               <button
                 type="button"
                 onClick={() => setClarificationNotice(null)}
-                className="text-teal-700 hover:text-teal-950 font-bold ml-2 text-xs cursor-pointer"
+                className="text-cyan-300 hover:text-cyan-100 font-bold ml-2 text-xs cursor-pointer underline"
               >
                 OK
               </button>
@@ -562,20 +561,20 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           {currentQuestion.inputType === 'slider' ? (
             <div
               data-testid="pain-slider-area"
-              className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4"
+              className="p-6 bg-white/[0.025] border border-white/[0.08] rounded-2xl space-y-4 shadow-inner"
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-800">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
                   Select Discomfort Rating (0 to 10):
                 </span>
                 <span
                   data-testid="slider-value-display"
-                  className={`text-2xl font-black px-3 py-1 rounded-xl ${
+                  className={`text-2xl font-black px-3.5 py-1 rounded-xl font-mono ${
                     painScore >= 8
-                      ? 'bg-rose-100 text-rose-800'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                       : painScore >= 5
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-teal-100 text-teal-800'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                   }`}
                 >
                   {painScore} / 10
@@ -594,7 +593,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                 className="w-full"
               />
 
-              <div className="flex justify-between text-xs font-medium text-slate-500 pt-1">
+              <div className="flex justify-between text-[11px] font-mono text-slate-400 pt-1">
                 <span>0 - No Pain</span>
                 <span>3 - Mild</span>
                 <span>5 - Moderate</span>
@@ -604,7 +603,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
                 {modality === 'voice' ? 'Transcribed Response (Tap to edit):' : 'Your Answer:'}
               </label>
               <Input
@@ -616,14 +615,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                   setCurrentResponse(e.target.value);
                 }}
                 placeholder="Type your response here..."
-                className="w-full text-base py-3"
+                className="w-full text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
               />
             </div>
           )}
 
           {/* Fast Quick-Select Chips */}
           <div className="space-y-2">
-            <span className="text-xs font-semibold text-slate-500 block">
+            <span className="text-xs font-semibold text-slate-400 block font-mono uppercase tracking-wider">
               Quick Options (Tap to select):
             </span>
             <div className="flex flex-wrap gap-2">
@@ -641,7 +640,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                       setCurrentResponse(chip);
                     }
                   }}
-                  className="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-teal-500 hover:bg-teal-50 text-slate-700 hover:text-teal-900 text-xs font-medium bg-white transition-all cursor-pointer shadow-2xs active:scale-95"
+                  className="px-3.5 py-2 rounded-xl border border-white/[0.08] hover:border-cyan-400/50 hover:bg-cyan-500/10 text-slate-300 hover:text-white text-xs font-medium bg-white/[0.025] transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                   {chip}
                 </button>
@@ -654,10 +653,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             <div
               role="status"
               data-testid="inactivity-warning"
-              className="p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl text-xs flex items-center justify-between"
+              className="p-3.5 bg-amber-500/15 border border-amber-500/30 text-amber-200 rounded-xl text-xs flex items-center justify-between"
             >
               <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="w-4 h-4 text-amber-400" />
                 <span>Still there? ({inactivityTimer}s) Take your time, or tap for staff assistance.</span>
               </div>
               <Button size="sm" variant="outline" onClick={resetTimer}>
@@ -671,7 +670,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             <div
               role="alert"
               data-testid="submission-error-alert"
-              className="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-xl text-xs flex items-center justify-between"
+              className="p-3.5 bg-rose-500/15 border border-rose-500/30 text-rose-200 rounded-xl text-xs flex items-center justify-between"
             >
               <span>{submissionError}</span>
               <Button size="sm" variant="danger" onClick={handleNext}>
@@ -679,16 +678,16 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               </Button>
             </div>
           )}
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex items-center justify-between bg-slate-50 border-t border-slate-100 px-6 sm:px-8 py-4">
+        <div className="flex items-center justify-between bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
           <Button
             type="button"
             variant="outline"
             data-testid="prev-question-btn"
             onClick={handlePrevious}
             disabled={currentStepIndex === 0 || submitting}
-            className="text-slate-600"
+            className="text-slate-300 hover:text-white border-white/10"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Previous
@@ -700,7 +699,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             data-testid="next-question-btn"
             onClick={handleNext}
             disabled={submitting}
-            className="min-w-[140px] bg-teal-600 hover:bg-teal-700"
+            className="min-w-[140px] font-bold"
           >
             {submitting ? (
               'Saving...'
@@ -716,8 +715,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               </>
             )}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
       {/* Reset Session Confirmation Dialog */}
       <Dialog
@@ -726,7 +725,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         title="Start Over / Clear Session?"
       >
         <div className="space-y-4 pt-2">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-300">
             Are you sure you want to start over? All answers entered during this session will be cleared.
           </p>
           <div className="flex justify-end space-x-3 pt-2">

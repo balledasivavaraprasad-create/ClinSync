@@ -70,16 +70,16 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
     diffData.conflicting_facts.length - Object.keys(resolvedConflicts).length;
 
   return (
-    <Card className="shadow-sm border-slate-200" data-testid="context-diff-view">
+    <Card className="shadow-lg border-white/[0.08] bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl overflow-hidden" data-testid="context-diff-view">
       {/* Header */}
-      <CardHeader className="pb-3 border-b border-slate-100">
+      <CardHeader className="pb-4 border-b border-white/[0.06]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center border border-cyan-500/30 shadow-inner">
               <GitCompare className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <CardTitle className="text-xl font-serif text-white font-normal flex items-center space-x-2">
                 <span>Patient Context Diff</span>
                 {activeUnresolvedCount > 0 ? (
                   <Badge variant="error" className="text-xs font-semibold">
@@ -92,7 +92,7 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
+              <CardDescription className="text-xs text-slate-400 mt-0.5">
                 Automated reconciliation comparing current intake claims against historical health records
               </CardDescription>
             </div>
@@ -104,7 +104,7 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
               variant="outline"
               size="sm"
               onClick={onRefresh}
-              className="text-xs h-8 px-2.5 text-slate-600 hover:text-slate-900"
+              className="text-xs h-8 px-2.5 text-slate-300 hover:text-white border-white/10"
             >
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
               Recompute Diff
@@ -119,8 +119,8 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
             data-testid="diff-loading-state"
             className="p-12 text-center text-slate-400 space-y-2"
           >
-            <div className="w-8 h-8 rounded-full border-2 border-brand-600 border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs font-semibold">Computing patient context diff engine results...</p>
+            <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin mx-auto" />
+            <p className="text-xs font-semibold font-mono">Computing patient context diff engine results...</p>
           </div>
         ) : (
           <>
@@ -128,8 +128,8 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
             {diffData.conflicting_facts.length > 0 && (
               <div className="space-y-3" data-testid="unresolved-conflicts-section">
                 <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-600" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-rose-900">
+                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400 font-mono">
                     Unresolved Clinical Contradictions ({diffData.conflicting_facts.length})
                   </h3>
                 </div>
@@ -141,14 +141,14 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
                     <div
                       key={idx}
                       data-testid={`conflict-card-${idx}`}
-                      className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-3 shadow-subtle"
+                      className="p-5 rounded-2xl border border-rose-500/40 bg-rose-950/40 backdrop-blur-md space-y-4 shadow-lg"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1">
-                          <span className="text-xs font-bold text-rose-950 uppercase tracking-wider block">
+                          <span className="text-[11px] font-mono font-bold text-rose-300 uppercase tracking-widest block">
                             Conflict #{idx + 1}: Discrepancy Detected
                           </span>
-                          <p className="text-xs text-rose-900 font-medium leading-relaxed">
+                          <p className="text-xs sm:text-sm text-rose-100 font-medium leading-relaxed">
                             {conflict.conflict_description}
                           </p>
                         </div>
@@ -172,35 +172,35 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
                       {/* Side-by-side comparison */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                         {/* Claim A */}
-                        <div className="bg-white p-3 rounded-lg border border-rose-200/80 space-y-1 text-xs">
-                          <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
-                            <span className="flex items-center text-teal-700">
-                              <User className="w-3 h-3 mr-1" />
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-cyan-500/30 space-y-1.5 text-xs shadow-inner">
+                          <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300 font-semibold">
+                            <span className="flex items-center">
+                              <User className="w-3.5 h-3.5 mr-1" />
                               Claim A (Current Patient Intake)
                             </span>
-                            <span>{conflict.claim_a.source_location || 'Turn 1'}</span>
+                            <span className="text-slate-400">{conflict.claim_a.source_location || 'Turn 1'}</span>
                           </div>
-                          <p className="font-bold text-slate-900 text-sm">
+                          <p className="font-bold text-white text-sm sm:text-base">
                             {conflict.claim_a.value}
                           </p>
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-slate-400 font-mono">
                             Source: {conflict.claim_a.source_type} • Status: {conflict.claim_a.status}
                           </p>
                         </div>
 
                         {/* Claim B */}
-                        <div className="bg-white p-3 rounded-lg border border-rose-200/80 space-y-1 text-xs">
-                          <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
-                            <span className="flex items-center text-blue-700">
-                              <Stethoscope className="w-3 h-3 mr-1" />
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-blue-500/30 space-y-1.5 text-xs shadow-inner">
+                          <div className="flex items-center justify-between text-[11px] font-mono text-blue-300 font-semibold">
+                            <span className="flex items-center">
+                              <Stethoscope className="w-3.5 h-3.5 mr-1" />
                               Claim B (Referral Note / Prior EHR)
                             </span>
-                            <span>{conflict.claim_b.source_location || 'Referral'}</span>
+                            <span className="text-slate-400">{conflict.claim_b.source_location || 'Referral'}</span>
                           </div>
-                          <p className="font-bold text-slate-900 text-sm">
+                          <p className="font-bold text-white text-sm sm:text-base">
                             {conflict.claim_b.value}
                           </p>
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-slate-400 font-mono">
                             Source: {conflict.claim_b.source_type} • Status: {conflict.claim_b.status}
                           </p>
                         </div>
@@ -208,14 +208,14 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
 
                       {/* Resolution actions */}
                       {!resolvedStatus && (
-                        <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-rose-200/60">
+                        <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-rose-500/30">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleAction(idx, 'accept_a')}
                             data-testid={`resolve-patient-btn-${idx}`}
-                            className="text-xs h-8 px-2.5 bg-white text-teal-800 border-teal-300 hover:bg-teal-50"
+                            className="text-xs h-9 px-3 bg-cyan-500/15 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/25"
                           >
                             Accept Patient Statement
                           </Button>
@@ -225,7 +225,7 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
                             size="sm"
                             onClick={() => handleAction(idx, 'accept_b')}
                             data-testid={`resolve-ehr-btn-${idx}`}
-                            className="text-xs h-8 px-2.5 bg-white text-blue-800 border-blue-300 hover:bg-blue-50"
+                            className="text-xs h-9 px-3 bg-blue-500/15 text-blue-300 border-blue-500/40 hover:bg-blue-500/25"
                           >
                             Retain Prior EHR Record
                           </Button>
@@ -235,7 +235,7 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
                             size="sm"
                             onClick={() => handleAction(idx, 'escalate')}
                             data-testid={`resolve-escalate-btn-${idx}`}
-                            className="text-xs h-8 px-2.5 bg-white text-rose-800 border-rose-300 hover:bg-rose-50 font-bold"
+                            className="text-xs h-9 px-3 bg-rose-500/20 text-rose-300 border-rose-500/50 hover:bg-rose-500/30 font-bold"
                           >
                             Flag for Doctor Review
                           </Button>
@@ -250,38 +250,38 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
             {/* 2. Changed / Updated Clinical Facts */}
             <div className="space-y-3" data-testid="changed-facts-section">
               <div className="flex items-center space-x-2">
-                <RefreshCw className="w-4 h-4 text-amber-600" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                <RefreshCw className="w-4 h-4 text-amber-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
                   Changed / Superseded Facts ({diffData.changed_facts.length})
                 </h3>
               </div>
 
               {diffData.changed_facts.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No historical facts superseded in this encounter.</p>
+                <p className="text-xs text-slate-500 italic">No historical facts superseded in this encounter.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {diffData.changed_facts.map((item, idx) => (
                     <div
                       key={idx}
                       data-testid={`changed-fact-card-${idx}`}
-                      className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-subtle"
+                      className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
                     >
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-slate-800 block">
+                      <div className="space-y-1">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-400 block">
                           {item.current.concept}
                         </span>
-                        <div className="flex items-center space-x-2 text-xs">
-                          <span className="line-through text-slate-400 font-mono">
+                        <div className="flex items-center space-x-2.5 text-xs">
+                          <span className="line-through text-slate-500 font-mono">
                             {item.historical.value} {item.historical.unit || ''}
                           </span>
-                          <ArrowRight className="w-3.5 h-3.5 text-amber-600" />
-                          <span className="font-bold text-amber-950 font-mono text-sm">
+                          <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+                          <span className="font-bold text-amber-300 font-mono text-sm sm:text-base">
                             {item.current.value} {item.current.unit || ''}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2 text-[11px] text-slate-500">
+                      <div className="flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
                         <span>Updated: {new Date(item.current.recorded_at).toLocaleDateString()}</span>
                         <Badge variant="warning" className="text-[10px] font-semibold">
                           Supersedes prior reading
@@ -296,30 +296,30 @@ export const ContextDiffView: React.FC<ContextDiffViewProps> = ({
             {/* 3. New Clinical Facts */}
             <div className="space-y-3" data-testid="new-facts-section">
               <div className="flex items-center space-x-2">
-                <PlusCircle className="w-4 h-4 text-teal-600" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                <PlusCircle className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
                   Newly Introduced Facts ({diffData.new_facts.length})
                 </h3>
               </div>
 
               {diffData.new_facts.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No new clinical facts introduced in this encounter.</p>
+                <p className="text-xs text-slate-500 italic">No new clinical facts introduced in this encounter.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {diffData.new_facts.map((fact) => (
                     <div
                       key={fact.id}
                       data-testid={`new-fact-card-${fact.id}`}
-                      className="p-3 rounded-xl border border-teal-200 bg-teal-50/20 space-y-1 shadow-subtle"
+                      className="p-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] hover:border-cyan-400/40 space-y-1.5 shadow-sm transition-all"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800">{fact.concept}</span>
+                        <span className="text-xs font-bold text-white font-mono uppercase tracking-wider">{fact.concept}</span>
                         <Badge variant="success" className="text-[10px] font-semibold">
                           NEW
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-900 font-semibold">{fact.value}</p>
-                      <p className="text-[11px] text-slate-500 pt-0.5">
+                      <p className="text-sm text-cyan-300 font-bold">{fact.value}</p>
+                      <p className="text-[11px] text-slate-400 pt-0.5 font-mono">
                         Source: {fact.source_type} ({fact.source_location || 'Recorded today'})
                       </p>
                     </div>

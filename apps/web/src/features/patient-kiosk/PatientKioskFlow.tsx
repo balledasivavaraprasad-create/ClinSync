@@ -170,7 +170,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
                 type="button"
                 onClick={handleResetSession}
                 data-testid="kiosk-finish-checkin-btn"
-                className="w-full sm:w-auto inline-flex items-center justify-center font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 min-h-[48px] px-6 py-3 shadow-xs text-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center font-medium rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] min-h-[48px] px-6 py-3 shadow-sm text-sm transition-all cursor-pointer"
               >
                 Skip & Return to Welcome
               </button>
@@ -179,7 +179,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
                 type="button"
                 onClick={() => setCurrentStep('scheduling')}
                 data-testid="proceed-to-scheduling-from-docs-btn"
-                className="w-full sm:w-auto inline-flex items-center justify-center font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 min-h-[48px] px-6 py-3 shadow-sm text-sm font-semibold"
+                className="w-full sm:w-auto inline-flex items-center justify-center font-bold rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 min-h-[48px] px-6 py-3 shadow-lg shadow-cyan-500/25 text-sm transition-all cursor-pointer"
               >
                 Proceed to Appointment Scheduling (G4)
               </button>

@@ -94,9 +94,9 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
         return (
           <Badge
             variant="info"
-            className="text-xs font-semibold bg-blue-50 text-blue-800 border-blue-300"
+            className="text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30"
           >
-            <FileText className="w-3 h-3 mr-1" />
+            <FileText className="w-3 h-3 mr-1 text-cyan-400" />
             Extracted (Unverified Draft)
           </Badge>
         );
@@ -104,9 +104,9 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
         return (
           <Badge
             variant="warning"
-            className="text-xs font-semibold bg-amber-50 text-amber-800 border-amber-300"
+            className="text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-400/30"
           >
-            <Mic className="w-3 h-3 mr-1" />
+            <Mic className="w-3 h-3 mr-1 text-amber-400" />
             Patient Reported
           </Badge>
         );
@@ -114,16 +114,16 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
         return (
           <Badge
             variant="neutral"
-            className="text-xs font-semibold bg-slate-100 text-slate-700 border-slate-300"
+            className="text-xs font-semibold bg-white/[0.05] text-slate-300 border border-white/10"
           >
-            <History className="w-3 h-3 mr-1" />
+            <History className="w-3 h-3 mr-1 text-slate-400" />
             Historical EHR Record
           </Badge>
         );
       case 'conflicting':
         return (
-          <Badge variant="error" className="text-xs font-semibold">
-            <AlertTriangle className="w-3 h-3 mr-1" />
+          <Badge variant="error" className="text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+            <AlertTriangle className="w-3 h-3 mr-1 text-rose-400" />
             Contradiction Detected
           </Badge>
         );
@@ -131,9 +131,9 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
         return (
           <Badge
             variant="warning"
-            className="text-xs font-semibold bg-purple-50 text-purple-800 border-purple-300"
+            className="text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-400/30"
           >
-            <HelpCircle className="w-3 h-3 mr-1" />
+            <HelpCircle className="w-3 h-3 mr-1 text-purple-400" />
             Uncertain Evidence
           </Badge>
         );
@@ -141,7 +141,7 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
         return (
           <Badge
             variant="neutral"
-            className="text-xs font-semibold line-through text-slate-400 border-slate-200"
+            className="text-xs font-semibold line-through text-slate-500 bg-white/[0.02] border border-white/5"
           >
             Refuted / Inactive
           </Badge>
@@ -153,18 +153,18 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
 
   const getSourceIcon = (sourceType: string) => {
     if (sourceType.includes('utterance') || sourceType.includes('voice')) {
-      return <Mic className="w-3.5 h-3.5 text-teal-600" />;
+      return <Mic className="w-3.5 h-3.5 text-cyan-400" />;
     }
     if (sourceType.includes('document') || sourceType.includes('scan')) {
-      return <FileText className="w-3.5 h-3.5 text-blue-600" />;
+      return <FileText className="w-3.5 h-3.5 text-blue-400" />;
     }
     if (sourceType.includes('ehr') || sourceType.includes('hospital')) {
-      return <History className="w-3.5 h-3.5 text-slate-600" />;
+      return <History className="w-3.5 h-3.5 text-slate-400" />;
     }
     if (sourceType.includes('cuff') || sourceType.includes('device')) {
-      return <Activity className="w-3.5 h-3.5 text-rose-600" />;
+      return <Activity className="w-3.5 h-3.5 text-rose-400" />;
     }
-    return <FileSpreadsheet className="w-3.5 h-3.5 text-slate-500" />;
+    return <FileSpreadsheet className="w-3.5 h-3.5 text-slate-400" />;
   };
 
   const getCitationForFact = (factId: string) => {
@@ -172,30 +172,30 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
   };
 
   return (
-    <Card className="shadow-sm border-slate-200" data-testid="clinical-context-ledger">
+    <Card className="shadow-lg border-white/[0.08] bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl overflow-hidden" data-testid="clinical-context-ledger">
       {/* Header */}
-      <CardHeader className="pb-3 border-b border-slate-100">
+      <CardHeader className="pb-4 border-b border-white/[0.06]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center border border-cyan-500/30 shadow-inner">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <CardTitle className="text-xl font-serif text-white font-normal flex items-center space-x-2">
                 <span>Clinical Context Ledger</span>
-                <span className="text-xs font-mono text-slate-400 font-normal">
+                <span className="text-xs font-mono text-cyan-400 font-normal">
                   ({filteredFacts.length} {filteredFacts.length === 1 ? 'fact' : 'facts'})
                 </span>
               </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
+              <CardDescription className="text-xs text-slate-400 mt-0.5">
                 Immutable, provenance-tracked patient claims with source anchors and verification states
               </CardDescription>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
-            <Badge variant="neutral" className="text-xs bg-slate-50 border-slate-200 text-slate-700">
-              Encounter: <span className="font-mono text-slate-900 font-bold ml-1">{encounterId}</span>
+            <Badge variant="neutral" className="text-xs bg-white/[0.05] border-white/10 text-cyan-300">
+              Encounter: <span className="font-mono text-white font-bold ml-1">{encounterId}</span>
             </Badge>
           </div>
         </div>
@@ -203,7 +203,7 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
 
       <CardContent className="space-y-4 pt-4">
         {/* Filters and Search Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search Input */}
           <div className="md:col-span-5 relative">
             <Input
@@ -211,7 +211,7 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search concepts, values, or sources..."
-              className="pl-9 h-10 text-xs w-full"
+              className="pl-9 h-10 text-xs w-full bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
             />
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
           </div>
@@ -222,10 +222,10 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
               data-testid="ledger-category-select"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600 font-medium"
+              className="w-full h-10 px-3 rounded-xl border border-white/15 text-xs bg-[#0b101e] text-slate-200 focus:outline-none focus:border-cyan-400 font-medium cursor-pointer"
             >
               {categories.map((c) => (
-                <option key={c.key} value={c.key}>
+                <option key={c.key} value={c.key} className="bg-[#0b101e] text-slate-200">
                   {c.label}
                 </option>
               ))}
@@ -238,10 +238,10 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
               data-testid="ledger-status-select"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600 font-medium"
+              className="w-full h-10 px-3 rounded-xl border border-white/15 text-xs bg-[#0b101e] text-slate-200 focus:outline-none focus:border-cyan-400 font-medium cursor-pointer"
             >
               {statuses.map((s) => (
-                <option key={s.key} value={s.key}>
+                <option key={s.key} value={s.key} className="bg-[#0b101e] text-slate-200">
                   {s.label}
                 </option>
               ))}
@@ -255,17 +255,17 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
             data-testid="ledger-loading-state"
             className="p-12 text-center text-slate-400 space-y-2"
           >
-            <div className="w-8 h-8 rounded-full border-2 border-brand-600 border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs font-semibold">Retrieving Clinical Context Ledger facts...</p>
+            <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin mx-auto" />
+            <p className="text-xs font-semibold font-mono">Retrieving Clinical Context Ledger facts...</p>
           </div>
         ) : filteredFacts.length === 0 ? (
           <div
             data-testid="ledger-empty-state"
-            className="p-10 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 space-y-2"
+            className="p-10 text-center border border-dashed border-white/15 rounded-2xl bg-white/[0.02] text-slate-400 space-y-2"
           >
-            <FileSpreadsheet className="w-8 h-8 mx-auto text-slate-300" />
-            <p className="text-sm font-semibold text-slate-700">No matching clinical facts found</p>
-            <p className="text-xs text-slate-400">
+            <FileSpreadsheet className="w-8 h-8 mx-auto text-slate-500" />
+            <p className="text-sm font-semibold text-slate-300">No matching clinical facts found</p>
+            <p className="text-xs text-slate-500">
               Try adjusting your category, verification status, or search keywords.
             </p>
           </div>
@@ -280,22 +280,22 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                 <div
                   key={fact.id}
                   data-testid={`ledger-fact-card-${fact.id}`}
-                  className={`p-4 rounded-xl border bg-white shadow-subtle transition-all hover:shadow-sm ${
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 ${
                     isConflicting
-                      ? 'border-rose-300 bg-rose-50/20 ring-1 ring-rose-200'
+                      ? 'border-rose-500/40 bg-rose-500/10 ring-1 ring-rose-500/30'
                       : isUnverified
-                      ? 'border-blue-200 bg-blue-50/10'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-cyan-500/30 bg-cyan-500/10'
+                      : 'border-white/[0.08] bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.045]'
                   }`}
                 >
                   {/* Top Bar: Concept & Status */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-white/[0.06]">
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs uppercase font-extrabold tracking-wider text-slate-500">
+                      <span className="text-xs uppercase font-mono tracking-wider text-slate-400">
                         {fact.concept}
                       </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-[11px] font-mono text-slate-400">
+                      <span className="text-slate-600">•</span>
+                      <span className="text-[11px] font-mono text-cyan-400">
                         {fact.id}
                       </span>
                     </div>
@@ -306,11 +306,11 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                   </div>
 
                   {/* Fact Value */}
-                  <div className="py-2.5">
-                    <p className="text-base font-bold text-slate-900 leading-snug">
+                  <div className="py-3">
+                    <p className="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
                       {fact.value}
                       {fact.unit && (
-                        <span className="ml-1 text-xs font-normal text-slate-500">
+                        <span className="ml-1.5 text-xs font-normal text-slate-400">
                           ({fact.unit})
                         </span>
                       )}
@@ -318,18 +318,18 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                   </div>
 
                   {/* Provenance & Citation Metadata Footer */}
-                  <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+                  <div className="pt-2.5 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                     {/* Source Origin */}
                     <div className="flex items-center space-x-2">
-                      <span className="flex items-center font-medium text-slate-700">
+                      <span className="flex items-center font-medium text-slate-300">
                         {getSourceIcon(fact.source_type)}
                         <span className="ml-1 font-semibold">{fact.source_type}</span>
                       </span>
 
                       {fact.source_location && (
                         <>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-slate-500">{fact.source_location}</span>
+                          <span className="text-white/20">•</span>
+                          <span className="text-slate-400">{fact.source_location}</span>
                         </>
                       )}
 
@@ -339,7 +339,7 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                           type="button"
                           onClick={() => onSelectSourceDocument(fact.source_id)}
                           data-testid={`view-source-doc-btn-${fact.id}`}
-                          className="text-xs text-brand-600 hover:text-brand-800 underline font-semibold flex items-center ml-1"
+                          className="text-xs text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center ml-1 cursor-pointer"
                         >
                           <ExternalLink className="w-3 h-3 mr-0.5" />
                           View Document
@@ -353,20 +353,20 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                         <span
                           className={`font-semibold flex items-center ${
                             fact.confidence < 0.85
-                              ? 'text-amber-700 font-bold'
-                              : 'text-teal-700'
+                              ? 'text-amber-400 font-bold'
+                              : 'text-cyan-400'
                           }`}
                         >
                           {fact.confidence < 0.85 && (
-                            <AlertTriangle className="w-3 h-3 mr-1 text-amber-600" />
+                            <AlertTriangle className="w-3 h-3 mr-1 text-amber-400" />
                           )}
                           Confidence: {Math.round(fact.confidence * 100)}%
                         </span>
                       )}
 
                       {fact.reviewed_by && (
-                        <span className="text-[11px] text-slate-500 flex items-center">
-                          <UserCheck className="w-3 h-3 mr-1 text-teal-600" />
+                        <span className="text-[11px] text-slate-400 flex items-center">
+                          <UserCheck className="w-3 h-3 mr-1 text-cyan-400" />
                           Reviewed by {fact.reviewed_by}
                         </span>
                       )}
@@ -382,13 +382,13 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                   {citation && (
                     <div
                       data-testid={`citation-callout-${fact.id}`}
-                      className="mt-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start justify-between space-x-2"
+                      className="mt-3 p-3.5 rounded-xl bg-[#0b101e] border border-white/[0.08] text-xs text-slate-200 flex items-start justify-between space-x-2 shadow-inner"
                     >
                       <div className="space-y-0.5">
-                        <span className="font-semibold text-slate-600 block text-[11px]">
+                        <span className="font-semibold text-cyan-400 block text-[11px] font-mono">
                           Evidence Quote ({citation.source_title}):
                         </span>
-                        <p className="italic text-slate-800 font-serif">
+                        <p className="italic text-slate-100 font-serif text-sm">
                           {citation.text_snippet}
                         </p>
                       </div>
@@ -400,7 +400,7 @@ export const ClinicalContextLedger: React.FC<ClinicalContextLedgerProps> = ({
                           size="sm"
                           onClick={() => onSelectCitation(fact.id)}
                           data-testid={`jump-citation-btn-${fact.id}`}
-                          className="h-7 text-xs text-brand-600 hover:text-brand-800 shrink-0"
+                          className="h-7 text-xs text-cyan-400 hover:text-white shrink-0 cursor-pointer"
                         >
                           Inspect Quote
                         </Button>

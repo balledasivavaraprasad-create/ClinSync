@@ -71,46 +71,46 @@ export const VisualQADashboard: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" data-testid="visual-qa-dashboard">
       {/* Header */}
-      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs space-y-4">
+      <div className="bg-[#080d19]/90 border border-white/[0.08] p-6 rounded-2xl shadow-xl backdrop-blur-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs uppercase font-extrabold tracking-wider bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded">
+              <span className="text-xs uppercase font-extrabold font-mono tracking-wider bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded">
                 Gate G6 Verified
               </span>
               <Badge variant="success" size="sm">
                 WCAG 2.1 AA Compliant
               </Badge>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 mt-1">
+            <h1 className="text-2xl font-black text-white mt-1">
               Visual QA, Viewport Matrix & Accessibility Showcase
             </h1>
-            <p className="text-sm text-slate-600 mt-0.5">
+            <p className="text-sm text-slate-400 mt-0.5">
               Live viewport resizing, touch target auditing (&ge; 48px), contrast verification, and reduced-motion evaluation.
             </p>
           </div>
 
           {/* Quick Metrics */}
           <div className="flex items-center space-x-3 shrink-0">
-            <div className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Touch Targets</span>
-              <span className="text-xs font-black text-emerald-700">&ge; 48px Compliant</span>
+            <div className="bg-white/[0.03] border border-white/[0.08] px-3 py-2 rounded-xl text-center">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Touch Targets</span>
+              <span className="text-xs font-black text-emerald-400 font-mono">&ge; 48px Compliant</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Contrast Ratio</span>
-              <span className="text-xs font-black text-teal-700">&gt; 14:1 (Deep Navy)</span>
+            <div className="bg-white/[0.03] border border-white/[0.08] px-3 py-2 rounded-xl text-center">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Contrast Ratio</span>
+              <span className="text-xs font-black text-cyan-300 font-mono">&gt; 14:1 (Deep Navy)</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Web Tests</span>
-              <span className="text-xs font-black text-indigo-700">137 / 137 Passing</span>
+            <div className="bg-white/[0.03] border border-white/[0.08] px-3 py-2 rounded-xl text-center">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Web Tests</span>
+              <span className="text-xs font-black text-cyan-400 font-mono">147 / 147 Passing</span>
             </div>
           </div>
         </div>
 
         {/* Viewport Presets & Simulator Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/[0.08]">
           <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
-            <span className="text-xs font-bold text-slate-500 mr-1 flex items-center">
+            <span className="text-xs font-mono font-bold text-cyan-400 mr-1 flex items-center">
               <Sliders className="w-3.5 h-3.5 mr-1" /> Viewport:
             </span>
 
@@ -118,10 +118,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setViewport('tablet-landscape')}
               data-testid="viewport-tablet-landscape"
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 viewport === 'tablet-landscape'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
               }`}
             >
               <Tablet className="w-3.5 h-3.5" />
@@ -132,10 +132,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setViewport('tablet-portrait')}
               data-testid="viewport-tablet-portrait"
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 viewport === 'tablet-portrait'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -146,10 +146,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setViewport('wide-tablet')}
               data-testid="viewport-wide-tablet"
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 viewport === 'wide-tablet'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
               }`}
             >
               <Tablet className="w-3.5 h-3.5" />
@@ -160,10 +160,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setViewport('desktop')}
               data-testid="viewport-desktop"
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 viewport === 'desktop'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
@@ -174,10 +174,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setViewport('fluid')}
               data-testid="viewport-fluid"
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                 viewport === 'fluid'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
               }`}
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -191,10 +191,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setHighlightTouchTargets(!highlightTouchTargets)}
               data-testid="toggle-touch-target-highlighter"
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 cursor-pointer ${
                 highlightTouchTargets
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                  : 'bg-white/[0.04] text-slate-300 border-white/10 hover:bg-white/5'
               }`}
               title="Highlight interactive elements to verify touch target height >= 48px"
             >
@@ -206,10 +206,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setSimulateHighContrast(!simulateHighContrast)}
               data-testid="toggle-high-contrast-sim"
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 cursor-pointer ${
                 simulateHighContrast
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-extrabold shadow-md shadow-cyan-500/20'
+                  : 'bg-white/[0.04] text-slate-300 border-white/10 hover:bg-white/5'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -220,10 +220,10 @@ export const VisualQADashboard: React.FC = () => {
               type="button"
               onClick={() => setSimulateReducedMotion(!simulateReducedMotion)}
               data-testid="toggle-reduced-motion-sim"
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center space-x-1 cursor-pointer ${
                 simulateReducedMotion
-                  ? 'bg-purple-700 text-white border-purple-700'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-500/20'
+                  : 'bg-white/[0.04] text-slate-300 border-white/10 hover:bg-white/5'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -234,8 +234,8 @@ export const VisualQADashboard: React.FC = () => {
       </div>
 
       {/* Component Flow Selector */}
-      <div className="flex items-center space-x-1 bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs overflow-x-auto">
-        <span className="text-xs font-bold text-slate-400 px-2 flex items-center shrink-0">
+      <div className="flex items-center space-x-1 bg-[#050811]/90 p-1.5 rounded-xl border border-white/[0.08] shadow-inner overflow-x-auto">
+        <span className="text-xs font-mono font-bold text-cyan-400 px-2 flex items-center shrink-0">
           <Layers className="w-3.5 h-3.5 mr-1" /> Showcase View:
         </span>
 
@@ -255,10 +255,10 @@ export const VisualQADashboard: React.FC = () => {
             type="button"
             onClick={() => setActivePreview(tab.id as typeof activePreview)}
             data-testid={`preview-tab-${tab.id}`}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
               activePreview === tab.id
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
             {tab.label}
@@ -268,16 +268,16 @@ export const VisualQADashboard: React.FC = () => {
 
       {/* Active Viewport Frame */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-500 px-1 font-mono">
+        <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-mono">
           <span>Target Viewport: {dimensions.label}</span>
           {highlightTouchTargets && (
-            <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-sans">
+            <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30 font-sans">
               Touch Target Overlay Active (Green outline indicates verified &ge; 48px interactive target)
             </span>
           )}
         </div>
 
-        <div className="w-full flex justify-center bg-slate-200/70 p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-inner overflow-x-auto">
+        <div className="w-full flex justify-center bg-[#050811]/90 p-4 sm:p-6 rounded-3xl border border-white/[0.08] shadow-2xl overflow-x-auto">
           <div
             style={{ width: dimensions.width }}
             className={`transition-all duration-300 mx-auto ${
@@ -311,7 +311,7 @@ export const VisualQADashboard: React.FC = () => {
 
             {/* View 3: Intake */}
             {activePreview === 'intake' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-[#080d19]/90 p-6 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <IntakeInterview
                   encounterId="enc_demo_001"
                   patientName="Eleanor Johnson"
@@ -323,21 +323,21 @@ export const VisualQADashboard: React.FC = () => {
 
             {/* View 4: Documents */}
             {activePreview === 'documents' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-[#080d19]/90 p-6 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <DocumentUploadZone encounterId="enc_demo_001" />
               </div>
             )}
 
             {/* View 5: Context Ledger */}
             {activePreview === 'ledger' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-[#080d19]/90 p-6 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <ClinicalContextLedger facts={mockClinicalFacts} encounterId="enc_demo_001" />
               </div>
             )}
 
             {/* View 6: Context Diff */}
             {activePreview === 'diff' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-[#080d19]/90 p-6 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <ContextDiffView
                   diffData={{
                     encounter_id: 'enc_demo_001',
@@ -364,22 +364,25 @@ export const VisualQADashboard: React.FC = () => {
 
             {/* View 7: Appointment Booking */}
             {activePreview === 'booking' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-[#080d19]/90 p-6 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <AppointmentSchedulingHub encounterId="enc_demo_001" patientName="Eleanor Johnson" />
               </div>
             )}
 
             {/* View 8: Doctor Console */}
             {activePreview === 'doctor' && (
-              <div className="bg-slate-100 p-4 rounded-2xl shadow-sm">
+              <div className="bg-[#080d19]/90 p-4 rounded-2xl shadow-2xl border border-white/[0.08] backdrop-blur-xl">
                 <DoctorDashboardHub />
               </div>
             )}
 
             {/* View 9: Audio Brief Player */}
             {activePreview === 'audio' && (
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <h3 className="text-sm font-bold text-slate-800">Standalone Synthesized Audio Player</h3>
+              <div className="bg-[#080d19]/90 p-8 rounded-2xl shadow-2xl border border-white/[0.08] space-y-4 backdrop-blur-xl">
+                <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center space-x-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span>Standalone Synthesized Audio Player</span>
+                </h3>
                 <AudioBriefPlayer
                   transcriptText="44-year-old female presenting with 3 days of progressive retrosternal chest tightness. Blood pressure elevated at 142/88. Currently on Lisinopril 10mg daily. Documented severe allergy to Penicillin. Note discrepancy regarding symptom onset timeline between oral statement and external referral."
                   patientName="Eleanor Johnson"
@@ -389,7 +392,7 @@ export const VisualQADashboard: React.FC = () => {
                   type="button"
                   variant="outline"
                   onClick={() => setIsSignOffModalOpen(true)}
-                  className="mt-4"
+                  className="mt-4 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
                 >
                   Test Review Sign-off Dialog
                 </Button>

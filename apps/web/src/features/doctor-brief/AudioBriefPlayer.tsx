@@ -92,20 +92,20 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
   return (
     <div
       data-testid="audio-brief-player"
-      className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-md space-y-4"
+      className="p-4 sm:p-5 rounded-2xl border border-white/[0.08] bg-[#080d19]/90 backdrop-blur-2xl text-white shadow-xl space-y-4"
     >
       {/* Player Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-400/30 flex items-center justify-center shadow-inner">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-teal-300">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
                 AI Synthesized Audio Brief
               </span>
-              <Badge variant="neutral" size="sm" className="bg-slate-800 text-slate-300 border-slate-700 text-[10px]">
+              <Badge variant="neutral" size="sm" className="bg-white/[0.05] text-slate-300 border-white/10 text-[10px]">
                 60s Consultation Summary
               </Badge>
             </div>
@@ -120,7 +120,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
             type="button"
             onClick={cycleSpeed}
             data-testid="audio-speed-btn"
-            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 text-xs font-mono font-bold transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-cyan-300 border border-white/10 text-xs font-mono font-bold transition-colors cursor-pointer"
             title="Adjust playback speed"
           >
             {playbackRate}x
@@ -129,7 +129,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
             type="button"
             onClick={() => setIsMuted(!isMuted)}
             data-testid="audio-mute-btn"
-            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs transition-colors"
+            className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10 text-xs transition-colors cursor-pointer"
             title={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -215,7 +215,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
             onClick={togglePlay}
             data-testid="audio-play-pause-btn"
             aria-label={isPlaying ? 'Pause audio brief' : 'Play audio brief'}
-            className="w-11 h-11 rounded-full bg-teal-500 hover:bg-teal-400 text-slate-950 flex items-center justify-center font-bold shadow-md transition-transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-teal-400"
+            className="w-11 h-11 rounded-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 flex items-center justify-center font-bold shadow-lg shadow-cyan-400/25 transition-transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
           >
             {isPlaying ? (
               <Pause className="w-5 h-5 fill-current" />
@@ -241,7 +241,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
           type="button"
           onClick={() => setShowFullTranscript(!showFullTranscript)}
           data-testid="toggle-transcript-btn"
-          className="text-xs text-teal-300 hover:text-teal-200 flex items-center font-medium underline"
+          className="text-xs text-cyan-300 hover:text-white flex items-center font-medium underline cursor-pointer"
         >
           <FileText className="w-3.5 h-3.5 mr-1" />
           {showFullTranscript ? 'Hide Transcript' : 'View Text Transcript'}
@@ -253,7 +253,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
         <div
           role="alert"
           data-testid="audio-error-notice"
-          className="p-3 bg-amber-950/70 border border-amber-600/50 rounded-xl text-xs text-amber-200 flex items-start space-x-2"
+          className="p-3 bg-amber-950/70 border border-amber-500/50 rounded-xl text-xs text-amber-200 flex items-start space-x-2"
         >
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <span>{audioError}</span>
@@ -264,13 +264,13 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
       {showFullTranscript && (
         <div
           data-testid="audio-transcript-fallback"
-          className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-xs text-slate-200 space-y-1.5"
+          className="p-3.5 rounded-xl bg-[#050811]/90 border border-white/[0.08] text-xs text-slate-200 space-y-1.5 shadow-inner"
         >
           <div className="flex items-center justify-between text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
             <span>Oral Brief Transcript:</span>
-            <span className="text-[10px] text-teal-400 font-mono">Audio URL: {audioUrl}</span>
+            <span className="text-[10px] text-cyan-400 font-mono">Audio URL: {audioUrl}</span>
           </div>
-          <p className="leading-relaxed font-serif text-slate-300 italic">
+          <p className="leading-relaxed font-serif text-slate-200 italic text-sm">
             "{transcriptText}"
           </p>
         </div>

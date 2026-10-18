@@ -144,7 +144,7 @@ body.clinsync-landing-active{
 @keyframes themeReveal{from{clip-path:circle(0% at var(--tx,50%) var(--ty,50%))}to{clip-path:circle(150% at var(--tx,50%) var(--ty,50%))}}
 
 /* ---------- landing scoped reset ---------- */
-body.clinsync-landing-active.is-loading{overflow:hidden;height:100vh}
+body.clinsync-landing-active{min-height:100vh}
 .clinsync-landing-root img, .clinsync-landing-root video, .clinsync-landing-root svg{display:block;max-width:100%}
 .clinsync-landing-root a{color:inherit;text-decoration:none}
 .clinsync-landing-root button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -205,8 +205,8 @@ body.clinsync-landing-active ::selection{background:rgba(var(--accent-rgb),.28);
 /* ============================================================
    PRELOADER
    ============================================================ */
-.preloader{position:fixed;inset:0;z-index:10001;background:var(--bg);display:grid;place-items:center;transition:opacity .8s var(--ease),visibility .8s}
-.preloader.is-done{opacity:0;visibility:hidden}
+.preloader{position:fixed;inset:0;z-index:10001;background:var(--bg);display:none;opacity:0;pointer-events:none;place-items:center;transition:opacity .4s var(--ease),visibility .4s}
+.preloader.is-done{opacity:0;visibility:hidden;display:none}
 .preloader__inner{display:flex;flex-direction:column;align-items:center;gap:22px;width:min(360px,80vw)}
 .preloader__mark svg{width:120px;height:120px}
 .pl-ring{stroke:var(--line-2);transform-origin:60px 60px;stroke-dasharray:290;stroke-dashoffset:0}

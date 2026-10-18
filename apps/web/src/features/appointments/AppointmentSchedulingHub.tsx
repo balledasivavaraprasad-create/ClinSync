@@ -216,15 +216,15 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
       className="w-full max-w-4xl mx-auto space-y-6 py-4"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-white/[0.08]">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center">
-            <Calendar className="w-6 h-6 mr-2 text-teal-600" />
+          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center">
+            <Calendar className="w-6 h-6 mr-2 text-cyan-400" />
             Clinic Appointment Scheduling
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-            Synchronized with clinical intake for <strong>{patientName}</strong> (Encounter{' '}
-            <code className="text-xs font-mono text-teal-800 bg-slate-100 px-1 py-0.5 rounded">
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Synchronized with clinical intake for <strong className="text-slate-200">{patientName}</strong> (Encounter{' '}
+            <code className="text-xs font-mono text-cyan-300 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">
               {encounterId}
             </code>
             )
@@ -243,17 +243,17 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
       {routingError && (
         <div
           role="alert"
-          className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 flex items-center justify-between"
+          className="p-4 rounded-xl border border-rose-500/40 bg-rose-950/40 text-rose-200 flex items-center justify-between"
         >
           <div className="flex items-center space-x-2 text-xs">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{routingError}</span>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchRoutingDecision}
-            className="text-xs min-h-[44px]"
+            className="text-xs text-slate-300 border-white/10 hover:bg-white/5 min-h-[44px]"
           >
             Retry Review
           </Button>
@@ -264,15 +264,15 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
       {isRoutineBookingBlocked ? (
         <div
           data-testid="booking-blocked-notice"
-          className="p-8 rounded-2xl border border-slate-200 bg-slate-50 text-center space-y-3"
+          className="p-8 rounded-2xl border border-white/[0.08] bg-[#0a0f1d]/80 text-center space-y-3 backdrop-blur-md"
         >
-          <div className="w-12 h-12 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-white/5 text-slate-400 flex items-center justify-center mx-auto">
             <Calendar className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">
+          <h3 className="text-base font-bold text-white">
             Direct Slot Scheduling Currently Held
           </h3>
-          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
             Per clinical safety requirements, direct self-service slot booking is restricted while
             clinical review or high-acuity evaluation is in progress. Please review the notice above.
           </p>
@@ -282,16 +282,16 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
           {slotsError ? (
             <div
               role="alert"
-              className="p-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 text-center space-y-3"
+              className="p-6 rounded-2xl border border-rose-500/40 bg-rose-950/40 text-rose-200 text-center space-y-3"
             >
-              <AlertCircle className="w-8 h-8 text-red-600 mx-auto" />
-              <h3 className="text-sm font-bold">Failed to Load Available Slots</h3>
-              <p className="text-xs text-red-700">{slotsError}</p>
+              <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+              <h3 className="text-sm font-bold text-white">Failed to Load Available Slots</h3>
+              <p className="text-xs text-rose-200">{slotsError}</p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => fetchSlots(selectedDepartmentId)}
-                className="min-h-[44px]"
+                className="min-h-[44px] text-slate-300 border-white/10 hover:bg-white/5"
               >
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                 Retry Fetching Slots
@@ -313,10 +313,10 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
           )}
 
           {/* Action Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 bg-white p-4 rounded-2xl border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border border-white/[0.08] bg-[#080d19]/90 p-5 rounded-2xl backdrop-blur-xl shadow-xl">
             <div>
-              <span className="text-xs text-slate-500 block">Selected Consultation:</span>
-              <span className="text-sm font-bold text-slate-900">
+              <span className="text-xs font-mono uppercase tracking-wider text-cyan-400 block">Selected Consultation:</span>
+              <span className="text-sm font-bold text-white mt-0.5 block">
                 {selectedSlot
                   ? `${selectedSlot.doctor_name} (${new Date(selectedSlot.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
                   : 'No slot selected'}
@@ -329,7 +329,7 @@ export const AppointmentSchedulingHub: React.FC<AppointmentSchedulingHubProps> =
               disabled={!selectedSlot || !selectedSlot.available || isSlotsLoading}
               onClick={handleOpenBookingModal}
               data-testid="btn-proceed-to-book"
-              className="w-full sm:w-auto min-h-[48px] px-8 text-sm font-bold"
+              className="w-full sm:w-auto min-h-[48px] px-8 text-sm font-bold cursor-pointer"
             >
               Proceed to Confirm Booking
             </Button>

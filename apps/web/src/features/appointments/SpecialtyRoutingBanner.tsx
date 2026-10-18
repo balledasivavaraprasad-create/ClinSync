@@ -28,12 +28,12 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
     return (
       <div
         data-testid="routing-banner-loading"
-        className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 animate-pulse flex items-center space-x-3"
+        className="w-full p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] animate-pulse flex items-center space-x-3"
       >
-        <div className="w-8 h-8 rounded-full bg-slate-200" />
+        <div className="w-8 h-8 rounded-full bg-white/10" />
         <div className="space-y-2 flex-1">
-          <div className="h-4 bg-slate-200 rounded w-1/3" />
-          <div className="h-3 bg-slate-200 rounded w-2/3" />
+          <div className="h-4 bg-white/10 rounded w-1/3" />
+          <div className="h-3 bg-white/10 rounded w-2/3" />
         </div>
       </div>
     );
@@ -53,26 +53,26 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
         data-testid="routing-escalation-banner"
         role="alert"
         aria-label="Urgent Clinical Escalation"
-        className="w-full p-5 rounded-2xl border-2 border-red-500 bg-red-50/90 text-red-950 shadow-md space-y-3"
+        className="w-full p-5 rounded-2xl border border-rose-500/50 bg-rose-950/40 text-rose-100 shadow-[0_0_30px_rgba(244,63,94,0.15)] backdrop-blur-xl space-y-3"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start space-x-3">
-            <div className="p-2.5 rounded-xl bg-red-600 text-white shrink-0 mt-0.5">
+            <div className="p-2.5 rounded-xl bg-rose-500 text-white shrink-0 mt-0.5 shadow-md shadow-rose-500/30">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="inline-block px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded bg-red-700 text-white">
+                <span className="inline-block px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded bg-rose-600 text-white">
                   High Acuity Alert
                 </span>
-                <span className="text-xs font-mono text-red-700">
+                <span className="text-xs font-mono text-rose-300">
                   Policy: {policy_version}
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-red-950 mt-1">
+              <h2 className="text-lg font-bold text-white mt-1">
                 Immediate Clinical Evaluation Recommended
               </h2>
-              <p className="text-sm text-red-900 mt-1 leading-relaxed">
+              <p className="text-sm text-rose-200/90 mt-1 leading-relaxed">
                 Based on validated hospital safety protocols, reported symptoms require immediate
                 in-person clinical triage rather than a routine outpatient appointment. Routine booking has been safely held.
               </p>
@@ -85,10 +85,10 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
               onClick={onNotifyStaff}
               disabled={staffNotified}
               data-testid="btn-notify-triage"
-              className={`shrink-0 inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors min-h-[44px] ${
+              className={`shrink-0 inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors min-h-[44px] cursor-pointer ${
                 staffNotified
                   ? 'bg-emerald-600 text-white cursor-default'
-                  : 'bg-red-700 text-white hover:bg-red-800'
+                  : 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/30'
               }`}
             >
               <Bell className="w-4 h-4 mr-2" />
@@ -98,14 +98,14 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
         </div>
 
         {/* Reason Codes */}
-        <div className="pt-2 border-t border-red-200/80 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-red-800">
+        <div className="pt-2 border-t border-rose-500/30 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-rose-300">
             Safety Trigger Codes:
           </span>
           {reason_codes.map((code) => (
             <span
               key={code}
-              className="text-xs font-mono bg-red-100 text-red-900 border border-red-300 px-2 py-0.5 rounded font-medium"
+              className="text-xs font-mono bg-rose-900/50 text-rose-200 border border-rose-500/40 px-2 py-0.5 rounded font-medium"
             >
               {code}
             </span>
@@ -122,26 +122,26 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
         data-testid="routing-review-banner"
         role="alert"
         aria-label="Clinical Triage Review Required"
-        className="w-full p-5 rounded-2xl border-2 border-amber-400 bg-amber-50/90 text-amber-950 shadow-sm space-y-3"
+        className="w-full p-5 rounded-2xl border border-amber-500/50 bg-amber-950/40 text-amber-100 shadow-[0_0_30px_rgba(245,158,11,0.15)] backdrop-blur-xl space-y-3"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start space-x-3">
-            <div className="p-2.5 rounded-xl bg-amber-500 text-white shrink-0 mt-0.5">
+            <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 shrink-0 mt-0.5 shadow-md shadow-amber-500/20 font-bold">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="inline-block px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded bg-amber-600 text-white">
+                <span className="inline-block px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded bg-amber-500 text-slate-950">
                   Clinical Triage Review
                 </span>
-                <span className="text-xs font-mono text-amber-800">
+                <span className="text-xs font-mono text-amber-300">
                   Policy: {policy_version}
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-amber-950 mt-1">
+              <h2 className="text-lg font-bold text-white mt-1">
                 Clinical Specialist Review in Progress
               </h2>
-              <p className="text-sm text-amber-900 mt-1 leading-relaxed">
+              <p className="text-sm text-amber-200/90 mt-1 leading-relaxed">
                 Hospital protocol requires a clinical provider to review your intake records and medication history before finalizing routine appointment slots. Please remain at this kiosk station.
               </p>
             </div>
@@ -153,10 +153,10 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
               onClick={onNotifyStaff}
               disabled={staffNotified}
               data-testid="btn-notify-triage"
-              className={`shrink-0 inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors min-h-[44px] ${
+              className={`shrink-0 inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors min-h-[44px] cursor-pointer ${
                 staffNotified
                   ? 'bg-emerald-600 text-white cursor-default'
-                  : 'bg-amber-700 text-white hover:bg-amber-800'
+                  : 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/30'
               }`}
             >
               <Clock className="w-4 h-4 mr-2" />
@@ -166,14 +166,14 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
         </div>
 
         {/* Reason Codes */}
-        <div className="pt-2 border-t border-amber-200/80 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">
+        <div className="pt-2 border-t border-amber-500/30 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-amber-300">
             Review Protocol Factors:
           </span>
           {reason_codes.map((code) => (
             <span
               key={code}
-              className="text-xs font-mono bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded font-medium"
+              className="text-xs font-mono bg-amber-900/50 text-amber-200 border border-amber-500/40 px-2 py-0.5 rounded font-medium"
             >
               {code}
             </span>
@@ -190,15 +190,15 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
         data-testid="routing-undetermined-banner"
         role="alert"
         aria-label="Staff Assistance Required"
-        className="w-full p-4 rounded-xl border border-slate-300 bg-slate-100 text-slate-800 space-y-2"
+        className="w-full p-4 rounded-xl border border-white/10 bg-[#0a0f1d]/80 text-slate-200 space-y-2 backdrop-blur-md"
       >
         <div className="flex items-center space-x-3">
-          <HelpCircle className="w-5 h-5 text-slate-600 shrink-0" />
+          <HelpCircle className="w-5 h-5 text-cyan-400 shrink-0" />
           <div>
-            <h2 className="text-sm font-bold text-slate-900">
+            <h2 className="text-sm font-bold text-white">
               Reception Assistance Recommended
             </h2>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-400">
               The intake system was unable to map a routine specialty match. Please consult reception desk A for manual scheduling.
             </p>
           </div>
@@ -212,19 +212,19 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
     <aside
       data-testid="routing-routine-banner"
       aria-label="Routine Clinic Scheduling Approved"
-      className="w-full p-4 sm:p-5 rounded-2xl border border-teal-200 bg-teal-50/70 text-teal-950 space-y-3"
+      className="w-full p-4 sm:p-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/20 text-cyan-100 backdrop-blur-xl space-y-3 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
     >
       <div className="flex items-start space-x-3">
-        <div className="p-2 rounded-xl bg-teal-600 text-white shrink-0 mt-0.5">
+        <div className="p-2 rounded-xl bg-cyan-500 text-slate-950 shrink-0 mt-0.5 shadow-md shadow-cyan-500/20">
           <CheckCircle2 className="w-5 h-5" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-600 text-white">
+              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-400 text-slate-950">
                 Routine Booking Approved
               </span>
-              <span className="text-xs font-mono text-teal-800">
+              <span className="text-xs font-mono text-cyan-300">
                 Rule Engine {policy_version}
               </span>
             </div>
@@ -235,22 +235,22 @@ export const SpecialtyRoutingBanner: React.FC<SpecialtyRoutingBannerProps> = ({
               </Badge>
             )}
           </div>
-          <h2 className="text-base font-bold text-teal-950 mt-1">
+          <h2 className="text-base font-bold text-white mt-1">
             Outpatient Specialty Scheduling Available
           </h2>
-          <p className="text-xs sm:text-sm text-teal-800/90 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
             Your intake facts satisfy non-acute triage criteria. You may select an available consultation slot below.
           </p>
         </div>
       </div>
 
       {reason_codes.length > 0 && (
-        <div className="pt-2 border-t border-teal-200/70 flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="font-semibold text-teal-800">Clinical Protocol Matches:</span>
+        <div className="pt-2 border-t border-cyan-500/20 flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="font-semibold text-cyan-300">Clinical Protocol Matches:</span>
           {reason_codes.map((code) => (
             <span
               key={code}
-              className="font-mono bg-white text-teal-900 border border-teal-200 px-2 py-0.5 rounded text-[11px]"
+              className="font-mono bg-white/[0.04] text-cyan-200 border border-cyan-400/30 px-2 py-0.5 rounded text-[11px]"
             >
               {code}
             </span>

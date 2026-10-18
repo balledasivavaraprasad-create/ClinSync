@@ -67,14 +67,12 @@ export function initLandingInteractions(
   const finishPreloader = () => {
     clearInterval(tick);
     paintPreloader(100);
-    setTimeout(() => {
-      if (preloader) preloader.classList.add('is-done');
-      document.body.classList.remove('is-loading');
-      document.body.classList.add('is-ready');
-    }, 380);
+    if (preloader) preloader.classList.add('is-done');
+    document.body.classList.remove('is-loading');
+    document.body.classList.add('is-ready');
   };
 
-  const timerSafety = setTimeout(finishPreloader, 1200);
+  const timerSafety = setTimeout(finishPreloader, 50);
   cleanupFns.push(() => {
     clearInterval(tick);
     clearTimeout(timerSafety);

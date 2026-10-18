@@ -3,8 +3,9 @@ import { MainView } from '../routes';
 import { LandingPage } from '../features/landing';
 import { LoginPage, type LoginSuccessPayload } from '../features/authentication';
 import { ErrorState } from '../components/shared/ErrorState';
+import { ThemeProvider } from '../lib/theme';
 
-type TabType = 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa';
+type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -57,12 +58,13 @@ function parseRoute(): { view: 'landing' | 'login' | 'app'; tab: TabType } {
   }
 
   // Check if hash points to the prototype
-  if (hash.startsWith('#/app') || hash.startsWith('#/kiosk') || hash.startsWith('#/doctor') ||
+  if (hash.startsWith('#/app') || hash.startsWith('#/dashboard') || hash.startsWith('#/kiosk') || hash.startsWith('#/doctor') ||
       hash.startsWith('#/ledger') || hash.startsWith('#/appointments') || hash.startsWith('#/visual-qa') ||
       hash.startsWith('#/showroom') || hash.startsWith('#/mock-api') ||
       search.includes('view=app') || search.includes('app=1') || pathname.startsWith('/app')) {
-    let tab: TabType = 'kiosk';
-    if (hash.includes('doctor')) tab = 'doctor';
+    let tab: TabType = 'dashboard';
+    if (hash.includes('kiosk')) tab = 'kiosk';
+    else if (hash.includes('doctor')) tab = 'doctor';
     else if (hash.includes('ledger')) tab = 'ledger';
     else if (hash.includes('appointments')) tab = 'appointments';
     else if (hash.includes('visual-qa')) tab = 'visual-qa';
@@ -72,7 +74,7 @@ function parseRoute(): { view: 'landing' | 'login' | 'app'; tab: TabType } {
     return { view: 'app', tab };
   }
 
-  return { view: 'landing', tab: 'kiosk' };
+  return { view: 'landing', tab: 'dashboard' };
 }
 
 export const App: React.FC = () => {
@@ -92,10 +94,10 @@ export const App: React.FC = () => {
   }, []);
 
   const handleLaunchApp = (tab?: TabType) => {
-    const targetTab = tab || 'kiosk';
+    const targetTab = tab || 'dashboard';
     setActiveTab(targetTab);
     setRoute('app');
-    window.location.hash = targetTab === 'kiosk' ? '#/app' : `#/app/${targetTab}`;
+    window.location.hash = targetTab === 'dashboard' ? '#/app' : `#/app/${targetTab}`;
     window.scrollTo(0, 0);
   };
 
@@ -129,23 +131,25 @@ export const App: React.FC = () => {
   };
 
   return (
-    <ErrorBoundary>
-      {route === 'landing' ? (
-        <LandingPage onLaunchApp={handleLaunchApp} onOpenLogin={handleOpenLogin} />
-      ) : route === 'login' ? (
-        <LoginPage
-          onLoginSuccess={handleLoginSuccess}
-          onBackToLanding={handleBackToLanding}
-        />
-      ) : (
-        <MainView
-          initialTab={activeTab}
-          currentUser={currentUser}
-          onBackToLanding={handleBackToLanding}
-          onOpenLogin={handleOpenLogin}
-        />
-      )}
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary>
+        {route === 'landing' ? (
+          <LandingPage onLaunchApp={handleLaunchApp} onOpenLogin={handleOpenLogin} />
+        ) : route === 'login' ? (
+          <LoginPage
+            onLoginSuccess={handleLoginSuccess}
+            onBackToLanding={handleBackToLanding}
+          />
+        ) : (
+          <MainView
+            initialTab={activeTab}
+            currentUser={currentUser}
+            onBackToLanding={handleBackToLanding}
+            onOpenLogin={handleOpenLogin}
+          />
+        )}
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 };
 

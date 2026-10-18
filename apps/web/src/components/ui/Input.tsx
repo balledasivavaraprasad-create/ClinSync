@@ -13,11 +13,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
-      <div className="w-full space-y-1.5">
+      <div className="w-full space-y-1.5 text-left">
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-ink-primary"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300"
           >
             {label}
           </label>
@@ -27,11 +27,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           className={twMerge(
             clsx(
-              'w-full min-h-[48px] px-4 py-3 rounded-lg border text-base bg-surface text-ink-primary placeholder:text-ink-muted transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:border-brand-600',
+              'w-full min-h-[48px] px-4 py-3 rounded-xl border text-base bg-slate-900/80 text-white placeholder:text-slate-500 transition-all duration-200',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-cyan-400 shadow-inner',
               error
-                ? 'border-red-500 focus-visible:ring-red-500'
-                : 'border-borderSubtle hover:border-slate-300',
+                ? 'border-red-500/80 focus-visible:ring-red-500'
+                : 'border-white/10 hover:border-white/20',
               className
             )
           )}
@@ -40,12 +40,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p id={`${inputId}-error`} className="text-sm text-red-600 mt-1 font-medium">
-            {error}
+          <p id={`${inputId}-error`} className="text-xs text-rose-400 mt-1 font-medium flex items-center space-x-1">
+            <span>•</span>
+            <span>{error}</span>
           </p>
         )}
         {!error && helperText && (
-          <p id={`${inputId}-helper`} className="text-sm text-ink-muted mt-1">
+          <p id={`${inputId}-helper`} className="text-xs text-slate-400 mt-1">
             {helperText}
           </p>
         )}

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { mockApi } from '../../lib/api/mockAdapter';
@@ -109,30 +108,30 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
       data-testid="identity-confirmation-container"
       className="w-full max-w-xl mx-auto"
     >
-      <Card className="shadow-lg border-teal-100 overflow-hidden">
-        <div className="h-2 bg-teal-600" />
-        <CardHeader className="pb-3 text-center">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center mb-2 border border-teal-100">
+      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-cyan-500 via-teal-400 to-indigo-500" />
+        <div className="pt-7 pb-4 px-6 sm:px-8 text-center border-b border-white/[0.06]">
+          <div className="w-13 h-13 rounded-2xl bg-cyan-500/10 text-cyan-400 mx-auto flex items-center justify-center mb-3 border border-cyan-500/25 shadow-lg shadow-cyan-500/10">
             <Lock className="w-6 h-6" />
           </div>
-          <CardTitle className="text-2xl font-bold text-slate-900">
+          <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal tracking-tight">
             Confirm Your Identity
-          </CardTitle>
-          <CardDescription className="text-slate-600 text-sm">
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1.5 max-w-md mx-auto leading-relaxed">
             For medical privacy, we must verify your identity before starting your intake encounter.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
         <form onSubmit={handleConfirm}>
-          <CardContent className="space-y-5 px-6 sm:px-8">
+          <div className="space-y-5 px-6 sm:px-8 py-6">
             {/* Multiple Candidate Selector if > 1 */}
             {candidateList.length > 1 && (
-              <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-slate-600 flex items-center">
-                  <Users className="w-3.5 h-3.5 mr-1 text-teal-600" />
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-slate-300 flex items-center">
+                  <Users className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
                   Multiple Match Candidates Found. Please select your record:
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   {candidateList.map((cand, idx) => (
                     <button
                       key={cand.candidate_id}
@@ -142,14 +141,14 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                         setErrorMessage(null);
                         setUncertainState(false);
                       }}
-                      className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                      className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                         selectedCandidateIndex === idx
-                          ? 'border-teal-600 bg-teal-50/70 text-teal-950 font-bold ring-2 ring-teal-500/20'
-                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                          ? 'border-cyan-400 bg-cyan-500/15 text-white font-bold ring-2 ring-cyan-500/25 shadow-md shadow-cyan-500/10'
+                          : 'border-white/[0.08] bg-white/[0.025] hover:bg-white/[0.06] text-slate-300'
                       }`}
                     >
-                      <div className="truncate">{cand.masked_name}</div>
-                      <div className="text-[11px] text-slate-500 font-normal">Born {cand.dob_year}</div>
+                      <div className="truncate text-white font-semibold">{cand.masked_name}</div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Born {cand.dob_year}</div>
                     </button>
                   ))}
                 </div>
@@ -159,24 +158,24 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
             {/* Selected Masked Candidate Card */}
             <div
               data-testid="masked-candidate-card"
-              className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between"
+              className="bg-white/[0.025] border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-inner"
             >
               <div>
-                <span className="text-xs uppercase font-bold tracking-wider text-slate-500 block">
+                <span className="text-[11px] uppercase font-mono tracking-wider text-slate-400 block">
                   Matched Record Candidate
                 </span>
                 <span
                   data-testid="masked-candidate-name"
-                  className="text-lg font-bold text-slate-800"
+                  className="text-lg sm:text-xl font-bold text-white tracking-tight mt-0.5 block"
                 >
                   {currentCandidate.masked_name}
                 </span>
-                <span className="text-xs text-slate-500 block mt-0.5">
+                <span className="text-xs text-slate-400 block mt-1 font-mono">
                   Birth Year: {currentCandidate.dob_year} • Phone: {currentCandidate.contact_hint}
                 </span>
               </div>
-              <div className="text-right">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-teal-100 text-teal-800">
+              <div className="text-right shrink-0">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 shadow-sm">
                   <UserCheck className="w-3.5 h-3.5 mr-1" />
                   Candidate Found
                 </span>
@@ -184,18 +183,18 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
             </div>
 
             {/* Privacy Warning Guard */}
-            <div className="bg-amber-50/80 border border-amber-200 text-amber-900 px-3.5 py-2.5 rounded-lg text-xs flex items-start space-x-2">
-              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>
-                <strong>Privacy Protocol:</strong> No previous medical records or clinical history are displayed until your Date of Birth is confirmed.
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-200 px-4 py-3 rounded-xl text-xs flex items-start space-x-2.5">
+              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">
+                <strong className="text-amber-300">Privacy Protocol:</strong> No previous medical records or clinical history are displayed until your Date of Birth is confirmed.
               </span>
             </div>
 
             {/* Secondary Verification: DOB */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label
                 htmlFor="dob-input"
-                className="block text-sm font-semibold text-slate-800"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
               >
                 Enter your Date of Birth (Secondary Verification):
               </label>
@@ -211,26 +210,26 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                     setUncertainState(false);
                   }}
                   placeholder="YYYY-MM-DD"
-                  className="w-full text-base py-3 pl-10"
+                  className="w-full text-base py-3 pl-10 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
                   required
                 />
                 <Calendar className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
               </div>
-              <span className="text-xs text-slate-500">
+              <span className="text-[11px] text-slate-400 block font-mono">
                 Example: {currentCandidate.dob_year}-05-12 (Enter full birth date as registered in your records)
               </span>
             </div>
 
             {/* Consent Checkbox */}
-            <label className="flex items-start space-x-3 cursor-pointer pt-1">
+            <label className="flex items-start space-x-3 cursor-pointer pt-1 group">
               <input
                 type="checkbox"
                 data-testid="consent-checkbox"
                 checked={consentGiven}
                 onChange={(e) => setConsentGiven(e.target.checked)}
-                className="w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 mt-0.5"
+                className="w-5 h-5 text-cyan-500 rounded border-white/20 bg-slate-900 focus:ring-cyan-400 mt-0.5 accent-cyan-400"
               />
-              <span className="text-xs text-slate-700 leading-relaxed">
+              <span className="text-xs text-slate-300 leading-relaxed group-hover:text-white transition-colors">
                 I confirm this is my record and consent to automated clinical intake questioning and structured fact extraction for clinical triage.
               </span>
             </label>
@@ -240,26 +239,26 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
               <div
                 role="alert"
                 data-testid="identity-error-alert"
-                className={`p-3.5 rounded-lg text-xs flex items-start space-x-2 border ${
+                className={`p-4 rounded-xl text-xs flex items-start space-x-2.5 border backdrop-blur-md ${
                   uncertainState
-                    ? 'bg-amber-50 border-amber-300 text-amber-900'
-                    : 'bg-rose-50 border-rose-200 text-rose-900'
+                    ? 'bg-amber-950/60 border-amber-500/50 text-amber-200'
+                    : 'bg-rose-950/60 border-rose-500/50 text-rose-200'
                 }`}
               >
-                <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 ${uncertainState ? 'text-amber-600' : 'text-rose-600'}`} />
+                <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 ${uncertainState ? 'text-amber-400' : 'text-rose-400'}`} />
                 <div className="flex-1">
-                  <span className="font-semibold block">
+                  <span className="font-bold block text-sm">
                     {uncertainState ? 'Uncertain Identity State' : 'Verification Failed'}
                   </span>
-                  <span>{errorMessage}</span>
+                  <span className="mt-1 block leading-relaxed">{errorMessage}</span>
                   {uncertainState && (
-                    <div className="mt-2 pt-2 border-t border-amber-200 flex items-center justify-between">
-                      <span className="text-amber-800">Need reception staff to look up your chart?</span>
+                    <div className="mt-2.5 pt-2.5 border-t border-amber-500/30 flex items-center justify-between">
+                      <span className="text-amber-300">Need reception staff to look up your chart?</span>
                       <button
                         type="button"
                         data-testid="uncertain-staff-link"
                         onClick={onRouteToStaff}
-                        className="font-bold underline text-amber-900 hover:text-amber-950 cursor-pointer"
+                        className="font-bold underline text-cyan-300 hover:text-cyan-200 cursor-pointer"
                       >
                         Go to Reception Desk
                       </button>
@@ -268,15 +267,15 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                 </div>
               </div>
             )}
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/70 border-t border-slate-100 px-6 sm:px-8 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
             <Button
               type="button"
               variant="outline"
               data-testid="not-me-btn"
               onClick={onCancel}
-              className="w-full sm:w-auto text-slate-600"
+              className="w-full sm:w-auto text-slate-300 hover:text-white border-white/10"
             >
               This is Not Me
             </Button>
@@ -286,7 +285,7 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                 type="button"
                 variant="ghost"
                 onClick={onRouteToStaff}
-                className="text-xs text-slate-600"
+                className="text-xs text-slate-400 hover:text-white"
               >
                 <HelpCircle className="w-3.5 h-3.5 mr-1" />
                 Staff Help
@@ -296,7 +295,7 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                 variant="primary"
                 data-testid="confirm-identity-btn"
                 disabled={loading}
-                className="flex-1 sm:flex-none min-w-[150px]"
+                className="flex-1 sm:flex-none min-w-[160px] font-bold"
               >
                 {loading ? (
                   'Verifying...'
@@ -308,9 +307,9 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
                 )}
               </Button>
             </div>
-          </CardFooter>
+          </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };

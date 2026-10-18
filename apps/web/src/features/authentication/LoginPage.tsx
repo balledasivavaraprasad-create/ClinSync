@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { ThemeToggle } from '../../lib/theme';
 import {
   Stethoscope,
   Tablet,
@@ -11,7 +12,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Building2,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
@@ -103,17 +103,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-slate-950 text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-[#05070d] text-slate-100 flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden">
+      {/* Dynamic ambient glow orbs with architectural refraction */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="ambient-backdrop-image" />
+        <div className="absolute top-[-10%] left-[20%] w-[550px] h-[550px] rounded-full bg-cyan-600/[0.07] blur-[140px]" />
+        <div className="absolute bottom-[-10%] right-[20%] w-[500px] h-[500px] rounded-full bg-blue-600/[0.05] blur-[150px]" />
+      </div>
+
       {/* Top Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
+      <header className="px-6 py-4 flex items-center justify-between border-b border-white/[0.08] bg-[#070a14]/80 backdrop-blur-2xl relative z-10 shadow-lg">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-teal-500/20">
-            <Building2 className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20 font-bold text-xs ring-1 ring-white/20">
+            CS
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold tracking-tight text-white text-base">ClinSync</span>
-              <span className="text-[10px] font-mono uppercase bg-teal-500/10 text-teal-300 border border-teal-500/30 px-1.5 py-0.5 rounded">
+              <span className="font-extrabold tracking-wider text-white text-base font-sans">ClinSync</span>
+              <span className="text-[10px] font-mono uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded font-semibold">
                 Hospital Portal
               </span>
             </div>
@@ -121,21 +128,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={onBackToLanding}
-          className="text-xs font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1.5"
-          data-testid="btn-login-back-to-landing"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Landing Page</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <ThemeToggle />
+          <button
+            onClick={onBackToLanding}
+            className="text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] px-3.5 py-1.5 rounded-full transition-all flex items-center space-x-1.5 shadow-sm cursor-pointer"
+            data-testid="btn-login-back-to-landing"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Landing Page</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Login Container */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6 relative z-10">
         <div className="w-full max-w-md space-y-6">
           {/* Presets Bar / Role Switcher */}
-          <div className="bg-slate-800/60 p-1 rounded-xl border border-slate-700/70 grid grid-cols-3 gap-1 shadow-inner">
+          <div className="bg-[#050811]/90 p-1.5 rounded-2xl border border-white/[0.08] grid grid-cols-3 gap-1.5 shadow-inner backdrop-blur-xl">
             <button
               type="button"
               onClick={() => {
@@ -143,10 +153,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 setUserId('dr_clara_chen');
                 setErrorMessage(null);
               }}
-              className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center space-x-1.5 transition-all ${
+              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 selectedRole === 'doctor'
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-400 text-slate-950 font-bold shadow-md shadow-cyan-400/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
               data-testid="role-tab-doctor"
             >
@@ -160,10 +170,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 setUserId('kiosk_tablet_01');
                 setErrorMessage(null);
               }}
-              className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center space-x-1.5 transition-all ${
+              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 selectedRole === 'kiosk'
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-400 text-slate-950 font-bold shadow-md shadow-cyan-400/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
               data-testid="role-tab-kiosk"
             >
@@ -177,10 +187,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 setUserId('auditor_quality');
                 setErrorMessage(null);
               }}
-              className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center space-x-1.5 transition-all ${
+              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 selectedRole === 'auditor'
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-400 text-slate-950 font-bold shadow-md shadow-cyan-400/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
               data-testid="role-tab-auditor"
             >
@@ -190,7 +200,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
 
           {/* Login Card */}
-          <Card className="border border-slate-800 bg-slate-850/90 shadow-2xl backdrop-blur-xl text-slate-100">
+          <Card className="border border-white/[0.08] bg-[#080c17]/90 shadow-[0_50px_140px_-30px_rgba(0,0,0,0.9)] backdrop-blur-3xl rounded-3xl text-slate-100 p-6 sm:p-8">
             <CardHeader className="space-y-1 pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl text-white font-semibold flex items-center space-x-2">
@@ -250,7 +260,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                           ? 'e.g. kiosk_station_01'
                           : 'e.g. auditor_01'
                       }
-                      className="w-full min-h-[48px] pl-10 pr-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full min-h-[48px] pl-10 pr-4 py-2.5 rounded-xl bg-[#050811] border border-white/15 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-mono"
                       data-testid="input-login-userid"
                     />
                   </div>
@@ -261,7 +271,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     <label htmlFor="login-passcode" className="block text-xs font-medium text-slate-300">
                       Security Passcode / Badge Token
                     </label>
-                    <span className="text-[11px] text-teal-400 font-mono">Demo: demo1234</span>
+                    <span className="text-[11px] text-cyan-400 font-mono">Demo: demo1234</span>
                   </div>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -271,7 +281,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full min-h-[48px] pl-10 pr-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full min-h-[48px] pl-10 pr-4 py-2.5 rounded-xl bg-[#050811] border border-white/15 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-mono"
                       data-testid="input-login-passcode"
                     />
                   </div>
@@ -283,17 +293,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       type="checkbox"
                       checked={rememberWorkstation}
                       onChange={(e) => setRememberWorkstation(e.target.checked)}
-                      className="rounded bg-slate-900 border-slate-700 text-teal-500 focus:ring-teal-500 focus:ring-offset-slate-900"
+                      className="rounded bg-[#050811] border-white/20 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-[#05070d] accent-cyan-400"
                     />
                     <span>Remember workstation</span>
                   </label>
-                  <span className="text-slate-500">TLS 1.3 Encrypted</span>
+                  <span className="text-slate-500 font-mono text-[11px]">TLS 1.3 Encrypted</span>
                 </div>
 
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium shadow-lg shadow-teal-600/20 min-h-[48px] flex items-center justify-center space-x-2 text-sm"
+                  className="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-400/25 min-h-[48px] flex items-center justify-center space-x-2 text-sm rounded-xl cursor-pointer"
                   isLoading={isLoading}
                   data-testid="btn-login-submit"
                 >
@@ -309,12 +319,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               </form>
 
               {/* Demo Quick-Fill Presets */}
-              <div className="mt-5 pt-4 border-t border-slate-800 space-y-2">
+              <div className="mt-5 pt-4 border-t border-white/[0.08] space-y-2">
                 <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium">
-                  <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Quick Demo Profiles (1-Click Fill)</span>
                 </div>
-                <div className="grid grid-cols-1 gap-1.5">
+                <div className="grid grid-cols-1 gap-2">
                   <button
                     type="button"
                     onClick={() =>
@@ -326,21 +336,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         dept: 'Cardiology',
                       })
                     }
-                    className="w-full text-left p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-750 hover:border-teal-500/40 text-xs transition-colors flex items-center justify-between group"
+                    className="w-full text-left p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.06] border border-white/[0.07] hover:border-cyan-400/40 text-xs transition-colors flex items-center justify-between group cursor-pointer"
                     data-testid="preset-dr-clara"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-md bg-teal-500/10 text-teal-300 flex items-center justify-center font-bold text-[10px]">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 flex items-center justify-center font-bold text-[10px]">
                         CC
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-200 group-hover:text-white">
+                        <div className="font-semibold text-white group-hover:text-cyan-300 transition-colors">
                           Dr. Clara Chen, MD
                         </div>
                         <div className="text-[11px] text-slate-400">Cardiology & Chest Pain Center</div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-teal-400 font-mono">Fill &rarr;</span>
+                    <span className="text-[10px] text-cyan-400 font-mono font-bold">Fill &rarr;</span>
                   </button>
 
                   <button
@@ -354,21 +364,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         dept: 'Internal Medicine',
                       })
                     }
-                    className="w-full text-left p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-750 hover:border-teal-500/40 text-xs transition-colors flex items-center justify-between group"
+                    className="w-full text-left p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.06] border border-white/[0.07] hover:border-cyan-400/40 text-xs transition-colors flex items-center justify-between group cursor-pointer"
                     data-testid="preset-dr-marcus"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-md bg-sky-500/10 text-sky-300 flex items-center justify-center font-bold text-[10px]">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-400/30 flex items-center justify-center font-bold text-[10px]">
                         MV
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-200 group-hover:text-white">
+                        <div className="font-semibold text-white group-hover:text-blue-300 transition-colors">
                           Dr. Marcus Vance, MD
                         </div>
                         <div className="text-[11px] text-slate-400">General Internal Medicine</div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-teal-400 font-mono">Fill &rarr;</span>
+                    <span className="text-[10px] text-cyan-400 font-mono font-bold">Fill &rarr;</span>
                   </button>
 
                   <button
@@ -382,21 +392,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         dept: 'Emergency Intake',
                       })
                     }
-                    className="w-full text-left p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-750 hover:border-teal-500/40 text-xs transition-colors flex items-center justify-between group"
+                    className="w-full text-left p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.06] border border-white/[0.07] hover:border-cyan-400/40 text-xs transition-colors flex items-center justify-between group cursor-pointer"
                     data-testid="preset-kiosk-station"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-300 flex items-center justify-center font-bold text-[10px]">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold text-[10px]">
                         TK
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-200 group-hover:text-white">
+                        <div className="font-semibold text-white group-hover:text-amber-300 transition-colors">
                           Tablet Intake Kiosk
                         </div>
                         <div className="text-[11px] text-slate-400">Ambulatory Check-in Station</div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-teal-400 font-mono">Fill &rarr;</span>
+                    <span className="text-[10px] text-cyan-400 font-mono font-bold">Fill &rarr;</span>
                   </button>
                 </div>
               </div>
@@ -404,8 +414,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </Card>
 
           {/* Compliance & Security Banner */}
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center space-x-2.5">
-            <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+          <div className="p-3.5 rounded-2xl bg-[#080c17]/80 border border-white/[0.08] text-[11px] text-slate-400 flex items-center space-x-2.5 shadow-sm">
+            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
             <span>
               Synthetic patient data verified. Zero PHI leakage in access logs. Hospital demo policy compliant.
             </span>
@@ -414,7 +424,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-3 border-t border-slate-800 text-center text-xs text-slate-500">
+      <footer className="px-6 py-3.5 border-t border-white/[0.06] bg-[#070a14]/60 text-center text-xs text-slate-400 font-mono">
         ClinSync Hospital Intake & Clinician Handoff • Version 0.1.0 • All data synthetic
       </footer>
     </div>

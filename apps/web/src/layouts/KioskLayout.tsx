@@ -22,34 +22,37 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between text-ink-primary select-none">
+    <div className="min-h-screen bg-transparent flex flex-col justify-between text-slate-100 select-none relative">
       {/* Top Tablet Header Bar */}
-      <header className="bg-surface border-b border-borderSubtle px-6 py-4 shadow-subtle flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold shadow-sm">
-            <Shield className="w-6 h-6" />
+      <header className="bg-[#080c17]/90 backdrop-blur-2xl border-b border-white/[0.08] px-6 py-4 shadow-2xl flex items-center justify-between relative z-10">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-cyan-500/20">
+            <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-ink-primary leading-tight">
-              {title}
+            <h1 className="text-xl font-bold tracking-tight text-white leading-tight flex items-center space-x-2">
+              <span>{title}</span>
+              <span className="text-[10px] font-mono uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded">
+                Live
+              </span>
             </h1>
-            <p className="text-xs font-medium text-ink-muted">{subtitle}</p>
+            <p className="text-xs font-medium text-slate-400">{subtitle}</p>
           </div>
         </div>
 
         {/* Status / Language / Steps */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           {currentStep && totalSteps && (
-            <div className="hidden sm:flex items-center space-x-2 bg-surfaceMuted px-3 py-1.5 rounded-full border border-borderSubtle">
-              <span className="text-xs font-medium text-ink-muted">Progress</span>
-              <span className="text-sm font-semibold text-brand-700">
+            <div className="hidden sm:flex items-center space-x-2 bg-white/[0.04] px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
+              <span className="text-xs font-medium text-slate-400">Progress</span>
+              <span className="text-xs font-bold text-cyan-300 font-mono">
                 Step {currentStep} of {totalSteps}
               </span>
             </div>
           )}
 
-          <div className="flex items-center space-x-1.5 text-xs font-medium text-ink-secondary bg-surfaceMuted px-3 py-1.5 rounded-lg border border-borderSubtle">
-            <Globe className="w-4 h-4 text-brand-600" />
+          <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-300 bg-white/[0.04] px-3 py-1.5 rounded-lg border border-white/10">
+            <Globe className="w-3.5 h-3.5 text-cyan-400" />
             <span>English (US)</span>
           </div>
 
@@ -59,8 +62,8 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
               size="sm"
               onClick={onResetSession}
               aria-label="Start over"
-              leftIcon={<RotateCcw className="w-4 h-4" />}
-              className="text-ink-muted hover:text-ink-primary"
+              leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+              className="text-slate-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10"
             >
               Start Over
             </Button>
@@ -69,14 +72,14 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
       </header>
 
       {/* Main Kiosk Touch Workspace */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8 flex flex-col justify-center">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 md:p-8 flex flex-col justify-center relative z-10">
         {children}
       </main>
 
       {/* Persistent Bottom Help & Privacy Footer */}
-      <footer className="bg-surface border-t border-borderSubtle px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2 text-xs text-ink-muted">
-          <Shield className="w-4 h-4 text-brand-600" />
+      <footer className="bg-[#080c17]/90 backdrop-blur-2xl border-t border-white/[0.08] px-6 py-4 flex items-center justify-between relative z-10 text-xs text-slate-400 shadow-xl">
+        <div className="flex items-center space-x-2">
+          <Shield className="w-4 h-4 text-cyan-400" />
           <span>Hospital Secure Intake Session • Data encrypted and HIPAA protected</span>
         </div>
 
@@ -84,8 +87,8 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
           variant="secondary"
           size="sm"
           onClick={onHelp}
-          leftIcon={<HelpCircle className="w-4 h-4 text-brand-600" />}
-          className="min-h-[48px]"
+          leftIcon={<HelpCircle className="w-4 h-4 text-cyan-400" />}
+          className="min-h-[48px] bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10"
         >
           Staff Assistance
         </Button>

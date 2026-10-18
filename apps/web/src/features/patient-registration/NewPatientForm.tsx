@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { mockApi } from '../../lib/api/mockAdapter';
@@ -79,39 +78,39 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
     >
       <button
         onClick={onCancel}
-        className="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+        className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-white transition-colors cursor-pointer font-mono"
       >
         <ArrowLeft className="w-4 h-4 mr-1.5" />
         Back to Welcome
       </button>
 
-      <Card className="shadow-lg border-slate-200 overflow-hidden">
-        <div className="h-2 bg-indigo-600" />
-        <CardHeader className="pt-6 pb-2">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-100">
+      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-cyan-400 to-teal-400" />
+        <div className="pt-7 pb-4 px-6 sm:px-8 border-b border-white/[0.06]">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-13 h-13 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
               <UserPlus className="w-6 h-6" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-slate-900">
+              <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal tracking-tight">
                 New Patient Registration
-              </CardTitle>
-              <CardDescription className="text-slate-600 text-sm">
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm mt-0.5 leading-relaxed">
                 Enter your basic details to start your clinical intake encounter.
-              </CardDescription>
+              </p>
             </div>
           </div>
-        </CardHeader>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4 pt-4 px-6 sm:px-8">
+          <div className="space-y-4 pt-5 pb-6 px-6 sm:px-8">
             {/* Full Name */}
             <div className="space-y-1.5">
               <label
                 htmlFor="new-patient-name"
-                className="block text-sm font-semibold text-slate-800"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
               >
-                Full Legal Name <span className="text-rose-500">*</span>
+                Full Legal Name <span className="text-rose-400">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -121,7 +120,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
                   placeholder="e.g. Eleanor Vance"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 text-base py-3"
+                  className="pl-10 text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
                   required
                 />
                 <User className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
@@ -133,9 +132,9 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
               <div className="space-y-1.5">
                 <label
                   htmlFor="new-patient-dob"
-                  className="block text-sm font-semibold text-slate-800"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
                 >
-                  Date of Birth <span className="text-rose-500">*</span>
+                  Date of Birth <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
                   <Input
@@ -144,7 +143,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
                     type="date"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="pl-10 text-base py-3"
+                    className="pl-10 text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
                     required
                   />
                   <Calendar className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
@@ -154,9 +153,9 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
               <div className="space-y-1.5">
                 <label
                   htmlFor="new-patient-phone"
-                  className="block text-sm font-semibold text-slate-800"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
                 >
-                  Mobile / Phone <span className="text-rose-500">*</span>
+                  Mobile / Phone <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
                   <Input
@@ -166,7 +165,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
                     placeholder="(555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="pl-10 text-base py-3"
+                    className="pl-10 text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
                     required
                   />
                   <Phone className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
@@ -178,7 +177,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
             <div className="space-y-1.5">
               <label
                 htmlFor="new-patient-emergency"
-                className="block text-sm font-semibold text-slate-800"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
               >
                 Emergency Contact (Name & Phone)
               </label>
@@ -190,7 +189,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
                   placeholder="e.g. John Vance (Spouse) - (555) 123-4567"
                   value={emergencyContact}
                   onChange={(e) => setEmergencyContact(e.target.value)}
-                  className="pl-10 text-base py-3"
+                  className="pl-10 text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
                 />
                 <HeartPulse className="w-5 h-5 text-slate-400 absolute left-3 top-3.5 pointer-events-none" />
               </div>
@@ -198,16 +197,16 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
 
             {/* Consent Toggle */}
             <div className="pt-2">
-              <label className="flex items-start space-x-3 cursor-pointer p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <label className="flex items-start space-x-3 cursor-pointer p-4 bg-white/[0.025] border border-white/[0.08] rounded-xl group hover:border-cyan-400/40 transition-colors">
                 <input
                   type="checkbox"
                   data-testid="registration-consent-checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mt-0.5"
+                  className="w-5 h-5 text-cyan-500 rounded border-white/20 bg-slate-900 focus:ring-cyan-400 mt-0.5 accent-cyan-400"
                 />
-                <div className="text-xs text-slate-700 leading-relaxed">
-                  <span className="font-semibold block text-slate-900">
+                <div className="text-xs text-slate-300 leading-relaxed">
+                  <span className="font-semibold block text-white group-hover:text-cyan-300 transition-colors">
                     Consent to Digital Intake & Clinical Fact Processing
                   </span>
                   I consent to the collection and algorithmic extraction of my reported symptoms for clinical triage and doctor preparation.
@@ -220,15 +219,15 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
               <div
                 role="alert"
                 data-testid="registration-error-alert"
-                className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs"
+                className="p-3.5 bg-rose-500/15 border border-rose-500/30 text-rose-200 rounded-xl text-xs"
               >
                 {validationError}
               </div>
             )}
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex items-center justify-between bg-slate-50 border-t border-slate-100 px-6 sm:px-8 py-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex items-center justify-between bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
+            <Button type="button" variant="outline" onClick={onCancel} className="text-slate-300 hover:text-white border-white/10">
               Cancel
             </Button>
             <Button
@@ -236,7 +235,7 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
               variant="primary"
               data-testid="submit-registration-btn"
               disabled={submitting}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[160px]"
+              className="min-w-[160px] font-bold"
             >
               {submitting ? (
                 'Registering...'
@@ -247,12 +246,12 @@ export const NewPatientForm: React.FC<NewPatientFormProps> = ({
                 </>
               )}
             </Button>
-          </CardFooter>
+          </div>
         </form>
-      </Card>
+      </div>
 
-      <div className="text-center text-xs text-slate-500 flex items-center justify-center space-x-1.5">
-        <ShieldCheck className="w-4 h-4 text-indigo-600" />
+      <div className="text-center text-xs text-slate-400 flex items-center justify-center space-x-2">
+        <ShieldCheck className="w-4 h-4 text-cyan-400" />
         <span>Data is encrypted and stored strictly in compliance with hospital security protocols.</span>
       </div>
     </div>

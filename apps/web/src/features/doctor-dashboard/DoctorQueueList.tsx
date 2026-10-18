@@ -4,6 +4,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import type { DoctorQueueItem } from '../../lib/api/types';
+import { useTheme } from '../../lib/theme';
 import {
   Users,
   Search,
@@ -30,6 +31,7 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
   isLoading = false,
   onRefresh,
 }) => {
+  const { isLight } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
@@ -68,7 +70,7 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
       case 'ROUTINE':
       default:
         return (
-          <Badge variant="neutral" size="sm" className="text-slate-600">
+          <Badge variant="neutral" size="sm" className="text-slate-300 bg-white/5 border border-white/10">
             Routine
           </Badge>
         );
@@ -79,21 +81,21 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             Signed Off
           </span>
         );
       case 'IN_CONSULTATION':
         return (
-          <span className="inline-flex items-center text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center text-[10px] font-bold text-cyan-300 bg-cyan-500/20 border border-cyan-400/30 px-2 py-0.5 rounded-full">
             Active Now
           </span>
         );
       case 'PENDING_REVIEW':
       default:
         return (
-          <span className="inline-flex items-center text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center text-[10px] font-medium text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
             Pending Review
           </span>
         );
@@ -101,19 +103,19 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
   };
 
   return (
-    <Card className="shadow-sm border-slate-200" data-testid="doctor-queue-list">
+    <Card className="shadow-xl border-white/[0.08] bg-[#080d19]/90 backdrop-blur-xl" data-testid="doctor-queue-list">
       {/* Header */}
-      <CardHeader className="pb-3 border-b border-slate-100">
+      <CardHeader className="pb-3 border-b border-white/[0.08]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shadow-sm">
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-slate-900">
+              <CardTitle className="text-base font-bold text-white">
                 Patient Triage Queue
               </CardTitle>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 {queue.length} scheduled consultations today
               </p>
             </div>
@@ -127,7 +129,7 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
               onClick={onRefresh}
               disabled={isLoading}
               data-testid="refresh-queue-btn"
-              className="text-xs h-8 px-2 text-slate-600"
+              className="text-xs h-8 px-2 text-slate-300 border-white/10 hover:bg-white/5"
               title="Refresh Queue"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -145,23 +147,23 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search patient or triage note..."
-              className="pl-8 text-xs h-9 w-full"
+              className="pl-8 text-xs h-9 w-full border-white/10 bg-[#050811] text-white placeholder-slate-500 focus:border-cyan-400"
             />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-3 pointer-events-none" />
           </div>
 
           <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
-            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+            <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1" />
             {(['all', 'URGENT', 'ELEVATED', 'ROUTINE'] as const).map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPriorityFilter(p)}
                 data-testid={`filter-priority-${p}`}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
                   priorityFilter === p
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                    : 'bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
                 }`}
               >
                 {p === 'all' ? 'All Priorities' : p}
@@ -174,13 +176,13 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
         {isLoading ? (
           <div className="space-y-2.5 py-4" data-testid="queue-loading-state">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />
+              <div key={i} className="h-20 rounded-xl bg-white/[0.03] animate-pulse" />
             ))}
           </div>
         ) : filteredQueue.length === 0 ? (
           <div
             data-testid="queue-empty-state"
-            className="p-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 text-xs"
+            className="p-6 text-center border border-dashed border-white/10 rounded-xl bg-white/[0.02] text-slate-400 text-xs"
           >
             No patients match the search or priority filter.
           </div>
@@ -197,21 +199,25 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
                   onClick={() => onSelectPatient(item)}
                   className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
                     isSelected
-                      ? 'border-brand-600 bg-teal-50/80 shadow-sm ring-2 ring-brand-500/30'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70 shadow-subtle'
+                      ? isLight
+                        ? 'border-cyan-600 bg-gradient-to-b from-cyan-50 via-cyan-100/50 to-white shadow-md shadow-cyan-600/15 ring-2 ring-cyan-500/30 text-slate-900'
+                        : 'border-cyan-400/80 bg-gradient-to-b from-cyan-950/60 via-cyan-900/40 to-slate-950/60 shadow-[0_0_20px_rgba(6,182,212,0.18)] ring-1 ring-cyan-400/40 text-white'
+                      : isLight
+                        ? 'border-[#d4e0ed] bg-gradient-to-b from-white/98 via-[#f4f8fc]/92 to-[#edf3fa]/88 text-slate-900 hover:border-cyan-400 hover:from-white hover:to-[#f0f6fd] shadow-sm'
+                        : 'border-white/[0.08] bg-gradient-to-b from-[#0e162a]/80 via-[#0a1020]/75 to-[#060a14]/80 text-slate-200 hover:border-cyan-500/40 hover:from-[#121c35] hover:to-[#0a1020]'
                   }`}
                 >
                   {/* Top line: Name & Priority */}
                   <div className="flex items-start justify-between gap-1">
                     <div>
-                      <h4 className="font-extrabold text-sm text-slate-900 leading-tight">
+                      <h4 className={`font-extrabold text-sm leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         {item.patient_name}
                       </h4>
-                      <p className="text-[11px] text-slate-500 flex items-center space-x-1.5 mt-0.5">
-                        <Clock className="w-3 h-3 text-slate-400" />
+                      <p className={`text-[11px] flex items-center space-x-1.5 mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        <Clock className={`w-3 h-3 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
                         <span>{item.appointment_time}</span>
                         <span>•</span>
-                        <span className="font-mono text-[10px] text-slate-400">
+                        <span className={`font-mono text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                           {item.encounter_id}
                         </span>
                       </p>
@@ -224,13 +230,15 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
                   </div>
 
                   {/* Triage Note Snippet */}
-                  <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                  <p className={`text-xs mt-2 line-clamp-2 leading-relaxed ${isLight ? 'text-slate-700 font-medium' : 'text-slate-300'}`}>
                     {item.triage_note}
                   </p>
 
                   {/* Active selection arrow */}
                   {isSelected && (
-                    <div className="mt-2 pt-1.5 border-t border-teal-200/80 flex items-center justify-between text-[11px] font-bold text-teal-800">
+                    <div className={`mt-2 pt-1.5 border-t flex items-center justify-between text-[11px] font-bold ${
+                      isLight ? 'border-cyan-200 text-cyan-800' : 'border-cyan-500/30 text-cyan-300'
+                    }`}>
                       <span>Currently Active in Console</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </div>

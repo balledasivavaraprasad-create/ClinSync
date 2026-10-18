@@ -45,6 +45,8 @@ data/local/
 # Build outputs
 build/
 artifacts/
+.vercel
+
 
 # Local prompt package & deliverables (distributed out-of-band)
 ClinSync_Phase_Prompt_Package/
