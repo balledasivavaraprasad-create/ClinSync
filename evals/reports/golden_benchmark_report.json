@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T07:24:26.908273+00:00",
+  "timestamp_utc": "2026-10-18T07:34:41.886774+00:00",
   "total_cases": 7,
   "passed_cases": 7,
   "failed_cases": 0,
@@ -7,7 +7,7 @@
   "latency_summary_ms": {
     "min_ms": 0.05,
     "avg_ms": 2.52,
-    "max_ms": 12.6
+    "max_ms": 12.57
   },
   "provider_failure_count": 0,
   "results": [
@@ -16,7 +16,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 0.11,
+      "duration_ms": 0.14,
       "details": [
         {
           "assertion": "schema_conformity",
@@ -97,7 +97,7 @@
             "INSTRUCTION_OVERRIDE",
             "SYSTEM_DIRECTIVE_INJECTION"
           ],
-          "reason": "Detected adversarial patterns: SYSTEM_DIRECTIVE_INJECTION, INSTRUCTION_OVERRIDE"
+          "reason": "Detected adversarial patterns: INSTRUCTION_OVERRIDE, SYSTEM_DIRECTIVE_INJECTION"
         }
       ]
     },
@@ -125,7 +125,7 @@
       "passed": true,
       "assertions_run": 5,
       "assertions_passed": 5,
-      "duration_ms": 12.6,
+      "duration_ms": 12.57,
       "details": [
         {
           "assertion": "schema_conformity",

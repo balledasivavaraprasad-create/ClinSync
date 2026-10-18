@@ -65,10 +65,10 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 
 ### Application foundation (Milestone B)
 
-- [ ] Frontend can run against contract-conforming mocks.
-- [ ] API can save and retrieve synthetic patient and intake state.
-- [ ] AI workflow returns validated structured facts with sources/status.
-- [ ] CI checks for initialized components run.
+- [x] Frontend can run against contract-conforming mocks.
+- [x] API can save and retrieve synthetic patient and intake state.
+- [x] AI workflow returns validated structured facts with sources/status.
+- [x] CI checks for initialized components run.
 
 ### Integrated system
 
