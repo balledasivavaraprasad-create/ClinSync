@@ -4,9 +4,10 @@ import { initLandingInteractions } from './landingInteractions';
 
 export interface LandingPageProps {
   onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa') => void;
+  onOpenLogin?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLogin }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,11 +89,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           </nav>
           <div className="nav__actions">
             <button
-              onClick={() => onLaunchApp('kiosk')}
+              onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('doctor'))}
               className="btn btn--ghost"
               data-cursor="login"
-              data-action="launch-app"
-              data-tab="kiosk"
+              data-action="launch-login"
+              data-testid="landing-btn-signin"
             >
               Sign in
             </button>

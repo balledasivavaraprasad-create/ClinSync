@@ -26,17 +26,37 @@ import {
   Calendar,
   Eye,
   ArrowLeft,
+  Lock,
+  User,
 } from 'lucide-react';
 
 export interface MainViewProps {
   initialTab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa';
   onBackToLanding?: () => void;
+  onOpenLogin?: () => void;
+  currentUser?: {
+    role: string;
+    userId: string;
+    userName: string;
+    department?: string;
+  } | null;
 }
 
-export const MainView: React.FC<MainViewProps> = ({ initialTab = 'kiosk', onBackToLanding }) => {
+export const MainView: React.FC<MainViewProps> = ({
+  initialTab = 'kiosk',
+  onBackToLanding,
+  onOpenLogin,
+  currentUser,
+}) => {
   const [activeTab, setActiveTab] = useState<
     'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa'
   >(initialTab);
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [sliderVal, setSliderVal] = useState<number>(4);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [inputVal, setInputVal] = useState<string>('Eleanor Johnson');
@@ -168,6 +188,38 @@ export const MainView: React.FC<MainViewProps> = ({ initialTab = 'kiosk', onBack
             <Eye className="w-3.5 h-3.5" />
             <span>Visual QA (G6)</span>
           </button>
+        </div>
+
+        {/* User / Hospital Auth Status */}
+        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+          {currentUser ? (
+            <div className="flex items-center space-x-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1 rounded-lg text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <User className="w-3.5 h-3.5 text-teal-400" />
+              <span className="text-slate-300 font-medium">{currentUser.userName}</span>
+              {onOpenLogin && (
+                <button
+                  onClick={onOpenLogin}
+                  className="text-[11px] text-teal-400 hover:text-teal-300 underline ml-1"
+                  title="Switch User / Sign Out"
+                  data-testid="btn-switch-user"
+                >
+                  Switch
+                </button>
+              )}
+            </div>
+          ) : (
+            onOpenLogin && (
+              <button
+                onClick={onOpenLogin}
+                className="px-2.5 py-1 rounded bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/40 text-xs font-medium flex items-center space-x-1 transition-colors"
+                data-testid="btn-header-login"
+              >
+                <Lock className="w-3 h-3" />
+                <span>Hospital Sign In</span>
+              </button>
+            )
+          )}
         </div>
       </div>
 
