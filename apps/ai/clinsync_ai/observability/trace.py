@@ -11,16 +11,52 @@ logger = logging.getLogger("clinsync.ai.observability")
 
 
 def redact_sensitive_text(text: str) -> str:
-    """Mask common sensitive patterns (SSN, phone, full DOB, API keys)."""
+    """Mask sensitive patterns (SSN, phone, email, full DOB, MRN, and API keys)."""
     if not text:
         return ""
-    # Mask API keys
+    # Mask API keys and Bearer tokens
     masked = re.sub(r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})", "[REDACTED_KEY]", text)
+    masked = re.sub(r"\bBearer\s+[A-Za-z0-9\-_.]+\b", "Bearer [REDACTED_TOKEN]", masked)
     # Mask SSN
     masked = re.sub(r"\b\d{3}-\d{2}-\d{4}\b", "[REDACTED_SSN]", masked)
-    # Mask 10-digit phone
-    masked = re.sub(r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b", "[REDACTED_PHONE]", masked)
+    # Mask phone
+    masked = re.sub(r"\b(?:\+?1[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}\b", "[REDACTED_PHONE]", masked)
+    # Mask Email
+    masked = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[REDACTED_EMAIL]", masked)
+    # Mask MRN
+    masked = re.sub(r"\bMRN[-:\s]+[A-Za-z0-9-]+\b", "MRN:[REDACTED_MRN]", masked, flags=re.IGNORECASE)
+    # Mask DOB
+    masked = re.sub(r"\b(?:DOB|Date of Birth|Birthdate)[:\s]+(?:\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})\b", "DOB:[REDACTED_DOB]", masked, flags=re.IGNORECASE)
     return masked
+
+
+def verify_trace_redaction(records: list["TraceRecord"]) -> tuple[bool, list[str]]:
+    """Audit a list of TraceRecords to confirm zero raw sensitive PII or API tokens leak."""
+    violations = []
+    # Sensitive regex detectors
+    ssn_re = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
+    key_re = re.compile(r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})")
+    email_re = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+
+    for i, rec in enumerate(records):
+        fields_to_check = [
+            ("error", rec.error or ""),
+            ("prompt_preview", rec.prompt_preview or ""),
+            ("output_preview", rec.output_preview or ""),
+        ]
+        for k, v in rec.metadata.items():
+            if isinstance(v, str):
+                fields_to_check.append((f"metadata.{k}", v))
+
+        for field_name, val in fields_to_check:
+            if ssn_re.search(val):
+                violations.append(f"Record {i} ({rec.step_name}) has unredacted SSN in {field_name}")
+            if key_re.search(val):
+                violations.append(f"Record {i} ({rec.step_name}) has unredacted API key in {field_name}")
+            if email_re.search(val):
+                violations.append(f"Record {i} ({rec.step_name}) has unredacted email in {field_name}")
+
+    return len(violations) == 0, violations
 
 
 def _format_trace_id(tid: str) -> str:
@@ -47,6 +83,8 @@ class TraceRecord(BaseModel):
     fallback_used: bool = False
     timestamp: float = Field(default_factory=time.time)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    prompt_preview: str | None = None
+    output_preview: str | None = None
 
 
 class TraceManager:
@@ -98,7 +136,15 @@ class TraceManager:
         fallback_used: bool = False,
         metadata: dict[str, Any] | None = None,
     ) -> TraceRecord:
-        """Record an execution step to memory and emit to Langfuse if enabled."""
+        # Sanitize metadata string fields
+        clean_metadata = {}
+        if metadata:
+            for k, v in metadata.items():
+                if isinstance(v, str):
+                    clean_metadata[k] = redact_sensitive_text(v)
+                else:
+                    clean_metadata[k] = v
+
         record = TraceRecord(
             trace_id=trace_id,
             step_name=step_name,
@@ -111,7 +157,9 @@ class TraceManager:
             success=success,
             error=redact_sensitive_text(error) if error else None,
             fallback_used=fallback_used,
-            metadata=metadata or {},
+            metadata=clean_metadata,
+            prompt_preview=redact_sensitive_text(prompt[:250]) if prompt else None,
+            output_preview=redact_sensitive_text(output[:250]) if output else None,
         )
         self._in_memory_records.append(record)
 

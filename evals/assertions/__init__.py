@@ -21,6 +21,7 @@ from evals.assertions.safety_assertion import (
     SafetyAssertionResult,
     assert_deterministic_escalation,
     assert_privacy_preserved,
+    assert_zero_emergency_bypass,
 )
 from evals.assertions.schema_assertion import (
     SchemaAssertionResult,
@@ -35,6 +36,7 @@ __all__ = [
     "assert_no_fabricated_citations",
     "assert_deterministic_escalation",
     "assert_privacy_preserved",
+    "assert_zero_emergency_bypass",
     "SchemaAssertionResult",
     "GroundednessAssertionResult",
     "CitationAssertionResult",
