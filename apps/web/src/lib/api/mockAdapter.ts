@@ -21,6 +21,8 @@ import type {
   ApprovalRequest,
   ApprovalResponse,
   ClinicalFact,
+  DoctorQueueItem,
+  Citation,
 } from './types';
 
 import {
@@ -585,7 +587,7 @@ export const mockApi = {
 
     // If dynamic facts exist, synthesize from facts
     if (inMemoryEncounterFacts[encounterId] && inMemoryEncounterFacts[encounterId].length > 0) {
-      const briefData = synthesizeBriefFromFacts(encounterId, inMemoryEncounterFacts[encounterId], patDisplayName);
+      const briefData = synthesizeBriefFromFacts(encounterId, facts, patDisplayName);
       return {
         data: briefData,
         request_id: `req_${Math.random().toString(36).substring(7)}`,
