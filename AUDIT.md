@@ -39,7 +39,7 @@
 | TASK-P1-501: Doctor Console, Briefing UI & Audio Player | Person 1 | INTEGRATED | `main` | 117 web tests pass, anti-wrong-patient safeguard, scannable queue, audio player & sign-off verified | None |
 | TASK-P3-601: Golden AI Evaluation Suite, Grounding Benchmarks & Trace Auditing | Person 3 | INTEGRATED | `main` | 75 tests pass, 18/18 golden benchmark evals pass (100%), citation grounding score 100%, zero emergency bypass, trace PHI redaction verified | None |
 | TASK-P1-601: Visual QA, Tablet Responsiveness & Accessibility Auditing | Person 1 | INTEGRATED | `main` | 137 web tests pass, tablet viewports, >=48px touch targets, high contrast, reduced-motion & screen reader audit verified | None |
-| TASK-P2-601: Full System End-to-End Integration, Concurrency & Security Testing | Person 2 | INTEGRATED | `main` | 105 tests pass, e2e journey verified, multi-client race & idempotent replays verified, security audit & log redaction verified, seed_demo_data.py --reset verified | None |
+| TASK-P2-601: Full System End-to-End Integration, Concurrency & Security Testing | Person 2 | INTEGRATED | `main` | 106 tests pass, e2e journey verified, multi-client race & idempotent replays verified, security audit & log redaction verified, Alembic migration cycle & seed_demo_data.py --reset verified | None |
 | CI / shared integration | Person 2 | VERIFIED | `main` | Governance checks pass; conditional app matrix configured | None |
 
 Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `INTEGRATED`.
@@ -95,8 +95,8 @@ Allowed statuses: `NOT_STARTED`, `BLOCKED`, `READY`, `IN_PROGRESS`, `IMPLEMENTED
 
 - [ ] Clean-checkout rehearsal completed by someone who did not implement the entire path.
 - [ ] CI is green on the candidate commit.
-- [ ] Known limitations are documented and visible to the presenter.
-- [ ] No unresolved critical identity disclosure, unsafe routing or double-booking issue.
+- [x] Known limitations are documented and visible to the presenter.
+- [x] No unresolved critical identity disclosure, unsafe routing or double-booking issue.
 
 ## Decision log
 
