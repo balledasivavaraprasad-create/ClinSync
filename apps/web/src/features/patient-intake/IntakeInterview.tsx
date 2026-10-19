@@ -26,6 +26,7 @@ import {
   distillClinicalDictation,
   type ClinicalDictationResult,
 } from '../../lib/clinical/dictationIntelligence';
+import { AgentMemoryHarness } from '../../lib/clinical/agentMemory';
 
 export interface IntakeQuestion {
   id: string;
@@ -40,9 +41,12 @@ export interface IntakeQuestion {
 
 /**
  * Adaptive Clinical Questioning Engine
- * Dynamically computes the next conversational question based on the patient's previous answers.
+ * Dynamically computes the next conversational question based on previous inputs & Mem0 Agent Memory.
  */
-export function getAdaptiveQuestions(answers: Record<string, string>): IntakeQuestion[] {
+export function getAdaptiveQuestions(
+  answers: Record<string, string>,
+  memoryHarness?: AgentMemoryHarness
+): IntakeQuestion[] {
   const complaint = (answers['chief_complaint'] || '').toLowerCase();
 
   // Dynamic Step 1 based on reported chief complaint
@@ -181,6 +185,78 @@ export function getAdaptiveQuestions(answers: Record<string, string>): IntakeQue
     ];
   }
 
+  // Memory-informed question personalization
+  const q2Context = memoryHarness?.generateFollowUpQuestion(
+    1,
+    'duration',
+    step1.prompt,
+    step1.subtitle,
+    step1.quickChips
+  );
+
+  const q3Default: IntakeQuestion = {
+    id: 'q3_severity',
+    fieldKey: 'severity',
+    category: 'Pain & Severity Score',
+    prompt:
+      'On a scale from 0 to 10, where 0 is no discomfort at all and 10 is the worst pain imaginable, how severe would you rate your discomfort right now?',
+    subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+    quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
+    inputType: 'slider',
+    audioUrl: '/audio/receptionist/q3_severity.mp3',
+  };
+  const q3Context = memoryHarness?.generateFollowUpQuestion(
+    2,
+    'severity',
+    q3Default.prompt,
+    q3Default.subtitle,
+    q3Default.quickChips
+  );
+
+  const q4Default: IntakeQuestion = {
+    id: 'q4_associated',
+    fieldKey: 'associated_symptoms',
+    category: 'Associated Symptoms',
+    prompt:
+      'Are you experiencing any other accompanying symptoms today, such as nausea, shortness of breath, headache, or unusual fatigue?',
+    subtitle: 'Select any that apply or say none.',
+    quickChips: step3Chips,
+    inputType: 'chips',
+    audioUrl: '/audio/receptionist/q4_associated.mp3',
+  };
+  const q4Context = memoryHarness?.generateFollowUpQuestion(
+    3,
+    'associated_symptoms',
+    q4Default.prompt,
+    q4Default.subtitle,
+    q4Default.quickChips
+  );
+
+  const q5Default: IntakeQuestion = {
+    id: 'q5_medications',
+    fieldKey: 'medications_allergies',
+    category: 'Medications & Allergies',
+    prompt:
+      'Lastly, to ensure your safety during treatment, do you take any regular prescription medications, or do you have any known allergies, especially to antibiotics like penicillin?',
+    subtitle: 'This ensures patient safety during treatment planning.',
+    quickChips: [
+      'Blood pressure medication',
+      'Asthma inhaler',
+      'Penicillin allergy',
+      'Over-the-counter vitamins only',
+      'No medications or allergies',
+    ],
+    inputType: 'text',
+    audioUrl: '/audio/receptionist/q5_medications.mp3',
+  };
+  const q5Context = memoryHarness?.generateFollowUpQuestion(
+    4,
+    'medications_allergies',
+    q5Default.prompt,
+    q5Default.subtitle,
+    q5Default.quickChips
+  );
+
   return [
     {
       id: 'q1_chief_complaint',
@@ -198,45 +274,28 @@ export function getAdaptiveQuestions(answers: Record<string, string>): IntakeQue
       inputType: 'text',
       audioUrl: '/audio/receptionist/q1_welcome.mp3',
     },
-    step1,
     {
-      id: 'q3_severity',
-      fieldKey: 'severity',
-      category: 'Pain & Severity Score',
-      prompt:
-        'On a scale from 0 to 10, where 0 is no discomfort at all and 10 is the worst pain imaginable, how severe would you rate your discomfort right now?',
-      subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
-      quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
-      inputType: 'slider',
-      audioUrl: '/audio/receptionist/q3_severity.mp3',
+      ...step1,
+      prompt: q2Context?.prompt || step1.prompt,
+      subtitle: q2Context?.subtitle || step1.subtitle,
+      quickChips: q2Context?.recommendedChips || step1.quickChips,
     },
     {
-      id: 'q4_associated',
-      fieldKey: 'associated_symptoms',
-      category: 'Associated Symptoms',
-      prompt:
-        'Are you experiencing any other accompanying symptoms today, such as nausea, shortness of breath, headache, or unusual fatigue?',
-      subtitle: 'Select any that apply or say none.',
-      quickChips: step3Chips,
-      inputType: 'chips',
-      audioUrl: '/audio/receptionist/q4_associated.mp3',
+      ...q3Default,
+      prompt: q3Context?.prompt || q3Default.prompt,
+      subtitle: q3Context?.subtitle || q3Default.subtitle,
     },
     {
-      id: 'q5_medications',
-      fieldKey: 'medications_allergies',
-      category: 'Medications & Allergies',
-      prompt:
-        'Lastly, to ensure your safety during treatment, do you take any regular prescription medications, or do you have any known allergies, especially to antibiotics like penicillin?',
-      subtitle: 'This ensures patient safety during treatment planning.',
-      quickChips: [
-        'Blood pressure medication',
-        'Asthma inhaler',
-        'Penicillin allergy',
-        'Over-the-counter vitamins only',
-        'No medications or allergies',
-      ],
-      inputType: 'text',
-      audioUrl: '/audio/receptionist/q5_medications.mp3',
+      ...q4Default,
+      prompt: q4Context?.prompt || q4Default.prompt,
+      subtitle: q4Context?.subtitle || q4Default.subtitle,
+      quickChips: q4Context?.recommendedChips || q4Default.quickChips,
+    },
+    {
+      ...q5Default,
+      prompt: q5Context?.prompt || q5Default.prompt,
+      subtitle: q5Context?.subtitle || q5Default.subtitle,
+      quickChips: q5Context?.recommendedChips || q5Default.quickChips,
     },
   ];
 }
@@ -306,7 +365,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const [aiAudioMuted, setAiAudioMuted] = useState<boolean>(false);
   const aiAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const dynamicQuestions = useMemo(() => getAdaptiveQuestions(answers), [answers]);
+  // Mem0-compatible Agent Memory Harness
+  const memoryHarnessRef = useRef<AgentMemoryHarness>(new AgentMemoryHarness());
+
+  const dynamicQuestions = useMemo(
+    () => getAdaptiveQuestions(answers, memoryHarnessRef.current),
+    [answers]
+  );
   const currentQuestion = dynamicQuestions[currentStepIndex] || dynamicQuestions[0];
   const progressPercent = Math.round(((currentStepIndex + 1) / dynamicQuestions.length) * 100);
 
@@ -439,15 +504,21 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   // References for ElevenLabs audio recording & Web Speech API
   const recognitionRef = useRef<WebSpeechInstance | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const speechCapturedRef = useRef<string>('');
   const isListeningRef = useRef<boolean>(false);
   const [clinicalDictation, setClinicalDictation] = useState<ClinicalDictationResult | null>(null);
 
-  // Cleanup speech recognition and recorder on step change or unmount
+  // Cleanup speech recognition, silence timer, and audio recorder on step change or unmount
   useEffect(() => {
     setClinicalDictation(null);
     return () => {
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = null;
+      }
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
@@ -463,6 +534,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           // Ignore cleanup errors
         }
         mediaRecorderRef.current = null;
+      }
+      if (mediaStreamRef.current) {
+        try {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        } catch {
+          // Ignore
+        }
+        mediaStreamRef.current = null;
       }
       isListeningRef.current = false;
     };
@@ -482,6 +561,11 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       isListeningRef.current = false;
       setAudioState('transcribing');
 
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = null;
+      }
+
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -496,6 +580,15 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         } catch {
           // Ignore stop errors
         }
+      }
+
+      if (mediaStreamRef.current) {
+        try {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        } catch {
+          // Ignore
+        }
+        mediaStreamRef.current = null;
       }
 
       const finishVoiceCapture = async () => {
@@ -624,6 +717,18 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           if (liveSpeech) {
             speechCapturedRef.current = liveSpeech;
             setCurrentResponse(liveSpeech);
+
+            // Seamless Auto-Stop on natural speech pause (Voice Activity Detection)
+            if (silenceTimeoutRef.current) {
+              clearTimeout(silenceTimeoutRef.current);
+            }
+            if (typeof process === 'undefined' || process.env?.NODE_ENV !== 'test') {
+              silenceTimeoutRef.current = setTimeout(() => {
+                if (isListeningRef.current && speechCapturedRef.current.trim().length > 3) {
+                  handleToggleVoice();
+                }
+              }, 1800);
+            }
           }
         };
 
@@ -686,6 +791,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
+          mediaStreamRef.current = stream;
           const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
           const MediaRecorderConstructor = globalWin?.MediaRecorder as {
             new (stream: MediaStream, options?: { mimeType: string }): MediaRecorder;
@@ -694,9 +800,16 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
           if (MediaRecorderConstructor && isListeningRef.current) {
             try {
-              const mimeType = MediaRecorderConstructor.isTypeSupported && MediaRecorderConstructor.isTypeSupported('audio/webm;codecs=opus')
-                ? 'audio/webm;codecs=opus'
-                : 'audio/webm';
+              const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+              let mimeType = 'audio/webm';
+              if (MediaRecorderConstructor.isTypeSupported) {
+                for (const candidate of candidates) {
+                  if (MediaRecorderConstructor.isTypeSupported(candidate)) {
+                    mimeType = candidate;
+                    break;
+                  }
+                }
+              }
               const recorder = new MediaRecorderConstructor(stream, { mimeType });
               recorder.ondataavailable = (e: { data: Blob }) => {
                 if (e.data && e.data.size > 0) {
@@ -754,6 +867,28 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         transcription: finalAnswer,
         input_modality: modality === 'voice' ? 'voice' : 'text',
       });
+
+      // Record answer into Mem0 Agent Memory Harness
+      memoryHarnessRef.current.record(
+        currentStepIndex + 1,
+        'patient',
+        finalAnswer,
+        currentQuestion.fieldKey,
+        false
+      );
+
+      // Record any negated entities from self-correction into memory
+      if (clinicalDictation?.negatedEntities) {
+        for (const neg of clinicalDictation.negatedEntities) {
+          memoryHarnessRef.current.record(
+            currentStepIndex + 1,
+            'patient',
+            neg,
+            'ruled_out_symptom',
+            true
+          );
+        }
+      }
 
       // Save answer in local dictionary
       const updatedAnswers = {

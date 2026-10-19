@@ -544,12 +544,20 @@ export const mockApi = {
 
   // 10. POST /encounters/{encounter_id}/routing-review
   async reviewRouting(encounterId: string): Promise<DecisionResultResponse> {
+    const facts = inMemoryEncounterFacts[encounterId] || [];
+    const factText = facts.map((f) => `${f.concept} ${f.value || ''}`).join(' ').toLowerCase();
+
     let decision: 'ROUTINE_SCHEDULING' | 'HUMAN_REVIEW' | 'URGENT_ESCALATION' | 'UNABLE_TO_DETERMINE' =
       'ROUTINE_SCHEDULING';
     let reasonCodes = ['CARDIOLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
     let recDept: string | null = 'dept_cardiology';
 
-    if (encounterId.includes('urgent') || encounterId.includes('emerg')) {
+    if (
+      encounterId.includes('urgent') ||
+      encounterId.includes('emerg') ||
+      factText.includes('severe chest pain') ||
+      factText.includes('crushing')
+    ) {
       decision = 'URGENT_ESCALATION';
       reasonCodes = ['CHEST_PAIN_RED_FLAG', 'HIGH_ACUITY_TRIAGE'];
       recDept = null;
@@ -561,6 +569,52 @@ export const mockApi = {
       decision = 'UNABLE_TO_DETERMINE';
       reasonCodes = ['INSUFFICIENT_CLINICAL_SYMPTOMS'];
       recDept = null;
+    } else if (
+      factText.includes('chest') ||
+      factText.includes('heart') ||
+      factText.includes('palpitation') ||
+      factText.includes('cardio')
+    ) {
+      decision = 'ROUTINE_SCHEDULING';
+      reasonCodes = ['CARDIOLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+      recDept = 'dept_cardiology';
+    } else if (
+      factText.includes('headache') ||
+      factText.includes('migraine') ||
+      factText.includes('dizz') ||
+      factText.includes('numbness')
+    ) {
+      decision = 'ROUTINE_SCHEDULING';
+      reasonCodes = ['NEUROLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+      recDept = 'dept_neurology';
+    } else if (
+      factText.includes('joint') ||
+      factText.includes('knee') ||
+      factText.includes('bone') ||
+      factText.includes('sprain') ||
+      factText.includes('ankle') ||
+      factText.includes('back pain')
+    ) {
+      decision = 'ROUTINE_SCHEDULING';
+      reasonCodes = ['ORTHOPEDICS_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+      recDept = 'dept_orthopedics';
+    } else if (
+      factText.includes('cough') ||
+      factText.includes('fever') ||
+      factText.includes('body ache') ||
+      factText.includes('cold') ||
+      factText.includes('throat') ||
+      factText.includes('stomach') ||
+      factText.includes('fatigue')
+    ) {
+      decision = 'ROUTINE_SCHEDULING';
+      reasonCodes = ['INTERNAL_MED_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+      recDept = 'dept_internal_med';
+    } else {
+      // Default baseline routing (e.g. for enc_demo_001)
+      decision = 'ROUTINE_SCHEDULING';
+      reasonCodes = ['CARDIOLOGY_SYMPTOM_MATCH', 'NO_UNSTABLE_VITALS'];
+      recDept = 'dept_cardiology';
     }
 
     return {

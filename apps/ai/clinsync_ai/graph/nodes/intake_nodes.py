@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, IntakeState
 from clinsync_ai.guardrails.prompt_guard import PromptGuard
+from clinsync_ai.memory.harness import default_memory_harness
 from clinsync_ai.routing.gateway import ModelGateway
 
 # Deterministic acute red flags requiring immediate human escalation
@@ -238,11 +239,28 @@ def extract_facts_node(state: IntakeState, gateway: ModelGateway | None = None) 
                 if "medication_allergy" not in updated_conflicts:
                     updated_conflicts.append("medication_allergy")
 
+    # Record raw statement into Mem0 agent memory harness
+    if input_text.strip():
+        default_memory_harness.add(
+            content=input_text.strip(),
+            user_id=state.patient_id,
+            encounter_id=state.encounter_id,
+            turn_index=state.turn_count + 1,
+            concept="patient_statement",
+        )
+
     # Determine fact status
     cc_status = "conflicting" if "chief_complaint" in updated_conflicts else "reported"
     med_status = "conflicting" if "medication_allergy" in updated_conflicts else "reported"
 
     if extracted.chief_complaint:
+        default_memory_harness.add(
+            content=extracted.chief_complaint,
+            user_id=state.patient_id,
+            encounter_id=state.encounter_id,
+            turn_index=state.turn_count + 1,
+            concept="chief_complaint",
+        )
         new_facts.append(
             ClinicalFactModel(
                 id=f"FACT-INTAKE-{uuid.uuid4().hex[:8].upper()}",
@@ -400,14 +418,29 @@ def generate_question_node(state: IntakeState, gateway: ModelGateway | None = No
     if state.status != "IN_PROGRESS":
         return {"next_question": None}
 
-    # Default fallback question templates
+    # Dynamic adaptive question templates informed by previous answers
+    cc = state.known_fields.get("chief_complaint") or state.chief_complaint
+    dur = state.known_fields.get("duration_onset")
+
     fallback_questions = {
-        "chief_complaint": "What is the primary reason for your visit today?",
-        "duration_onset": "How long have you been experiencing these symptoms, and when did they start?",
-        "severity_progression": "How severe is your discomfort right now, and has it been getting better, worse, or staying the same?",
-        "associated_symptoms": "Are you experiencing any other symptoms, such as fever, fatigue, or changes in appetite?",
-        "allergies": "Do you have any known allergies to medications, foods, or other substances?",
-        "medications": "Are you currently taking any prescription or over-the-counter medications?",
+        "chief_complaint": "What primary health symptom or discomfort brings you in to see the doctor today?",
+        "duration_onset": (
+            f"Thank you for sharing that. How long have you been experiencing this {cc}, and did it develop gradually or suddenly?"
+            if cc
+            else "How long have you been experiencing these symptoms, and when did they start?"
+        ),
+        "severity_progression": (
+            f"On a scale from 0 to 10, how severe would you rate your {cc or 'symptoms'} right now, and has it been getting better or worse?"
+        ),
+        "associated_symptoms": (
+            f"Earlier you mentioned having {cc or 'your primary symptom'}{f' for {dur}' if dur else ''}. Are you experiencing any other accompanying symptoms today, such as fever, fatigue, or shortness of breath?"
+        ),
+        "allergies": (
+            f"To ensure safe treatment planning for your {cc or 'care'}, do you have any known allergies, especially to antibiotics like penicillin?"
+        ),
+        "medications": (
+            f"Lastly, to ensure your safety while treating your {cc or 'health condition'}, are you currently taking any prescription medications or vitamins?"
+        ),
         "medication_allergy": "I noticed you mentioned a medication that may conflict with a reported allergy. Could you clarify this for the doctor?",
     }
 
@@ -431,12 +464,14 @@ def generate_question_node(state: IntakeState, gateway: ModelGateway | None = No
     question_text = None
     if gateway is not None:
         try:
+            memory_context = default_memory_harness.format_memory_for_prompt(state.encounter_id)
             question_prompt = (
-                f"You are a clinical intake assistant. Generate ONE concise, empathetic question for the patient.\n"
+                f"You are a clinical intake assistant. Generate ONE concise, empathetic follow-up question for the patient.\n"
                 f"Target Clinical Area: {target_field or 'any other concerns'}\n"
+                f"Mem0 Agent Memory Context:\n{memory_context}\n"
                 f"Already Known Facts: {state.known_fields}\n"
                 f"Conflicting Fields: {state.conflicting_fields}\n"
-                f"Do NOT ask about facts already known. Ask only ONE question."
+                f"Reference prior stated facts naturally (e.g. 'Earlier you mentioned having {cc}...'). Do NOT re-ask facts already known. Ask only ONE question."
             )
             result, _ = gateway.generate_structured(
                 prompt=question_prompt,
@@ -452,8 +487,18 @@ def generate_question_node(state: IntakeState, gateway: ModelGateway | None = No
         # Deterministic template fallback
         question_text = fallback_questions.get(
             target_field,
-            "Is there anything else regarding your symptoms or health you would like the doctor to know?"
+            f"Is there anything else regarding your {cc or 'symptoms'} or health you would like the doctor to know?"
         )
+
+    # Record question into Mem0 memory harness
+    default_memory_harness.add(
+        content=question_text,
+        user_id=state.patient_id,
+        encounter_id=state.encounter_id,
+        turn_index=state.turn_count + 1,
+        concept=f"assistant_question_{target_field or 'general'}",
+        metadata={"role": "assistant", "target_field": target_field},
+    )
 
     return {
         "next_question": question_text,

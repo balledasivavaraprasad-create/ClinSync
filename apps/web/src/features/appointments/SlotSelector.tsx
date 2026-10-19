@@ -65,56 +65,104 @@ export const SlotSelector: React.FC<SlotSelectorProps> = ({
 
   return (
     <div className="w-full space-y-6" data-testid="slot-selector-container">
-      {/* 1. Specialty / Department Selection */}
-      <div className="space-y-2">
-        <label
-          htmlFor="specialty-tabs"
-          className="text-xs font-mono uppercase tracking-wider text-cyan-400 block"
-        >
-          Select Medical Specialty
-        </label>
-        <div
-          id="specialty-tabs"
-          role="tablist"
-          aria-label="Medical specialties"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
-        >
-          {departments.map((dept) => {
-            const isSelected = dept.id === selectedDepartmentId;
-            return (
-              <button
-                key={dept.id}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                data-testid={`dept-tab-${dept.id}`}
-                onClick={() => onSelectDepartment(dept.id)}
-                className={`p-3.5 rounded-xl border text-left transition-all min-h-[56px] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-1 cursor-pointer ${
-                  isSelected
-                    ? isLight
-                      ? 'border-cyan-600 bg-cyan-50/95 text-slate-900 shadow-md shadow-cyan-600/15 ring-2 ring-cyan-500/30'
-                      : 'border-cyan-400/80 bg-cyan-500/15 text-white shadow-[0_0_20px_rgba(6,182,212,0.18)] ring-1 ring-cyan-400/40'
-                    : isLight
-                      ? 'border-slate-200 bg-white/95 text-slate-900 hover:border-cyan-400 hover:bg-slate-50/90 shadow-sm'
-                      : 'border-white/[0.08] bg-[#0a0f1d]/80 text-slate-200 hover:border-cyan-500/40 hover:bg-[#0e1629]'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-bold text-sm leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>{dept.name}</span>
-                  {isSelected && <Check className={`w-4 h-4 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />}
+      {/* 1. Automated Assigned Medical Specialty Direction (No patient selection required) */}
+      {(() => {
+        const assignedDept =
+          departments.find((d) => d.id === selectedDepartmentId) ||
+          departments[0] || {
+            id: 'dept_cardiology',
+            name: 'Cardiology & Chest Pain Center',
+            description: 'Specialized heart, rhythm, and cardiovascular evaluation',
+            wait_time_minutes: 15,
+          };
+
+        return (
+          <div
+            data-testid="assigned-specialty-card"
+            className={`p-5 rounded-2xl border transition-all ${
+              isLight
+                ? 'bg-gradient-to-r from-teal-50 via-cyan-50 to-indigo-50 border-cyan-300 text-slate-900 shadow-sm'
+                : 'bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-indigo-500/10 border-cyan-500/30 text-white shadow-xl'
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 font-bold">
+                    Assigned Medical Destination
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Direct Triage Redirection
+                  </span>
                 </div>
-                <p className={`text-xs mt-1 line-clamp-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                  {dept.description}
+                <h3 className="text-xl sm:text-2xl font-bold font-serif text-white tracking-tight flex items-center gap-2">
+                  <span>{assignedDept.name}</span>
+                </h3>
+                <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'} max-w-xl leading-relaxed`}>
+                  Based on your reported clinical symptoms, our intelligent triage engine has automatically directed your care to{' '}
+                  <strong className="text-cyan-300">{assignedDept.name}</strong>. No complex specialty selection required—simply choose your preferred appointment time below.
                 </p>
-                <div className={`flex items-center text-[11px] mt-2 ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
-                  <Clock className={`w-3 h-3 mr-1 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
-                  <span>Est. wait: {dept.wait_time_minutes}m</span>
+              </div>
+
+              <div className="flex items-center space-x-3 shrink-0">
+                <div className={`p-3 rounded-xl border text-center ${isLight ? 'bg-white border-slate-200' : 'bg-black/40 border-white/10'}`}>
+                  <div className="flex items-center justify-center space-x-1 text-[11px] text-slate-400 font-mono">
+                    <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Est. Wait</span>
+                  </div>
+                  <span className="text-base font-bold font-mono text-cyan-300">
+                    {assignedDept.wait_time_minutes} min
+                  </span>
                 </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              </div>
+            </div>
+
+            {/* Clinician / Staff Override Accordion (For staff triage override & contract compatibility) */}
+            <details className="mt-3 pt-3 border-t border-white/5 group">
+              <summary className="text-[11px] text-slate-400 hover:text-cyan-300 cursor-pointer font-mono select-none transition-colors">
+                Staff / Clinician Override: Reassign Department
+              </summary>
+              <div
+                id="specialty-tabs"
+                role="tablist"
+                aria-label="Medical specialties"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-2.5"
+              >
+                {departments.map((dept) => {
+                  const isSelected = dept.id === selectedDepartmentId;
+                  return (
+                    <button
+                      key={dept.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      data-testid={`dept-tab-${dept.id}`}
+                      onClick={() => onSelectDepartment(dept.id)}
+                      className={`p-2.5 rounded-xl border text-left transition-all min-h-[48px] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-1 cursor-pointer text-xs ${
+                        isSelected
+                          ? isLight
+                            ? 'border-cyan-600 bg-cyan-50/95 text-slate-900 shadow-sm'
+                            : 'border-cyan-400/80 bg-cyan-500/20 text-white shadow-sm ring-1 ring-cyan-400/40'
+                          : isLight
+                            ? 'border-slate-200 bg-white/95 text-slate-900 hover:border-cyan-400'
+                            : 'border-white/[0.08] bg-[#0a0f1d]/80 text-slate-200 hover:border-cyan-500/40 hover:bg-[#0e1629]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold leading-tight">{dept.name}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-cyan-400" />}
+                      </div>
+                      <p className="text-[11px] mt-0.5 line-clamp-1 text-slate-400">
+                        {dept.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </details>
+          </div>
+        );
+      })()}
 
       {/* 2. Date Filter Selection */}
       <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-white/[0.08]">
