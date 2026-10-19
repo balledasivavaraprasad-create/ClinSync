@@ -11,7 +11,6 @@ import {
   Sun,
   Users,
   ArrowLeft,
-  Lock,
   User,
   Activity,
   ShieldCheck,
@@ -27,13 +26,15 @@ import { BiometricPulseViewer } from './BiometricPulseViewer';
 import { Dialog } from '../../components/ui/Dialog';
 import { Button } from '../../components/ui/Button';
 import { ThemeToggle, useTheme } from '../../lib/theme';
+import { ProfileDropdownMenu } from '../patient-profile';
 
 export type DashboardTabType =
   | 'dashboard'
   | 'kiosk'
   | 'ledger'
   | 'appointments'
-  | 'doctor';
+  | 'doctor'
+  | 'profile';
 
 export interface LuxuryMasterDashboardProps {
   activeTab?: DashboardTabType;
@@ -43,6 +44,7 @@ export interface LuxuryMasterDashboardProps {
   onOpenDoctorConsole?: () => void;
   onOpenLedger?: () => void;
   onOpenAppointments?: () => void;
+  onOpenProfile?: () => void;
   onOpenLogin?: () => void;
   onBackToLanding?: () => void;
   currentUser?: {
@@ -286,6 +288,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
     { id: 'ledger', label: 'Clinical Ledger', icon: FileSpreadsheet, testId: 'tab-ledger-diff' },
     { id: 'appointments', label: 'Smart Booking', icon: Calendar, testId: 'tab-appointments' },
     { id: 'doctor', label: 'Doctor Console', icon: Stethoscope, testId: 'tab-doctor-console' },
+    { id: 'profile', label: 'Patient Records', icon: User, testId: 'tab-patient-profile' },
   ] as const;
 
   const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
@@ -373,42 +376,39 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
         {/* User / Hospital Auth Status & Theme Preference */}
         <div className="flex items-center space-x-3">
           <ThemeToggle />
-          {currentUser ? (
-            <div className={`flex items-center space-x-2 border px-3.5 py-1.5 rounded-full text-xs backdrop-blur-sm ${
-              isLight ? 'bg-slate-100/90 border-slate-200 text-slate-800' : 'bg-white/[0.04] border-white/[0.08] text-slate-200'
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-              <User className="w-3.5 h-3.5 text-cyan-500" />
-              <span className="font-semibold">{currentUser.userName}</span>
-              {onOpenLogin && (
-                <button
-                  onClick={onOpenLogin}
-                  className="text-[11px] text-cyan-600 hover:text-cyan-700 underline ml-1 font-mono cursor-pointer font-bold"
-                  title="Switch User / Sign Out"
-                  data-testid="btn-switch-user"
-                >
-                  Switch
-                </button>
-              )}
-            </div>
-          ) : (
-            onOpenLogin && (
-              <motion.button
-                whileHover={{ scale: 1.025 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onOpenLogin}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer border ${
-                  isLight
-                    ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border-cyan-300'
-                    : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                }`}
-                data-testid="btn-header-login"
-              >
-                <Lock className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Hospital Sign In</span>
-              </motion.button>
-            )
-          )}
+          <ProfileDropdownMenu
+            currentUser={currentUser}
+            onNavigateToTab={(tab) => {
+              if (
+                onSelectTab &&
+                (tab === 'dashboard' ||
+                  tab === 'kiosk' ||
+                  tab === 'ledger' ||
+                  tab === 'appointments' ||
+                  tab === 'doctor' ||
+                  tab === 'profile')
+              ) {
+                onSelectTab(tab as DashboardTabType);
+              }
+              if (onNavigateToTab) {
+                onNavigateToTab(tab);
+              }
+            }}
+            onSelectProfileSubtab={(subtab) => {
+              if (onSelectTab) {
+                onSelectTab('profile');
+              }
+              window.location.hash = `#/app/profile/${subtab}`;
+            }}
+            onOpenLogin={onOpenLogin}
+            onSignOut={() => {
+              if (onBackToLanding) {
+                onBackToLanding();
+              } else if (onOpenLogin) {
+                onOpenLogin();
+              }
+            }}
+          />
         </div>
       </header>
 

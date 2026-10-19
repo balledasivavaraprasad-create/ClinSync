@@ -21,6 +21,9 @@ import type {
   DoctorBriefResponse,
   ApprovalRequest,
   ApprovalResponse,
+  PatientProfile,
+  PatientProfileResponse,
+  PatientConsentStatus,
 } from './types';
 
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS !== 'false';
@@ -156,5 +159,37 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify(req),
     });
+  },
+
+  async getPatientProfile(patientId: string): Promise<PatientProfileResponse> {
+    if (USE_MOCKS) return mockApi.getPatientProfile(patientId);
+    return request<PatientProfileResponse>(`/patients/${patientId}/profile`);
+  },
+
+  async updatePatientProfile(
+    patientId: string,
+    updates: Partial<PatientProfile>
+  ): Promise<PatientProfileResponse> {
+    if (USE_MOCKS) return mockApi.updatePatientProfile(patientId, updates);
+    return request<PatientProfileResponse>(`/patients/${patientId}/profile`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+  },
+
+  async updatePatientConsent(
+    patientId: string,
+    updates: Partial<PatientConsentStatus>
+  ): Promise<PatientConsentStatus> {
+    if (USE_MOCKS) return mockApi.updatePatientConsent(patientId, updates);
+    return request<PatientConsentStatus>(`/patients/${patientId}/consent`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+  },
+
+  async getAllPatientProfiles(): Promise<PatientProfile[]> {
+    if (USE_MOCKS) return mockApi.getAllPatientProfiles();
+    return request<PatientProfile[]>('/patients');
   },
 };

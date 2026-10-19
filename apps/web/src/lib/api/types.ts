@@ -104,6 +104,71 @@ export interface IdentityConfirmResponse {
   request_id: string;
 }
 
+export interface PatientProfile {
+  id: string;
+  display_name: string;
+  date_of_birth?: string;
+  calculated_age?: number;
+  contact_number?: string;
+  email?: string;
+  address?: string;
+  hospital_id: string;
+  emergency_contact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  preferred_language: string;
+  blood_group?: string;
+  insurance_provider?: string;
+  insurance_id?: string;
+}
+
+export interface MedicalTimelineItem {
+  id: string;
+  date: string;
+  category: 'encounter' | 'diagnosis' | 'prescription' | 'investigation' | 'document' | 'procedure';
+  title: string;
+  description: string;
+  source: string;
+  provenance_type: 'patient_reported' | 'clinician_confirmed' | 'ai_extracted';
+  badge_status?: ClinicalFactStatus;
+  encounter_id?: string;
+  raw_fact?: ClinicalFact;
+}
+
+export interface PatientDocumentItem {
+  id: string;
+  title: string;
+  filename: string;
+  category: 'prescription' | 'lab_report' | 'imaging' | 'discharge_summary' | 'clinical_note';
+  date: string;
+  status: 'UPLOADED' | 'PROCESSING' | 'EXTRACTED' | 'VERIFIED' | 'FAILED';
+  file_size_bytes: number;
+  extracted_fact_ids: string[];
+  department?: string;
+  uploaded_by: string;
+}
+
+export interface PatientConsentStatus {
+  automated_intake_consent: boolean;
+  ehr_sharing_consent: boolean;
+  ai_triage_processing_consent: boolean;
+  last_updated: string;
+  audited_by: string;
+}
+
+export interface PatientProfileResponse {
+  data: {
+    profile: PatientProfile;
+    context: PatientContextResponse['data'];
+    timeline: MedicalTimelineItem[];
+    documents: PatientDocumentItem[];
+    consent: PatientConsentStatus;
+  };
+  request_id: string;
+}
+
 export interface PatientContextResponse {
   data: {
     patient_id: string;

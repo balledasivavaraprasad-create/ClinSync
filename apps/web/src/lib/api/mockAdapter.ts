@@ -23,6 +23,11 @@ import type {
   ClinicalFact,
   DoctorQueueItem,
   Citation,
+  PatientProfile,
+  PatientProfileResponse,
+  MedicalTimelineItem,
+  PatientDocumentItem,
+  PatientConsentStatus,
 } from './types';
 
 import {
@@ -43,6 +48,144 @@ const inMemoryEncounterFacts: Record<string, ClinicalFact[]> = {
 const inMemoryEncounterPatients: Record<string, { patient_id: string; patient_name: string; department?: string }> = {
   enc_demo_001: { patient_id: 'pat_synth_001', patient_name: 'Eleanor Johnson (44F)', department: 'Cardiology' },
   enc_demo_002: { patient_id: 'pat_synth_002', patient_name: 'Marcus Patel (52M)', department: 'Cardiology' },
+};
+
+// In-memory patient profiles store
+const inMemoryPatientProfiles: Record<string, PatientProfile> = {
+  pat_synth_001: {
+    id: 'pat_synth_001',
+    display_name: 'Eleanor Johnson',
+    date_of_birth: '1982-05-12',
+    calculated_age: 44,
+    contact_number: '(555) 382-4921',
+    email: 'eleanor.johnson@example.org',
+    address: '742 Evergreen Terrace, Springfield, OR',
+    hospital_id: 'MRN-EJ-829104',
+    emergency_contact: {
+      name: 'Robert Johnson',
+      relationship: 'Spouse',
+      phone: '(555) 382-9901',
+    },
+    preferred_language: 'en-US',
+    blood_group: 'A-Positive (A+)',
+    insurance_provider: 'Blue Cross Blue Shield — Premier PPO',
+    insurance_id: 'BCBS-8829104-A',
+  },
+  pat_synth_002: {
+    id: 'pat_synth_002',
+    display_name: 'Marcus Patel',
+    date_of_birth: '1968-09-24',
+    calculated_age: 58,
+    contact_number: '(555) 912-8812',
+    email: 'marcus.patel@example.org',
+    address: '1204 Pineview Boulevard, Portland, OR',
+    hospital_id: 'MRN-MP-680419',
+    emergency_contact: {
+      name: 'Amina Patel',
+      relationship: 'Daughter',
+      phone: '(555) 912-4420',
+    },
+    preferred_language: 'en-US',
+    blood_group: 'O-Positive (O+)',
+    insurance_provider: 'Aetna Health Advantage — Open Choice',
+    insurance_id: 'AET-4910283-02',
+  },
+};
+
+const inMemoryPatientDocuments: Record<string, PatientDocumentItem[]> = {
+  pat_synth_001: [
+    {
+      id: 'doc_synth_rx_01',
+      title: 'Active Prescription — Lisinopril 10mg',
+      filename: 'St_Jude_Pharmacy_Lisinopril_Refill.pdf',
+      category: 'prescription',
+      date: '2026-10-18T08:20:00Z',
+      status: 'VERIFIED',
+      file_size_bytes: 420800,
+      extracted_fact_ids: ['fact_003'],
+      department: 'Cardiology',
+      uploaded_by: 'Patient Mobile Upload',
+    },
+    {
+      id: 'doc_synth_ecg_01',
+      title: '12-Lead Ambulatory Electrocardiogram (ECG)',
+      filename: 'Cardiac_Telemetry_Strip_LeadII.pdf',
+      category: 'imaging',
+      date: '2026-10-18T08:35:00Z',
+      status: 'EXTRACTED',
+      file_size_bytes: 1240000,
+      extracted_fact_ids: ['fact_004'],
+      department: 'Cardiology & Chest Pain Center',
+      uploaded_by: 'Kiosk Station A Device Telemetry',
+    },
+    {
+      id: 'doc_synth_lab_01',
+      title: 'Comprehensive Metabolic Panel & Lipid Profile',
+      filename: 'Quest_Diagnostics_Metabolic_Panel.pdf',
+      category: 'lab_report',
+      date: '2026-09-15T14:10:00Z',
+      status: 'VERIFIED',
+      file_size_bytes: 615000,
+      extracted_fact_ids: [],
+      department: 'Outpatient Laboratory',
+      uploaded_by: 'Hospital EHR Interface',
+    },
+    {
+      id: 'doc_synth_disc_01',
+      title: 'Prior Ambulatory Referral & Clinical Summary',
+      filename: 'Community_Health_Referral_Note.pdf',
+      category: 'discharge_summary',
+      date: '2026-10-04T11:00:00Z',
+      status: 'EXTRACTED',
+      file_size_bytes: 890000,
+      extracted_fact_ids: ['fact_005'],
+      department: 'General Internal Medicine',
+      uploaded_by: 'Referring Physician Dr. Miller',
+    },
+  ],
+  pat_synth_002: [
+    {
+      id: 'doc_synth_rx_02',
+      title: 'Maintenance Prescription — Atorvastatin 20mg',
+      filename: 'Metro_Health_Atorvastatin_Rx.pdf',
+      category: 'prescription',
+      date: '2026-10-18T09:00:00Z',
+      status: 'VERIFIED',
+      file_size_bytes: 310500,
+      extracted_fact_ids: ['fact_006'],
+      department: 'Cardiology',
+      uploaded_by: 'Hospital EHR Ingestion',
+    },
+    {
+      id: 'doc_synth_lab_02',
+      title: 'Hemoglobin A1c and Fasting Glucose Report',
+      filename: 'Providence_Lab_A1c_Panel.pdf',
+      category: 'lab_report',
+      date: '2026-08-20T10:30:00Z',
+      status: 'VERIFIED',
+      file_size_bytes: 540000,
+      extracted_fact_ids: [],
+      department: 'Endocrinology & Internal Medicine',
+      uploaded_by: 'EHR Clinical Archive',
+    },
+  ],
+};
+
+const inMemoryPatientConsents: Record<string, PatientConsentStatus> = {
+  pat_synth_001: {
+    automated_intake_consent: true,
+    ehr_sharing_consent: true,
+    ai_triage_processing_consent: true,
+    last_updated: '2026-10-18T08:00:00Z',
+    audited_by: 'system_security_enclave',
+  },
+  pat_synth_002: {
+    automated_intake_consent: true,
+    ehr_sharing_consent: true,
+    ai_triage_processing_consent: true,
+    last_updated: '2026-10-18T09:00:00Z',
+    audited_by: 'system_security_enclave',
+  },
 };
 
 const inMemoryDoctorQueue: DoctorQueueItem[] = [...mockDoctorQueue];
@@ -633,5 +776,158 @@ export const mockApi = {
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
+  },
+
+  // 16. Patient Profile & Records APIs
+  async getPatientProfile(patientId: string): Promise<PatientProfileResponse> {
+    let profile = inMemoryPatientProfiles[patientId];
+    if (!profile) {
+      // Fallback or dynamically registered profile
+      profile = {
+        id: patientId,
+        display_name: patientId === 'pat_synth_002' ? 'Marcus Patel' : 'Eleanor Johnson',
+        date_of_birth: '1982-05-12',
+        calculated_age: 44,
+        contact_number: '(555) 382-4921',
+        email: 'patient@clinsync.health',
+        address: '742 Evergreen Terrace, Springfield, OR',
+        hospital_id: `MRN-${patientId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}`,
+        emergency_contact: {
+          name: 'Robert Johnson',
+          relationship: 'Spouse',
+          phone: '(555) 382-9901',
+        },
+        preferred_language: 'en-US',
+        blood_group: 'A-Positive (A+)',
+        insurance_provider: 'Blue Cross Blue Shield — Premier PPO',
+        insurance_id: 'BCBS-8829104-A',
+      };
+      inMemoryPatientProfiles[patientId] = profile;
+    }
+
+    const contextRes = await this.getPatientContext(patientId);
+    const documents = inMemoryPatientDocuments[patientId] || inMemoryPatientDocuments['pat_synth_001'] || [];
+    const consent = inMemoryPatientConsents[patientId] || {
+      automated_intake_consent: true,
+      ehr_sharing_consent: true,
+      ai_triage_processing_consent: true,
+      last_updated: '2026-10-18T08:00:00Z',
+      audited_by: 'system_security_enclave',
+    };
+
+    // Synthesize chronological medical history timeline from facts and documents
+    const timeline: MedicalTimelineItem[] = [
+      {
+        id: 'tl_01',
+        date: '2026-10-18T08:35:00Z',
+        category: 'investigation',
+        title: 'Diagnostic Vitals Captured',
+        description: 'Blood pressure 142/88 mmHg captured via calibrated digital cuff. Verified regular rhythm.',
+        source: 'Kiosk Station A Device Telemetry',
+        provenance_type: 'clinician_confirmed',
+        badge_status: 'doctor_confirmed',
+      },
+      {
+        id: 'tl_02',
+        date: '2026-10-18T08:20:00Z',
+        category: 'prescription',
+        title: 'Prescription Ingestion — Lisinopril 10mg',
+        description: 'Daily oral ACE inhibitor prescription record uploaded and extracted via OCR.',
+        source: 'Pharmacy Dispense Manifest',
+        provenance_type: 'ai_extracted',
+        badge_status: 'extracted_unverified',
+      },
+      {
+        id: 'tl_03',
+        date: '2026-10-18T08:00:00Z',
+        category: 'encounter',
+        title: 'Outpatient Triage Consultation',
+        description: 'Chief complaint of substernal chest discomfort documented during automated intake.',
+        source: 'Conversational Voice Intake',
+        provenance_type: 'patient_reported',
+        badge_status: 'reported',
+      },
+      {
+        id: 'tl_04',
+        date: '2026-10-04T11:00:00Z',
+        category: 'document',
+        title: 'Primary Care Physician Referral',
+        description: 'Referral for cardiac evaluation from Dr. Miller with documented 2-week intermittent symptoms.',
+        source: 'Hospital EHR Interface',
+        provenance_type: 'clinician_confirmed',
+        badge_status: 'historical_recorded',
+      },
+      {
+        id: 'tl_05',
+        date: '2021-04-12T10:00:00Z',
+        category: 'diagnosis',
+        title: 'Severe Penicillin Allergy Registered',
+        description: 'Documented systemic reaction (diffuse hives and facial angioedema) in emergency record.',
+        source: 'Historical EHR Ingestion',
+        provenance_type: 'clinician_confirmed',
+        badge_status: 'historical_recorded',
+      },
+    ];
+
+    return {
+      data: {
+        profile,
+        context: contextRes.data,
+        timeline,
+        documents,
+        consent,
+      },
+      request_id: `req_${Math.random().toString(36).substring(7)}`,
+    };
+  },
+
+  async updatePatientProfile(
+    patientId: string,
+    updates: Partial<PatientProfile>
+  ): Promise<PatientProfileResponse> {
+    const existing = inMemoryPatientProfiles[patientId] || {
+      id: patientId,
+      display_name: 'Eleanor Johnson',
+      hospital_id: 'MRN-EJ-829104',
+      preferred_language: 'en-US',
+    };
+
+    // Patient cannot overwrite clinician-verified MRN or system ID
+    const merged: PatientProfile = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      hospital_id: existing.hospital_id,
+    };
+
+    inMemoryPatientProfiles[patientId] = merged;
+    return this.getPatientProfile(patientId);
+  },
+
+  async updatePatientConsent(
+    patientId: string,
+    updates: Partial<PatientConsentStatus>
+  ): Promise<PatientConsentStatus> {
+    const existing = inMemoryPatientConsents[patientId] || {
+      automated_intake_consent: true,
+      ehr_sharing_consent: true,
+      ai_triage_processing_consent: true,
+      last_updated: new Date().toISOString(),
+      audited_by: 'system_security_enclave',
+    };
+
+    const updated: PatientConsentStatus = {
+      ...existing,
+      ...updates,
+      last_updated: new Date().toISOString(),
+      audited_by: 'patient_digital_signature_audit',
+    };
+
+    inMemoryPatientConsents[patientId] = updated;
+    return updated;
+  },
+
+  async getAllPatientProfiles(): Promise<PatientProfile[]> {
+    return Object.values(inMemoryPatientProfiles);
   },
 };

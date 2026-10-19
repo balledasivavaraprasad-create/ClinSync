@@ -24,7 +24,9 @@ import {
   AlertCircle,
   RefreshCw,
   CheckCircle2,
+  User,
 } from 'lucide-react';
+import { PatientProfileHub } from '../patient-profile';
 
 interface DoctorDashboardHubProps {
   doctorId?: string;
@@ -45,7 +47,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
   const [selectedPatientName, setSelectedPatientName] = useState<string>('Eleanor Johnson');
 
   // 3. Clinical Data for Active Encounter
-  const [activeTab, setActiveTab] = useState<'brief' | 'ledger' | 'diff' | 'documents'>('brief');
+  const [activeTab, setActiveTab] = useState<'brief' | 'ledger' | 'diff' | 'documents' | 'profile'>('brief');
   const [brief, setBrief] = useState<DoctorBriefResponse['data'] | null>(null);
   const [isBriefLoading, setIsBriefLoading] = useState<boolean>(true);
   const [briefError, setBriefError] = useState<string | null>(null);
@@ -338,6 +340,20 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               <UploadCloud className="w-3.5 h-3.5" />
               <span>Diagnostic Documents</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              data-testid="doc-tab-profile"
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                activeTab === 'profile'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Patient Profile & History</span>
+            </button>
           </div>
 
           {/* Tab 1: Evidence Brief & Audio */}
@@ -422,6 +438,16 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                   setSelectedDoc(doc);
                   setIsDocModalOpen(true);
                 }}
+              />
+            </div>
+          )}
+
+          {/* Tab 5: Hospital Patient Record / Master Profile */}
+          {activeTab === 'profile' && (
+            <div data-testid="tab-content-profile" className="pt-2">
+              <PatientProfileHub
+                patientId={selectedEncounterId === 'enc_demo_002' ? 'pat_synth_002' : 'pat_synth_001'}
+                isClinicianView={true}
               />
             </div>
           )}

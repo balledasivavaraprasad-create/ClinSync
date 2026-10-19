@@ -5,6 +5,7 @@ import { PatientKioskFlow } from '../features/patient-kiosk/PatientKioskFlow';
 import { LedgerDiffHub } from '../features/patient-context/LedgerDiffHub';
 import { AppointmentSchedulingHub } from '../features/appointments/AppointmentSchedulingHub';
 import { DoctorDashboardHub } from '../features/doctor-dashboard/DoctorDashboardHub';
+import { PatientProfileHub, type ProfileSubTab } from '../features/patient-profile';
 import { mockDoctorQueue } from '../lib/api/mockData';
 import { LuxuryMasterDashboard, type DashboardTabType } from '../features/luxury-dashboard';
 
@@ -34,6 +35,17 @@ export const MainView: React.FC<MainViewProps> = ({
     }
   }, [initialTab]);
 
+  const getProfileSubTab = (): ProfileSubTab => {
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    if (hash.includes('profile/')) {
+      const match = hash.split('profile/')[1]?.split('?')[0]?.split('/')[0] as ProfileSubTab;
+      if (['personal', 'overview', 'timeline', 'documents', 'medications', 'appointments', 'consent', 'settings'].includes(match)) {
+        return match;
+      }
+    }
+    return 'personal';
+  };
+
   return (
     <LuxuryMasterDashboard
       activeTab={activeTab}
@@ -45,6 +57,7 @@ export const MainView: React.FC<MainViewProps> = ({
       onOpenDoctorConsole={() => setActiveTab('doctor')}
       onOpenLedger={() => setActiveTab('ledger')}
       onOpenAppointments={() => setActiveTab('appointments')}
+      onOpenProfile={() => setActiveTab('profile')}
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -77,6 +90,19 @@ export const MainView: React.FC<MainViewProps> = ({
             <DoctorConsoleLayout activePatientCount={mockDoctorQueue.length}>
               <DoctorDashboardHub />
             </DoctorConsoleLayout>
+          )}
+
+          {/* 5. PATIENT PROFILE & HOSPITAL RECORDS TAB */}
+          {activeTab === 'profile' && (
+            <div className="p-2 sm:p-4 max-w-7xl mx-auto">
+              <PatientProfileHub
+                patientId={currentUser?.userId && currentUser.role === 'patient' ? currentUser.userId : 'pat_synth_001'}
+                initialSubTab={getProfileSubTab()}
+                isClinicianView={currentUser?.role === 'doctor' || currentUser?.role === 'auditor'}
+                onBookAppointment={() => setActiveTab('appointments')}
+                onNavigateToTab={(t) => setActiveTab(t as DashboardTabType)}
+              />
+            </div>
           )}
         </motion.div>
       </AnimatePresence>
