@@ -379,6 +379,8 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                   onViewLedger={() => setActiveTab('ledger')}
                   onViewDiff={() => setActiveTab('diff')}
                   onApprovalComplete={handleApprovalComplete}
+                  onRegenerateBrief={() => fetchEncounterData(selectedEncounterId)}
+                  isRegenerating={isBriefLoading}
                 />
               ) : (
                 <div className="p-8 text-center text-slate-400 text-xs bg-[#080d19]/40 border border-white/10 border-dashed rounded-2xl">

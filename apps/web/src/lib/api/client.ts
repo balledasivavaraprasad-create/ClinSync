@@ -142,6 +142,11 @@ export const apiClient = {
     return request<DoctorBriefResponse>(`/encounters/${encounterId}/brief`);
   },
 
+  async generateDoctorBrief(encounterId: string): Promise<DoctorBriefResponse> {
+    if (USE_MOCKS) return mockApi.generateDoctorBrief(encounterId);
+    return request<DoctorBriefResponse>(`/encounters/${encounterId}/brief`);
+  },
+
   async submitDoctorApproval(
     encounterId: string,
     req: ApprovalRequest

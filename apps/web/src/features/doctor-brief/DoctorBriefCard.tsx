@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Volume2,
   Stethoscope,
+  Sparkles,
 } from 'lucide-react';
 
 interface DoctorBriefCardProps {
@@ -34,6 +35,8 @@ interface DoctorBriefCardProps {
   onViewLedger?: () => void;
   onViewDiff?: () => void;
   onApprovalComplete?: (approval: ApprovalResponse['data']) => void;
+  onRegenerateBrief?: () => void;
+  isRegenerating?: boolean;
 }
 
 export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
@@ -46,6 +49,8 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
   onViewLedger,
   onViewDiff,
   onApprovalComplete,
+  onRegenerateBrief,
+  isRegenerating = false,
 }) => {
   const [isAudioExpanded, setIsAudioExpanded] = useState<boolean>(true);
   const [isApprovalOpen, setIsApprovalOpen] = useState<boolean>(false);
@@ -119,7 +124,22 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
               </CardDescription>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap gap-1">
+              {onRegenerateBrief && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onRegenerateBrief}
+                  disabled={isRegenerating}
+                  data-testid="regenerate-brief-btn"
+                  className="text-xs text-teal-300 border-teal-500/30 hover:bg-teal-500/10 min-h-[40px] cursor-pointer"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 mr-1 text-teal-400 ${isRegenerating ? 'animate-spin' : ''}`} />
+                  {isRegenerating ? 'Synthesizing...' : 'Regenerate Brief'}
+                </Button>
+              )}
+
               <Button
                 type="button"
                 variant="outline"

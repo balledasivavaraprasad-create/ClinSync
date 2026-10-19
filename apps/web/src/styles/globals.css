@@ -835,3 +835,34 @@ button.rounded-2xl {
   background: rgba(2, 132, 199, 0.7) !important;
   box-shadow: 0 0 10px rgba(2, 132, 199, 0.3) !important;
 }
+
+/* ============================================================
+   Hospital OS Responsive Navigation (Mobile, Portrait, Small Screens)
+   ============================================================ */
+
+/* Desktop Landscape default (> 1024px landscape) */
+.clinsync-mobile-nav {
+  display: none;
+}
+
+.clinsync-desktop-sidebar {
+  display: flex;
+}
+
+/* Small screens (< 1024px) OR any device in portrait orientation */
+@media (max-width: 1023px), (orientation: portrait) {
+  .clinsync-mobile-nav {
+    display: block !important;
+    grid-column: span 12 / span 12 !important;
+    width: 100% !important;
+  }
+
+  .clinsync-desktop-sidebar {
+    display: none !important;
+  }
+
+  .clinsync-workspace-section {
+    grid-column: span 12 / span 12 !important;
+    width: 100% !important;
+  }
+}

@@ -32,6 +32,121 @@ import {
   mockCitations,
 } from './mockData';
 
+// In-memory stores for dynamic encounter lifecycle and facts
+const inMemoryEncounterFacts: Record<string, ClinicalFact[]> = {
+  enc_demo_001: [...mockClinicalFacts],
+  enc_demo_002: [...mockMarcusClinicalFacts],
+};
+
+const inMemoryEncounterPatients: Record<string, { patient_id: string; patient_name: string; department?: string }> = {
+  enc_demo_001: { patient_id: 'pat_synth_001', patient_name: 'Eleanor Johnson (44F)', department: 'Cardiology' },
+  enc_demo_002: { patient_id: 'pat_synth_002', patient_name: 'Marcus Patel (52M)', department: 'Cardiology' },
+};
+
+const inMemoryDoctorQueue: DoctorQueueItem[] = [...mockDoctorQueue];
+
+function synthesizeBriefFromFacts(
+  encounterId: string,
+  facts: ClinicalFact[],
+  overridePatientName?: string
+): DoctorBriefResponse['data'] {
+  const patientName =
+    overridePatientName ||
+    inMemoryEncounterPatients[encounterId]?.patient_name ||
+    (encounterId === 'enc_demo_002' ? 'Marcus Patel (52M)' : 'Eleanor Johnson (44F)');
+
+  const complaintFact =
+    facts.find((f) => f.concept.toLowerCase().includes('complaint')) ||
+    facts.find((f) => f.fact_type === 'symptom');
+  const chiefComplaint = complaintFact?.value || (
+    encounterId === 'enc_demo_001'
+      ? 'Subacute retrosternal chest tightness with hypertensive trend'
+      : 'Acute symptom evaluation from intake'
+  );
+
+  const symptoms = facts
+    .filter((f) => f.fact_type === 'symptom')
+    .map((f) => `${f.concept}: ${f.value}`);
+  const vitals = facts
+    .filter((f) => f.fact_type === 'investigation' || f.concept.toLowerCase().includes('pressure') || f.concept.toLowerCase().includes('vital'))
+    .map((f) => `${f.concept}: ${f.value}`);
+  const meds = facts
+    .filter((f) => f.fact_type === 'medication')
+    .map((f) => f.value);
+  const allergies = facts
+    .filter((f) => f.fact_type === 'allergy')
+    .map((f) => f.value);
+  const conflicts = facts
+    .filter((f) => f.status === 'conflicting')
+    .map((f) => f.value);
+
+  let clinicalSummary = '';
+  if (encounterId === 'enc_demo_001' && facts.length === mockClinicalFacts.length) {
+    clinicalSummary =
+      '44-year-old female presenting with 3 days of progressive retrosternal chest tightness. Blood pressure elevated at 142/88. Currently on Lisinopril 10mg daily. Documented severe allergy to Penicillin. Note discrepancy regarding symptom onset timeline between oral statement and external referral.';
+  } else {
+    const parts: string[] = [
+      `Clinical brief for ${patientName}. Presenting with chief complaint of ${chiefComplaint}.`,
+    ];
+    if (symptoms.length > 0) {
+      parts.push(`Reported symptoms include: ${symptoms.slice(0, 3).join('; ')}.`);
+    }
+    if (vitals.length > 0) {
+      parts.push(`Documented measurements: ${vitals.join(', ')}.`);
+    }
+    if (meds.length > 0) {
+      parts.push(`Current medications: ${meds.join(', ')}.`);
+    }
+    if (allergies.length > 0) {
+      parts.push(`Documented allergies: ${allergies.join(', ')}.`);
+    }
+    if (conflicts.length > 0) {
+      parts.push(`Safety Alert: ${conflicts.join('; ')}.`);
+    } else {
+      parts.push('No acute contraindications or active medication conflicts detected.');
+    }
+    parts.push('All facts grounded with bidirectional Context Ledger citations.');
+    clinicalSummary = parts.join(' ');
+  }
+
+  const citations: Citation[] =
+    encounterId === 'enc_demo_001' && facts.length === mockClinicalFacts.length
+      ? mockCitations
+      : facts.slice(0, 4).map((f, idx) => ({
+          citation_id: f.id === 'fact_001' ? 'cite_01' : f.id === 'fact_003' ? 'cite_02' : `cite_${f.id || idx}`,
+          fact_id: f.id,
+          source_type: f.source_type ? f.source_type.replace(/_/g, ' ') : 'Patient Intake',
+          source_title: f.source_id ? `Source [${f.source_id}]` : 'Intake Dialogue Turn',
+          source_location: f.source_location || 'Kiosk Audio Turn',
+          text_snippet: `"${f.concept}: ${f.value}"`,
+        }));
+
+  const unresolved: string[] = [];
+  if (conflicts.length > 0) {
+    unresolved.push(`Resolve clinical contradiction: ${conflicts[0]}`);
+  }
+  if (facts.some((f) => f.status === 'uncertain')) {
+    unresolved.push('Verify uncertain findings during physical examination.');
+  }
+  if (encounterId === 'enc_demo_001' && facts.length === mockClinicalFacts.length) {
+    unresolved.push('Verify true symptom duration (3 days vs 2 weeks).');
+    unresolved.push('Confirm last dose of Lisinopril.');
+  } else if (unresolved.length === 0) {
+    unresolved.push('Verify reported symptoms and clinical history with patient.');
+  }
+
+  return {
+    encounter_id: encounterId,
+    patient_name: patientName,
+    chief_complaint: chiefComplaint,
+    clinical_summary: clinicalSummary,
+    citations: citations.length > 0 ? citations : mockCitations,
+    unresolved_questions: unresolved,
+    audio_brief_available: true,
+    audio_brief_url: '/synthetic_audio_brief.mp3',
+  };
+}
+
 /**
  * Mock API Adapter
  * Strictly adheres to 15 endpoints in packages/contracts/openapi.json
@@ -39,9 +154,16 @@ import {
 export const mockApi = {
   // 1. POST /encounters
   async createEncounter(req: CreateEncounterRequest): Promise<EncounterResponse> {
+    const encId = `enc_${Date.now()}`;
+    inMemoryEncounterFacts[encId] = [];
+    inMemoryEncounterPatients[encId] = {
+      patient_id: req.patient_id,
+      patient_name: req.patient_id === 'pat_synth_002' ? 'Marcus Patel (52M)' : 'Eleanor Johnson (44F)',
+    };
+
     return {
       data: {
-        id: `enc_${Date.now()}`,
+        id: encId,
         patient_id: req.patient_id,
         status: 'IN_PROGRESS',
         started_at: new Date().toISOString(),
@@ -99,30 +221,73 @@ export const mockApi = {
     encounterId: string,
     req: IntakeAnswerRequest
   ): Promise<IntakeStateResponse> {
-    const isLastTurn = req.question_id === 'q_final';
+    const isLastTurn = req.question_id === 'q_final' || req.question_id === 'q5_allergies';
+
+    let concept = 'Reported Symptom';
+    let factType: ClinicalFact['fact_type'] = 'symptom';
+    let unit: string | null = null;
+
+    if (req.question_id?.includes('complaint')) {
+      concept = 'Chief Complaint';
+      factType = 'symptom';
+    } else if (req.question_id?.includes('duration')) {
+      concept = 'Symptom Duration';
+      factType = 'symptom';
+    } else if (req.question_id?.includes('pain')) {
+      concept = 'Discomfort Rating';
+      factType = 'symptom';
+      unit = 'pain_scale_10';
+    } else if (req.question_id?.includes('med')) {
+      concept = 'Current Medication';
+      factType = 'medication';
+    } else if (req.question_id?.includes('allerg')) {
+      concept = 'Reported Allergy';
+      factType = 'allergy';
+    }
+
     const dynamicFact: ClinicalFact = {
       id: `fact_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       patient_id: 'pat_synth_001',
       encounter_id: encounterId,
-      concept: req.question_id || 'Reported Symptom',
+      concept,
       value: req.transcription,
-      unit: null,
+      unit,
       clinical_time: 'reported now',
       recorded_at: new Date().toISOString(),
-      fact_type: req.question_id?.includes('med')
-        ? 'medication'
-        : req.question_id?.includes('allerg')
-        ? 'allergy'
-        : 'symptom',
+      fact_type: factType,
       status: 'reported',
       source_type: req.input_modality === 'voice' ? 'patient_voice_kiosk' : 'patient_intake_utterance',
       source_id: `turn_${Date.now()}`,
       source_location: 'kiosk_voice_audio',
       extraction_method: 'automated_llm',
-      confidence: 0.96,
+      confidence: 0.98,
       reviewed_by: null,
       supersedes_fact_id: null,
     };
+
+    if (!inMemoryEncounterFacts[encounterId]) {
+      inMemoryEncounterFacts[encounterId] = [];
+    }
+    inMemoryEncounterFacts[encounterId].push(dynamicFact);
+
+    // Update or insert queue item so Doctor console can see it
+    const existingQueueItem = inMemoryDoctorQueue.find((q) => q.encounter_id === encounterId);
+    if (!existingQueueItem) {
+      const patientInfo = inMemoryEncounterPatients[encounterId];
+      inMemoryDoctorQueue.push({
+        encounter_id: encounterId,
+        patient_id: patientInfo?.patient_id || 'pat_synth_001',
+        patient_name: patientInfo?.patient_name || 'Eleanor Johnson',
+        appointment_time: 'Just now',
+        department: patientInfo?.department || 'Cardiology',
+        priority: req.transcription.toLowerCase().includes('chest') || req.transcription.toLowerCase().includes('breath') ? 'ELEVATED' : 'ROUTINE',
+        triage_note: `${concept}: ${req.transcription}`,
+        status: 'PENDING_REVIEW',
+      });
+    } else if (concept === 'Chief Complaint') {
+      existingQueueItem.triage_note = `Chief Complaint: ${req.transcription}`;
+    }
+
     return {
       data: {
         encounter_id: encounterId,
@@ -174,7 +339,8 @@ export const mockApi = {
   // 8. GET /encounters/{encounter_id}/ledger
   async getLedger(encounterId: string): Promise<LedgerResponse> {
     const facts =
-      encounterId === 'enc_demo_002' ? mockMarcusClinicalFacts : mockClinicalFacts;
+      inMemoryEncounterFacts[encounterId] ||
+      (encounterId === 'enc_demo_002' ? mockMarcusClinicalFacts : mockClinicalFacts);
 
     return {
       data: {
@@ -314,7 +480,7 @@ export const mockApi = {
     return {
       data: {
         doctor_id: doctorId,
-        queue: mockDoctorQueue,
+        queue: inMemoryDoctorQueue,
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
@@ -322,7 +488,15 @@ export const mockApi = {
 
   // 14. GET /encounters/{encounter_id}/brief
   async getDoctorBrief(encounterId: string): Promise<DoctorBriefResponse> {
-    if (encounterId === 'enc_demo_002') {
+    const facts =
+      inMemoryEncounterFacts[encounterId] ||
+      (encounterId === 'enc_demo_002' ? mockMarcusClinicalFacts : mockClinicalFacts);
+
+    if (
+      encounterId === 'enc_demo_002' &&
+      (!inMemoryEncounterFacts[encounterId] ||
+        inMemoryEncounterFacts[encounterId].length === mockMarcusClinicalFacts.length)
+    ) {
       return {
         data: {
           encounter_id: encounterId,
@@ -345,29 +519,22 @@ export const mockApi = {
             'Confirm fasting lipid panel collection prior to visit.',
           ],
           audio_brief_available: true,
-          audio_brief_url: '/synthetic_audio_brief_demo.mp3',
+          audio_brief_url: '/synthetic_audio_brief.mp3',
         },
         request_id: `req_${Math.random().toString(36).substring(7)}`,
       };
     }
 
+    const briefData = synthesizeBriefFromFacts(encounterId, facts);
     return {
-      data: {
-        encounter_id: encounterId,
-        patient_name: 'Eleanor Johnson (44F)',
-        chief_complaint: 'Subacute retrosternal chest tightness with hypertensive trend',
-        clinical_summary:
-          '44-year-old female presenting with 3 days of progressive retrosternal chest tightness. Blood pressure elevated at 142/88. Currently on Lisinopril 10mg daily. Documented severe allergy to Penicillin. Note discrepancy regarding symptom onset timeline between oral statement and external referral.',
-        citations: mockCitations,
-        unresolved_questions: [
-          'Verify true symptom duration (3 days vs 2 weeks).',
-          'Confirm last dose of Lisinopril.',
-        ],
-        audio_brief_available: true,
-        audio_brief_url: '/synthetic_audio_brief_demo.mp3',
-      },
+      data: briefData,
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
+  },
+
+  // Dynamic Brief Generation endpoint
+  async generateDoctorBrief(encounterId: string): Promise<DoctorBriefResponse> {
+    return this.getDoctorBrief(encounterId);
   },
 
   // 15. POST /encounters/{encounter_id}/approvals

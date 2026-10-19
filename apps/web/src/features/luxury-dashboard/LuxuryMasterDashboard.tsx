@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard,
   Tablet,
@@ -21,6 +21,10 @@ import {
   FileText,
   Clock,
   Sparkle,
+  ChevronDown,
+  Check,
+  Menu,
+  ChevronRight,
 } from 'lucide-react';
 import { BiometricPulseViewer } from './BiometricPulseViewer';
 import { Dialog } from '../../components/ui/Dialog';
@@ -73,6 +77,22 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   const [activeDateTab, setActiveDateTab] = useState<'queue' | 'today' | 'week' | 'month'>('today');
   const [selectedEncounter, setSelectedEncounter] = useState<any | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
+  const mobileNavRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target as Node)) {
+        setIsMobileNavOpen(false);
+      }
+    };
+    if (isMobileNavOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileNavOpen]);
 
   // Encounter timeline items tailored with restrained, high-contrast luxury styling in both themes
   const timelineSlots = [
@@ -257,6 +277,9 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
     { id: 'mock-api', label: 'Live API Hub', icon: Database, testId: 'tab-mock-api' },
   ] as const;
 
+  const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
+  const ActiveIcon = activeItem.icon;
+
   return (
     <div
       data-testid="luxury-master-dashboard"
@@ -395,9 +418,215 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
           {/* Main Grid: Left Navigation Rail + Right Workspace */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-7 items-start">
             {/* ----------------------------------------------------
-                1. LEFT SIDEBAR (Curated Obsidian / Porcelain Rail)
+                1A. PORTRAIT & SMALL SCREEN DROPDOWN MENU
                 ---------------------------------------------------- */}
-            <aside className={`md:col-span-4 lg:col-span-3 xl:col-span-2 flex flex-col justify-between self-stretch rounded-[28px] p-3.5 border backdrop-blur-2xl transition-all duration-300 min-h-[780px] ${
+            <div
+              ref={mobileNavRef}
+              data-testid="mobile-portrait-nav-container"
+              className="clinsync-mobile-nav relative z-30 col-span-12 w-full mb-2"
+            >
+              <div
+                className={`rounded-[28px] p-3.5 sm:p-4 border backdrop-blur-2xl transition-all duration-300 shadow-xl ${
+                  isLight
+                    ? 'bg-gradient-to-b from-white/98 via-[#f4f8fc]/95 to-[#eaf0f8]/90 border-[#d4e0ed]'
+                    : 'bg-gradient-to-b from-[#0c1324]/90 via-[#080d19]/85 to-[#050811]/90 border-white/[0.09]'
+                }`}
+              >
+                {/* Header label in dropdown with interactive Navigation Menu button */}
+                <div
+                  className={`px-2 py-1.5 mb-2.5 flex items-center justify-between border-b ${
+                    isLight ? 'border-[#d4e0ed]' : 'border-white/[0.06]'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse ring-4 ring-cyan-500/20" />
+                    <div>
+                      <div className="text-[10px] font-mono tracking-widest uppercase text-cyan-600 dark:text-cyan-400 font-bold leading-none">
+                        Hospital OS
+                      </div>
+                      <div
+                        className={`text-xs sm:text-sm font-bold tracking-tight mt-0.5 ${
+                          isLight ? 'text-slate-900' : 'text-white'
+                        }`}
+                      >
+                        St. Jude Medical Center
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactive Navigation Menu Button - Requested by user */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+                    data-testid="mobile-nav-menu-button"
+                    aria-expanded={isMobileNavOpen}
+                    aria-label="Toggle Hospital OS Navigation Menu"
+                    className={`px-3 py-1.5 rounded-full text-xs font-mono uppercase font-bold flex items-center space-x-1.5 transition-all duration-200 cursor-pointer shadow-sm active:scale-95 border ${
+                      isMobileNavOpen
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-cyan-500/25 ring-2 ring-cyan-400/50'
+                        : isLight
+                        ? 'bg-cyan-100/90 hover:bg-cyan-200 text-cyan-900 border-cyan-300 hover:border-cyan-400'
+                        : 'bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border-cyan-500/30'
+                    }`}
+                  >
+                    <Menu className="w-3.5 h-3.5 text-current" />
+                    <span>Navigation Menu</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isMobileNavOpen ? 'rotate-180' : 'rotate-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Dropdown Trigger Button - Current Module */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+                    data-testid="mobile-nav-dropdown-trigger"
+                    aria-expanded={isMobileNavOpen}
+                    aria-haspopup="listbox"
+                    aria-label="Select Hospital OS View"
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
+                      isLight
+                        ? 'bg-white border-slate-300 text-slate-900 shadow-sm hover:border-cyan-500 ring-1 ring-slate-200/80'
+                        : 'bg-[#080d19] border-white/15 text-white shadow-md hover:border-cyan-400'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-500 dark:text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                        <ActiveIcon className="w-4 h-4" />
+                      </div>
+                      <div className="text-left truncate">
+                        <span className="text-[10px] uppercase font-mono tracking-wider text-cyan-600 dark:text-cyan-400 block leading-none">
+                          Current Module
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold truncate block mt-0.5">
+                          {activeItem.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="text-[10px] font-mono text-cyan-700 dark:text-cyan-300 font-semibold px-2.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                        {isMobileNavOpen ? 'Close Menu' : 'Change'}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-cyan-400 transition-transform duration-200 ${
+                          isMobileNavOpen ? 'rotate-180' : 'rotate-0'
+                        }`}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu - Drops down cleanly inside the navigation card */}
+                  <AnimatePresence>
+                    {isMobileNavOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          data-testid="mobile-nav-dropdown-menu"
+                          role="listbox"
+                          aria-label="Hospital OS Modules"
+                          className={`mt-3 pt-3 border-t rounded-2xl p-2 transition-colors ${
+                            isLight
+                              ? 'border-slate-200/90 bg-slate-50/80 ring-1 ring-slate-200/60'
+                              : 'border-white/10 bg-black/35 ring-1 ring-white/10'
+                          }`}
+                        >
+                          <div className="px-2.5 py-1 mb-1.5 flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+                            <span>Clinical Modules</span>
+                            <span className="text-cyan-600 dark:text-cyan-400 font-bold">8 Workspaces</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[460px] overflow-y-auto p-0.5">
+                            {navItems.map((item) => {
+                              const isSelected = activeTab === item.id;
+                              const ItemIcon = item.icon;
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  onClick={() => {
+                                    handleTabClick(item.id);
+                                    setIsMobileNavOpen(false);
+                                  }}
+                                  data-testid={`mobile-${item.testId}`}
+                                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer min-h-[48px] ${
+                                    isSelected
+                                      ? isLight
+                                        ? 'bg-cyan-600 text-white font-bold shadow-md shadow-cyan-600/25 ring-1 ring-cyan-500'
+                                        : 'bg-cyan-400 text-slate-950 font-bold shadow-md shadow-cyan-400/25 ring-1 ring-cyan-300'
+                                      : isLight
+                                      ? 'text-slate-700 hover:text-slate-900 hover:bg-white bg-white/70 border border-slate-200/60 shadow-xs'
+                                      : 'text-slate-300 hover:text-white hover:bg-white/[0.08] bg-white/[0.03] border border-white/[0.06]'
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-3 min-w-0">
+                                    <div
+                                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                        isSelected
+                                          ? isLight
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-slate-950/20 text-slate-950'
+                                          : isLight
+                                          ? 'bg-slate-100 text-slate-600'
+                                          : 'bg-white/10 text-cyan-400'
+                                      }`}
+                                    >
+                                      <ItemIcon className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left truncate">
+                                      <span className="block truncate font-bold">{item.label}</span>
+                                    </div>
+                                  </div>
+
+                                  {isSelected ? (
+                                    <Check
+                                      className={`w-4 h-4 shrink-0 ml-2 ${
+                                        isLight ? 'text-white' : 'text-slate-950'
+                                      }`}
+                                    />
+                                  ) : (
+                                    <ChevronRight
+                                      className="w-3.5 h-3.5 shrink-0 ml-2 opacity-40 text-slate-400"
+                                    />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Quick Collapse Footer */}
+                          <div className="mt-2 pt-2 border-t border-slate-200/70 dark:border-white/10 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setIsMobileNavOpen(false)}
+                              className="text-[11px] font-mono text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer font-medium"
+                            >
+                              ✕ Collapse Menu
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+            {/* ----------------------------------------------------
+                1B. DESKTOP SIDEBAR (Curated Obsidian / Porcelain Rail)
+                ---------------------------------------------------- */}
+            <aside className={`clinsync-desktop-sidebar md:col-span-4 lg:col-span-3 xl:col-span-2 flex-col justify-between self-stretch rounded-[28px] p-3.5 border backdrop-blur-2xl transition-all duration-300 min-h-[780px] ${
               isLight
                 ? 'bg-gradient-to-b from-white/98 via-[#f4f8fc]/92 to-[#eaf0f8]/88 border-[#d4e0ed] shadow-sm'
                 : 'bg-gradient-to-b from-[#0c1324]/85 via-[#080d19]/80 to-[#050811]/85 border-white/[0.09] shadow-lg'
@@ -483,7 +712,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
             {/* ----------------------------------------------------
                 2. RIGHT CONTENT AREA
                 ---------------------------------------------------- */}
-            <section className="md:col-span-8 lg:col-span-9 xl:col-span-10 min-w-0">
+            <section className="clinsync-workspace-section col-span-1 md:col-span-8 lg:col-span-9 xl:col-span-10 w-full min-w-0">
               {/* If on another tab, render child view inside the luxury workspace */}
               {activeTab !== 'dashboard' && children ? (
                 <motion.div

@@ -148,4 +148,28 @@ describe('OpenAPI 3.1.0 Mock API Adapter Conformance (15 Endpoints)', () => {
     expect(res.data.status).toBe('RECORDED');
     expect(res.data.approval_id).toMatch(/^appr_/);
   });
+
+  it('16. Dynamically synthesizes doctor brief from submitted intake facts and symptoms', async () => {
+    const encRes = await mockApi.createEncounter({ patient_id: 'pat_dynamic_99' });
+    const dynamicEncId = encRes.data.id;
+
+    await mockApi.submitAnswer(dynamicEncId, {
+      question_id: 'q1_chief_complaint',
+      transcription: 'Progressive wheezing and throat irritation for 4 days',
+      input_modality: 'voice',
+    });
+
+    await mockApi.submitAnswer(dynamicEncId, {
+      question_id: 'q4_medications',
+      transcription: 'Albuterol inhaler 2 puffs PRN',
+      input_modality: 'text',
+    });
+
+    const brief = await mockApi.getDoctorBrief(dynamicEncId);
+    expect(brief.data.chief_complaint).toContain('Progressive wheezing and throat irritation');
+    expect(brief.data.clinical_summary).toContain('Progressive wheezing');
+    expect(brief.data.clinical_summary).toContain('Albuterol');
+    expect(brief.data.citations.length).toBeGreaterThanOrEqual(2);
+    expect(brief.data.audio_brief_available).toBe(true);
+  });
 });

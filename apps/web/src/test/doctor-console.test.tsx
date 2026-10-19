@@ -368,6 +368,24 @@ describe('TASK-P1-501: Doctor Console, Briefing UI & Audio Player Suite', () => 
         screen.getByText('Clinical Review Sign-off & Encounter Approval')
       ).toBeInTheDocument();
     });
+
+    it('triggers onRegenerateBrief callback when Regenerate Brief button is clicked', () => {
+      const handleRegenerate = vi.fn();
+      render(
+        <DoctorBriefCard
+          brief={sampleBrief}
+          encounterId="enc_demo_001"
+          patientName="Eleanor Johnson"
+          facts={mockClinicalFacts}
+          onRegenerateBrief={handleRegenerate}
+        />
+      );
+
+      const regenBtn = screen.getByTestId('regenerate-brief-btn');
+      expect(regenBtn).toBeInTheDocument();
+      fireEvent.click(regenBtn);
+      expect(handleRegenerate).toHaveBeenCalledTimes(1);
+    });
   });
 
   // 5. DOCTOR DASHBOARD HUB FULL INTEGRATION

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { KioskLayout } from '../layouts/KioskLayout';
 import { DoctorConsoleLayout } from '../layouts/DoctorConsoleLayout';
+import { LuxuryMasterDashboard } from '../features/luxury-dashboard';
 
 describe('Layout Shells for Kiosk and Doctor Workstation', () => {
   describe('KioskLayout', () => {
@@ -60,6 +61,84 @@ describe('Layout Shells for Kiosk and Doctor Workstation', () => {
       const logoutBtn = screen.getByRole('button', { name: /sign out/i });
       fireEvent.click(logoutBtn);
       expect(handleLogout).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('LuxuryMasterDashboard Mobile & Portrait Navigation Dropdown', () => {
+    it('renders dropdown menu selector on mobile and portrait views and switches tabs', () => {
+      const handleOpenDoctor = vi.fn();
+      const handleSelectTab = vi.fn();
+
+      render(
+        <LuxuryMasterDashboard
+          activeTab="dashboard"
+          onOpenDoctorConsole={handleOpenDoctor}
+          onSelectTab={handleSelectTab}
+        >
+          <div>Dashboard Child Content</div>
+        </LuxuryMasterDashboard>
+      );
+
+      // Verify mobile / portrait nav container is rendered
+      const navContainer = screen.getByTestId('mobile-portrait-nav-container');
+      expect(navContainer).toBeInTheDocument();
+      expect(navContainer).toHaveClass('clinsync-mobile-nav');
+
+      // Test the Navigation Menu button requested by user
+      const menuButton = screen.getByTestId('mobile-nav-menu-button');
+      expect(menuButton).toBeInTheDocument();
+      expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+      // Clicking Navigation Menu button drops down the menu
+      fireEvent.click(menuButton);
+      expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+
+      // Check that mobile navigation menu is visible
+      const dropdownMenu = screen.getByTestId('mobile-nav-dropdown-menu');
+      expect(dropdownMenu).toBeInTheDocument();
+
+      // All 8 options should be available
+      expect(screen.getByTestId('mobile-tab-dashboard')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-kiosk')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-ledger-diff')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-appointments')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-doctor-console')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-visual-qa')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-showroom')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-tab-mock-api')).toBeInTheDocument();
+
+      // Select Doctor Console
+      const doctorOption = screen.getByTestId('mobile-tab-doctor-console');
+      fireEvent.click(doctorOption);
+
+      expect(handleOpenDoctor).toHaveBeenCalledTimes(1);
+    });
+
+    it('toggles dropdown closed when clicking Navigation Menu button again or clicking dropdown trigger', async () => {
+      render(
+        <LuxuryMasterDashboard activeTab="kiosk">
+          <div>Kiosk Content</div>
+        </LuxuryMasterDashboard>
+      );
+
+      const menuButton = screen.getByTestId('mobile-nav-menu-button');
+      const dropdownTrigger = screen.getByTestId('mobile-nav-dropdown-trigger');
+
+      // Initially closed
+      expect(screen.queryByTestId('mobile-nav-dropdown-menu')).not.toBeInTheDocument();
+      expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+      // Open via dropdown trigger
+      fireEvent.click(dropdownTrigger);
+      expect(screen.getByTestId('mobile-nav-dropdown-menu')).toBeInTheDocument();
+      expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+
+      // Close via menu button
+      fireEvent.click(menuButton);
+      expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+      await waitFor(() => {
+        expect(screen.queryByTestId('mobile-nav-dropdown-menu')).not.toBeInTheDocument();
+      });
     });
   });
 });

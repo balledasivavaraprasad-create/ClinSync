@@ -35,6 +35,25 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
   const [audioError, setAudioError] = useState<string | null>(null);
   const [showFullTranscript, setShowFullTranscript] = useState<boolean>(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Stop / cancel speech helper
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Safe fallback in headless/test environments
+      }
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, []);
 
   // Format MM:SS
   const formatTime = (secs: number) => {
@@ -43,26 +62,103 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
     return `${mins}:${remaining < 10 ? '0' : ''}${remaining}`;
   };
 
-  // Simulate playback loop
+  // Playback & Speech Synthesis
   useEffect(() => {
     if (isPlaying) {
+      // 1. Trigger Web Speech Synthesis if available
+      if (
+        typeof window !== 'undefined' &&
+        'speechSynthesis' in window &&
+        typeof window.SpeechSynthesisUtterance !== 'undefined'
+      ) {
+        try {
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          } else {
+            window.speechSynthesis.cancel();
+            const utterance = new window.SpeechSynthesisUtterance(transcriptText);
+            utterance.rate = playbackRate;
+            utterance.volume = isMuted ? 0 : 1;
+
+            const voices = window.speechSynthesis.getVoices();
+            const voice =
+              voices.find(
+                (v) =>
+                  v.lang.startsWith('en') &&
+                  (v.name.includes('Natural') ||
+                    v.name.includes('Neural') ||
+                    v.name.includes('Google') ||
+                    v.name.includes('Online'))
+              ) ||
+              voices.find((v) => v.lang.startsWith('en')) ||
+              voices[0];
+            if (voice) {
+              utterance.voice = voice;
+            }
+
+            utterance.onend = () => {
+              setIsPlaying(false);
+              setCurrentTime(0);
+            };
+
+            utterance.onerror = (e) => {
+              if (e.error !== 'interrupted' && e.error !== 'canceled') {
+                console.warn('Speech synthesis playback notice:', e);
+              }
+            };
+
+            utteranceRef.current = utterance;
+            window.speechSynthesis.speak(utterance);
+          }
+        } catch (err) {
+          console.warn('Could not initiate window.speechSynthesis:', err);
+        }
+      }
+
+      // 2. Scrubber progression loop
       timerRef.current = setInterval(() => {
         setCurrentTime((prev) => {
           if (prev >= durationSeconds) {
             setIsPlaying(false);
+            stopSpeech();
             return 0;
           }
           return prev + 1;
         });
       }, 1000 / playbackRate);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
+    } else {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.pause();
+          }
+        } catch {
+          // ignore error
+        }
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, playbackRate, durationSeconds]);
+  }, [isPlaying, playbackRate, durationSeconds, transcriptText, isMuted]);
+
+  // Adjust utterance rate while playing
+  useEffect(() => {
+    if (utteranceRef.current) {
+      utteranceRef.current.rate = playbackRate;
+    }
+  }, [playbackRate]);
+
+  // Adjust volume while playing
+  useEffect(() => {
+    if (utteranceRef.current) {
+      utteranceRef.current.volume = isMuted ? 0 : 1;
+    }
+  }, [isMuted]);
 
   const togglePlay = () => {
     if (!isAvailable) {
@@ -74,6 +170,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
   };
 
   const handleReset = () => {
+    stopSpeech();
     setIsPlaying(false);
     setCurrentTime(0);
   };
@@ -268,7 +365,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
         >
           <div className="flex items-center justify-between text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
             <span>Oral Brief Transcript:</span>
-            <span className="text-[10px] text-cyan-400 font-mono">Audio URL: {audioUrl}</span>
+            <span className="text-[10px] text-cyan-400 font-mono">Voice: Web Speech TTS • Source: {audioUrl}</span>
           </div>
           <p className="leading-relaxed font-serif text-slate-200 italic text-sm">
             "{transcriptText}"
