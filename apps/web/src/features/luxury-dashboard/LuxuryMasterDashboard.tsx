@@ -54,6 +54,26 @@ export interface LuxuryMasterDashboardProps {
   children?: React.ReactNode;
 }
 
+interface DashboardEncounterItem {
+  id?: string;
+  title?: string;
+  time?: string;
+  badgeColor?: string;
+  priority?: string;
+  clinicalNote?: string;
+  category?: string;
+  [key: string]: unknown;
+}
+
+interface DashboardDocumentItem {
+  id?: string;
+  name?: string;
+  displayTitle?: string;
+  status?: string;
+  summary?: string;
+  [key: string]: unknown;
+}
+
 export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   activeTab = 'dashboard',
   onSelectTab,
@@ -69,8 +89,8 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
 }) => {
   const { isLight } = useTheme();
   const [activeDateTab, setActiveDateTab] = useState<'queue' | 'today' | 'week' | 'month'>('today');
-  const [selectedEncounter, setSelectedEncounter] = useState<any | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
+  const [selectedEncounter, setSelectedEncounter] = useState<DashboardEncounterItem | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DashboardDocumentItem | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const mobileNavRef = useRef<HTMLDivElement | null>(null);
 
@@ -1274,7 +1294,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
       <Dialog
         isOpen={!!selectedEncounter}
         onClose={() => setSelectedEncounter(null)}
-        title={selectedEncounter ? `Clinical Encounter: ${selectedEncounter.title}` : 'Encounter Dossier'}
+        title={selectedEncounter?.title ? `Clinical Encounter: ${selectedEncounter.title}` : 'Encounter Dossier'}
       >
         {selectedEncounter && (
           <div data-testid="modal-encounter-detail" className={`space-y-4 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
@@ -1337,7 +1357,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
       <Dialog
         isOpen={!!selectedDoc}
         onClose={() => setSelectedDoc(null)}
-        title={selectedDoc ? selectedDoc.displayTitle : 'Document Preview'}
+        title={selectedDoc?.displayTitle || 'Document Preview'}
       >
         {selectedDoc && (
           <div data-testid="modal-document-preview" className={`space-y-4 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>

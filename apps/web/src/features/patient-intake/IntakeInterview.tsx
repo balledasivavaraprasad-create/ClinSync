@@ -324,9 +324,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     if (currentQuestion?.audioUrl) {
       playReceptionistVoice(currentQuestion.audioUrl);
     }
+    const audioEl = aiAudioRef.current;
     return () => {
-      if (aiAudioRef.current) {
-        aiAudioRef.current.pause();
+      if (audioEl) {
+        audioEl.pause();
       }
       setIsAiSpeaking(false);
     };
@@ -399,8 +400,39 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
+  // Minimal typed interfaces for Web Speech API without using any
+  interface SpeechResultItem {
+    transcript: string;
+  }
+  interface SpeechResultList {
+    readonly length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: SpeechResultItem;
+    };
+  }
+  interface SpeechEvent {
+    results: SpeechResultList;
+  }
+  interface SpeechErrorEvent {
+    error: string;
+  }
+  interface WebSpeechInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives?: number;
+    lang: string;
+    start: () => void;
+    stop: () => void;
+    abort: () => void;
+    onstart: (() => void) | null;
+    onresult: ((event: SpeechEvent) => void) | null;
+    onerror: ((event: SpeechErrorEvent) => void) | null;
+    onend: (() => void) | null;
+  }
+
   // References for Web Speech API and captured speech
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<WebSpeechInstance | null>(null);
   const speechCapturedRef = useRef<string>('');
   const isListeningRef = useRef<boolean>(false);
 
@@ -425,10 +457,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     setMicPermissionNotice(null);
     setClarificationNotice(null);
 
-    const SpeechRecognitionClass =
-      typeof window !== 'undefined'
-        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-        : null;
+    const win = typeof window !== 'undefined' ? (window as unknown as Record<string, { new (): WebSpeechInstance } | undefined>) : null;
+    const SpeechRecognitionClass = win?.SpeechRecognition || win?.webkitSpeechRecognition;
 
     if (audioState === 'listening') {
       // User tapped stop listening -> finalize speech capture
@@ -452,9 +482,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           setClarificationNotice(`Speech captured: "${spokenText}". Review or tap Next Question to confirm.`);
         } else {
           // Check if running in test environment where browser speech is unavailable
+          const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
           const isTestEnv =
             (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
-            typeof (window as any).vi !== 'undefined' ||
+            Boolean(globalWin && typeof globalWin.vi !== 'undefined') ||
             !SpeechRecognitionClass;
 
           if (isTestEnv && !SpeechRecognitionClass) {
@@ -533,7 +564,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           isListeningRef.current = true;
         };
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechEvent) => {
           let finalTranscript = '';
           let interimTranscript = '';
           for (let i = 0; i < event.results.length; ++i) {
@@ -551,7 +582,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           }
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechErrorEvent) => {
           console.warn('Speech recognition notice:', event.error);
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');

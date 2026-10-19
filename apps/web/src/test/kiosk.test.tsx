@@ -368,18 +368,29 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
     });
 
     it('captures dynamic speech via SpeechRecognition and updates response without hardcoding', async () => {
-      let recognitionInstance: any;
+      interface MockSpeechEvent {
+        resultIndex?: number;
+        results: Array<Array<{ transcript: string }> & { isFinal?: boolean }>;
+      }
+
+      let latestOnResult: ((event: MockSpeechEvent) => void) | null = null;
       class MockSpeechRecognition {
         continuous = false;
         interimResults = false;
         maxAlternatives = 1;
         lang = 'en-US';
-        onstart: any = null;
-        onresult: any = null;
-        onerror: any = null;
-        onend: any = null;
+        onstart: (() => void) | null = null;
+        onerror: ((event: { error: string }) => void) | null = null;
+        onend: (() => void) | null = null;
+        private _onresult: ((event: MockSpeechEvent) => void) | null = null;
+        get onresult() {
+          return this._onresult;
+        }
+        set onresult(fn: ((event: MockSpeechEvent) => void) | null) {
+          this._onresult = fn;
+          latestOnResult = fn;
+        }
         start() {
-          recognitionInstance = this;
           if (this.onstart) this.onstart();
         }
         stop() {
@@ -388,8 +399,9 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
         abort() {}
       }
 
-      const originalSR = (window as any).SpeechRecognition;
-      (window as any).SpeechRecognition = MockSpeechRecognition;
+      const win = window as unknown as Record<string, unknown>;
+      const originalSR = win.SpeechRecognition;
+      win.SpeechRecognition = MockSpeechRecognition;
 
       try {
         render(
@@ -408,12 +420,14 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
 
         // Simulate recognition returning actual spoken words
         act(() => {
-          recognitionInstance.onresult({
-            resultIndex: 0,
-            results: [
-              Object.assign([{ transcript: 'Severe migraine with dizziness and nausea' }], { isFinal: true }),
-            ],
-          });
+          if (latestOnResult) {
+            latestOnResult({
+              resultIndex: 0,
+              results: [
+                Object.assign([{ transcript: 'Severe migraine with dizziness and nausea' }], { isFinal: true }),
+              ],
+            });
+          }
         });
 
         // Stop recognition
@@ -427,7 +441,7 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
           ).toBeInTheDocument();
         });
       } finally {
-        (window as any).SpeechRecognition = originalSR;
+        win.SpeechRecognition = originalSR;
       }
     });
   });
