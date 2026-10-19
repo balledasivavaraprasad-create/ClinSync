@@ -20,6 +20,7 @@ import type {
   DoctorBriefResponse,
   ApprovalRequest,
   ApprovalResponse,
+  ClinicalFact,
 } from './types';
 
 import {
@@ -99,6 +100,29 @@ export const mockApi = {
     req: IntakeAnswerRequest
   ): Promise<IntakeStateResponse> {
     const isLastTurn = req.question_id === 'q_final';
+    const dynamicFact: ClinicalFact = {
+      id: `fact_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      patient_id: 'pat_synth_001',
+      encounter_id: encounterId,
+      concept: req.question_id || 'Reported Symptom',
+      value: req.transcription,
+      unit: null,
+      clinical_time: 'reported now',
+      recorded_at: new Date().toISOString(),
+      fact_type: req.question_id?.includes('med')
+        ? 'medication'
+        : req.question_id?.includes('allerg')
+        ? 'allergy'
+        : 'symptom',
+      status: 'reported',
+      source_type: req.input_modality === 'voice' ? 'patient_voice_kiosk' : 'patient_intake_utterance',
+      source_id: `turn_${Date.now()}`,
+      source_location: 'kiosk_voice_audio',
+      extraction_method: 'automated_llm',
+      confidence: 0.96,
+      reviewed_by: null,
+      supersedes_fact_id: null,
+    };
     return {
       data: {
         encounter_id: encounterId,
@@ -111,7 +135,7 @@ export const mockApi = {
               text: 'Have you experienced any shortness of breath or radiating arm pain?',
               category: 'symptom_localization',
             },
-        extracted_facts_this_turn: [mockClinicalFacts[0]],
+        extracted_facts_this_turn: [dynamicFact],
         intake_complete: isLastTurn,
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,

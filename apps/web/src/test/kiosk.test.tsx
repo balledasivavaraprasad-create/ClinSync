@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { KioskWelcome } from '../features/patient-kiosk/KioskWelcome';
 import { IdentityConfirmationModal } from '../features/patient-kiosk/IdentityConfirmationModal';
 import { NewPatientForm } from '../features/patient-registration/NewPatientForm';
@@ -365,6 +365,70 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
         expect(screen.getByTestId('clarification-notice')).toBeInTheDocument();
         expect(screen.getByText(/Speech captured/i)).toBeInTheDocument();
       });
+    });
+
+    it('captures dynamic speech via SpeechRecognition and updates response without hardcoding', async () => {
+      let recognitionInstance: any;
+      class MockSpeechRecognition {
+        continuous = false;
+        interimResults = false;
+        maxAlternatives = 1;
+        lang = 'en-US';
+        onstart: any = null;
+        onresult: any = null;
+        onerror: any = null;
+        onend: any = null;
+        start() {
+          recognitionInstance = this;
+          if (this.onstart) this.onstart();
+        }
+        stop() {
+          if (this.onend) this.onend();
+        }
+        abort() {}
+      }
+
+      const originalSR = (window as any).SpeechRecognition;
+      (window as any).SpeechRecognition = MockSpeechRecognition;
+
+      try {
+        render(
+          <IntakeInterview
+            encounterId="enc_test_01"
+            patientName="Eleanor Johnson"
+            onComplete={vi.fn()}
+            onResetSession={vi.fn()}
+          />
+        );
+
+        const micBtn = screen.getByTestId('voice-record-btn');
+        fireEvent.click(micBtn);
+
+        expect(screen.getByLabelText('Stop Listening')).toBeInTheDocument();
+
+        // Simulate recognition returning actual spoken words
+        act(() => {
+          recognitionInstance.onresult({
+            resultIndex: 0,
+            results: [
+              Object.assign([{ transcript: 'Severe migraine with dizziness and nausea' }], { isFinal: true }),
+            ],
+          });
+        });
+
+        // Stop recognition
+        fireEvent.click(micBtn);
+
+        await waitFor(() => {
+          const input = screen.getByTestId('intake-answer-input') as HTMLInputElement;
+          expect(input.value).toBe('Severe migraine with dizziness and nausea');
+          expect(
+            screen.getByText(/Severe migraine with dizziness and nausea/i)
+          ).toBeInTheDocument();
+        });
+      } finally {
+        (window as any).SpeechRecognition = originalSR;
+      }
     });
   });
 

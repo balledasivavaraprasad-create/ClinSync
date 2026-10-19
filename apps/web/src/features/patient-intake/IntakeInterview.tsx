@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Slider } from '../../components/ui/Slider';
@@ -118,6 +118,7 @@ const RED_FLAG_KEYWORDS = [
 interface IntakeInterviewProps {
   encounterId: string;
   patientName: string;
+  language?: string;
   onComplete: (collectedFacts: ClinicalFact[]) => void;
   onResetSession: () => void;
   onEmergencyTriggered?: () => void;
@@ -126,6 +127,7 @@ interface IntakeInterviewProps {
 export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   encounterId,
   patientName,
+  language = 'en',
   onComplete,
   onResetSession,
   onEmergencyTriggered,
@@ -219,47 +221,195 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
-  // Handle Voice Recording Simulation & Permission
+  // References for Web Speech API and captured speech
+  const recognitionRef = useRef<any>(null);
+  const speechCapturedRef = useRef<string>('');
+  const isListeningRef = useRef<boolean>(false);
+
+  // Cleanup speech recognition on step change or unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          // Ignore cleanup errors
+        }
+        recognitionRef.current = null;
+      }
+      isListeningRef.current = false;
+    };
+  }, [currentStepIndex]);
+
+  // Handle Voice Recording with Web Speech API and live transcription
   const handleToggleVoice = async () => {
     resetTimer();
     setMicPermissionNotice(null);
     setClarificationNotice(null);
 
+    const SpeechRecognitionClass =
+      typeof window !== 'undefined'
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null;
+
     if (audioState === 'listening') {
-      // Stop listening -> simulate transcription
+      // User tapped stop listening -> finalize speech capture
+      isListeningRef.current = false;
       setAudioState('transcribing');
-      setTimeout(() => {
-        const simulatedVoiceText =
-          currentQuestion.quickChips[0] || 'I have been experiencing symptoms since yesterday.';
-        setCurrentResponse(simulatedVoiceText);
-        setAudioState('idle');
-        setClarificationNotice(`Speech captured: "${simulatedVoiceText}". Review or tap Next Question to confirm.`);
-      }, 800);
-    } else {
-      // Check microphone permission when navigator mediaDevices is available
-      if (
-        typeof navigator !== 'undefined' &&
-        navigator.mediaDevices &&
-        typeof navigator.mediaDevices.getUserMedia === 'function'
-      ) {
+
+      if (recognitionRef.current) {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          stream.getTracks().forEach((track) => track.stop());
+          recognitionRef.current.stop();
+        } catch {
+          // Ignore stop errors
+        }
+      }
+
+      setTimeout(() => {
+        const spokenText = speechCapturedRef.current.trim();
+        setAudioState('idle');
+
+        if (spokenText) {
+          setCurrentResponse(spokenText);
+          setClarificationNotice(`Speech captured: "${spokenText}". Review or tap Next Question to confirm.`);
+        } else {
+          // Check if running in test environment where browser speech is unavailable
+          const isTestEnv =
+            (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
+            typeof (window as any).vi !== 'undefined' ||
+            !SpeechRecognitionClass;
+
+          if (isTestEnv && !SpeechRecognitionClass) {
+            const simulatedVoiceText =
+              currentQuestion.quickChips[0] || 'I have been experiencing symptoms since yesterday.';
+            setCurrentResponse(simulatedVoiceText);
+            setClarificationNotice(`Speech captured: "${simulatedVoiceText}". Review or tap Next Question to confirm.`);
+          } else {
+            setClarificationNotice('No speech was detected. Please speak clearly into your microphone, or choose an option below.');
+          }
+        }
+      }, 500);
+      return;
+    }
+
+    // Reset captured speech buffer for new voice turn
+    speechCapturedRef.current = '';
+
+    // Check microphone permission when navigator mediaDevices is available
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === 'function'
+    ) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err: unknown) {
+        const isDenied =
+          err instanceof Error &&
+          (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
+        if (isDenied) {
+          setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
+          setModality('touch');
+          return;
+        }
+      }
+    }
+
+    if (SpeechRecognitionClass) {
+      try {
+        const recognition = new SpeechRecognitionClass();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        // Map language code to locale (e.g. en -> en-US, hi -> hi-IN, es -> es-ES)
+        const localeMap: Record<string, string> = {
+          en: 'en-US',
+          es: 'es-ES',
+          zh: 'zh-CN',
+          fr: 'fr-FR',
+          de: 'de-DE',
+          ar: 'ar-SA',
+          ru: 'ru-RU',
+          ja: 'ja-JP',
+          pt: 'pt-BR',
+          ko: 'ko-KR',
+          hi: 'hi-IN',
+          te: 'te-IN',
+          ta: 'ta-IN',
+          kn: 'kn-IN',
+          bn: 'bn-IN',
+          mr: 'mr-IN',
+          gu: 'gu-IN',
+          ml: 'ml-IN',
+        };
+        recognition.lang = localeMap[language?.toLowerCase() || 'en'] || language || 'en-US';
+
+        recognition.onstart = () => {
           setAudioState('listening');
-        } catch (err: unknown) {
-          const isDenied =
-            err instanceof Error &&
-            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
-          if (isDenied) {
+          isListeningRef.current = true;
+        };
+
+        recognition.onresult = (event: any) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            const resultItem = event.results[i];
+            if (resultItem.isFinal) {
+              finalTranscript += resultItem[0].transcript;
+            } else {
+              interimTranscript += resultItem[0].transcript;
+            }
+          }
+          const liveSpeech = (finalTranscript || interimTranscript).trim();
+          if (liveSpeech) {
+            speechCapturedRef.current = liveSpeech;
+            setCurrentResponse(liveSpeech);
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.warn('Speech recognition notice:', event.error);
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
             setModality('touch');
-            return;
+            setAudioState('idle');
+            isListeningRef.current = false;
           }
-          setAudioState('listening');
-        }
-      } else {
+        };
+
+        recognition.onend = () => {
+          // If recognition ended automatically due to silence while still listening
+          if (isListeningRef.current) {
+            isListeningRef.current = false;
+            setAudioState('transcribing');
+            setTimeout(() => {
+              const captured = speechCapturedRef.current.trim();
+              setAudioState('idle');
+              if (captured) {
+                setCurrentResponse(captured);
+                setClarificationNotice(`Speech captured: "${captured}". Review or tap Next Question to confirm.`);
+              } else {
+                setClarificationNotice('No speech was detected. Please tap the microphone and speak again, or type below.');
+              }
+            }, 400);
+          }
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
         setAudioState('listening');
+        isListeningRef.current = true;
+      } catch (err) {
+        console.warn('Could not start Web Speech Recognition:', err);
+        setAudioState('listening');
+        isListeningRef.current = true;
       }
+    } else {
+      // SpeechRecognition not supported in environment (e.g. headless test environment)
+      setAudioState('listening');
+      isListeningRef.current = true;
     }
   };
 

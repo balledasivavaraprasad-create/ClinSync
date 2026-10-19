@@ -145,6 +145,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
           <IntakeInterview
             encounterId={encounterId || 'enc_synth_001'}
             patientName={patientName || 'Eleanor Johnson'}
+            language={selectedLanguage}
             onComplete={handleInterviewComplete}
             onResetSession={handleResetSession}
           />
