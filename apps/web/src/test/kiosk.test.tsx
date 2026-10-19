@@ -437,8 +437,87 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
           const input = screen.getByTestId('intake-answer-input') as HTMLInputElement;
           expect(input.value).toBe('Severe migraine with dizziness and nausea');
           expect(
-            screen.getByText(/Severe migraine with dizziness and nausea/i)
-          ).toBeInTheDocument();
+            screen.getAllByText(/Severe migraine with dizziness and nausea/i).length
+          ).toBeGreaterThanOrEqual(1);
+        });
+      } finally {
+        win.SpeechRecognition = originalSR;
+      }
+    });
+
+    it('intelligently distills rambling patient speech and resolves self-corrections (not fever, but body ache)', async () => {
+      interface MockSpeechEvent {
+        resultIndex?: number;
+        results: Array<Array<{ transcript: string }> & { isFinal?: boolean }>;
+      }
+
+      let latestOnResult: ((event: MockSpeechEvent) => void) | null = null;
+      class MockSpeechRecognition {
+        continuous = false;
+        interimResults = false;
+        maxAlternatives = 1;
+        lang = 'en-US';
+        onstart: (() => void) | null = null;
+        onerror: ((event: { error: string }) => void) | null = null;
+        onend: (() => void) | null = null;
+        private _onresult: ((event: MockSpeechEvent) => void) | null = null;
+        get onresult() {
+          return this._onresult;
+        }
+        set onresult(fn: ((event: MockSpeechEvent) => void) | null) {
+          this._onresult = fn;
+          latestOnResult = fn;
+        }
+        start() {
+          if (this.onstart) this.onstart();
+        }
+        stop() {
+          if (this.onend) this.onend();
+        }
+        abort() {}
+      }
+
+      const win = window as unknown as Record<string, unknown>;
+      const originalSR = win.SpeechRecognition;
+      win.SpeechRecognition = MockSpeechRecognition;
+
+      try {
+        render(
+          <IntakeInterview
+            encounterId="enc_test_02"
+            patientName="Eleanor Johnson"
+            onComplete={vi.fn()}
+            onResetSession={vi.fn()}
+          />
+        );
+
+        const micBtn = screen.getByTestId('voice-record-btn');
+        fireEvent.click(micBtn);
+
+        // Simulate patient rambling and correcting themselves
+        act(() => {
+          if (latestOnResult) {
+            latestOnResult({
+              resultIndex: 0,
+              results: [
+                Object.assign(
+                  [{ transcript: "Well, honestly it's not the fever that I have, it's the body ache I have." }],
+                  { isFinal: true }
+                ),
+              ],
+            });
+          }
+        });
+
+        // Stop recognition
+        fireEvent.click(micBtn);
+
+        await waitFor(() => {
+          const card = screen.getByTestId('clinical-dictation-card');
+          expect(card).toBeInTheDocument();
+          expect(screen.getAllByText(/fever/i).length).toBeGreaterThanOrEqual(1);
+          expect(screen.getAllByText(/body ache/i).length).toBeGreaterThanOrEqual(1);
+          expect(screen.getAllByText(/Ruled Out/i).length).toBeGreaterThanOrEqual(1);
         });
       } finally {
         win.SpeechRecognition = originalSR;

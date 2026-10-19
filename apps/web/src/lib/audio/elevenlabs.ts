@@ -141,3 +141,59 @@ function speakViaBrowserSynthesis(text: string, onEnd?: () => void) {
     onEnd?.();
   }
 }
+
+export interface ElevenLabsTranscriptionResult {
+  text: string;
+  language_code?: string;
+  words?: Array<{
+    text: string;
+    start: number;
+    end: number;
+    type: string;
+    logprob?: number;
+  }>;
+}
+
+/**
+ * High-accuracy Speech-to-Text using ElevenLabs Scribe STT model.
+ * Transcribes recorded user audio stream into accurate text.
+ */
+export async function transcribeAudioWithElevenLabs(
+  audioBlob: Blob,
+  languageCode: string = 'eng'
+): Promise<ElevenLabsTranscriptionResult | null> {
+  const formData = new FormData();
+  const extension = audioBlob.type.includes('mp4') ? 'mp4' : 'webm';
+  formData.append('file', audioBlob, `speech_recording.${extension}`);
+  formData.append('model_id', 'scribe_v1');
+  if (languageCode) {
+    formData.append('language_code', languageCode);
+  }
+  formData.append('tag_audio_events', 'false');
+
+  try {
+    const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+      method: 'POST',
+      headers: {
+        'xi-api-key': ELEVENLABS_CONFIG.apiKey,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      console.warn('ElevenLabs STT API error:', errJson);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      text: data.text || '',
+      language_code: data.language_code,
+      words: data.words,
+    };
+  } catch (err) {
+    console.warn('Failed to contact ElevenLabs STT API:', err);
+    return null;
+  }
+}
