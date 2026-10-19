@@ -6,9 +6,6 @@ import {
   FileSpreadsheet,
   Calendar,
   Stethoscope,
-  Eye,
-  Sparkles,
-  Database,
   Plus,
   ArrowUpRight,
   Sun,
@@ -36,10 +33,7 @@ export type DashboardTabType =
   | 'kiosk'
   | 'ledger'
   | 'appointments'
-  | 'doctor'
-  | 'showroom'
-  | 'mock-api'
-  | 'visual-qa';
+  | 'doctor';
 
 export interface LuxuryMasterDashboardProps {
   activeTab?: DashboardTabType;
@@ -272,9 +266,6 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
     { id: 'ledger', label: 'Clinical Ledger', icon: FileSpreadsheet, testId: 'tab-ledger-diff' },
     { id: 'appointments', label: 'Smart Booking', icon: Calendar, testId: 'tab-appointments' },
     { id: 'doctor', label: 'Doctor Console', icon: Stethoscope, testId: 'tab-doctor-console' },
-    { id: 'visual-qa', label: 'Visual QA & A11y', icon: Eye, testId: 'tab-visual-qa' },
-    { id: 'showroom', label: 'Design Tokens', icon: Sparkles, testId: 'tab-showroom' },
-    { id: 'mock-api', label: 'Live API Hub', icon: Database, testId: 'tab-mock-api' },
   ] as const;
 
   const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];

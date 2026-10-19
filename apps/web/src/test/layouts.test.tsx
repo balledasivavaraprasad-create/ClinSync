@@ -97,15 +97,17 @@ describe('Layout Shells for Kiosk and Doctor Workstation', () => {
       const dropdownMenu = screen.getByTestId('mobile-nav-dropdown-menu');
       expect(dropdownMenu).toBeInTheDocument();
 
-      // All 8 options should be available
+      // All 5 user-facing navigation options should be available
       expect(screen.getByTestId('mobile-tab-dashboard')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-tab-kiosk')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-tab-ledger-diff')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-tab-appointments')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-tab-doctor-console')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-tab-visual-qa')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-tab-showroom')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-tab-mock-api')).toBeInTheDocument();
+
+      // Developer-only internal tabs should be removed
+      expect(screen.queryByTestId('mobile-tab-visual-qa')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('mobile-tab-showroom')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('mobile-tab-mock-api')).not.toBeInTheDocument();
 
       // Select Doctor Console
       const doctorOption = screen.getByTestId('mobile-tab-doctor-console');

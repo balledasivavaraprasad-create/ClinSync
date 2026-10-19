@@ -5,7 +5,7 @@ import { LoginPage, type LoginSuccessPayload } from '../features/authentication'
 import { ErrorState } from '../components/shared/ErrorState';
 import { ThemeProvider } from '../lib/theme';
 
-type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa';
+type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -59,17 +59,13 @@ function parseRoute(): { view: 'landing' | 'login' | 'app'; tab: TabType } {
 
   // Check if hash points to the prototype
   if (hash.startsWith('#/app') || hash.startsWith('#/dashboard') || hash.startsWith('#/kiosk') || hash.startsWith('#/doctor') ||
-      hash.startsWith('#/ledger') || hash.startsWith('#/appointments') || hash.startsWith('#/visual-qa') ||
-      hash.startsWith('#/showroom') || hash.startsWith('#/mock-api') ||
+      hash.startsWith('#/ledger') || hash.startsWith('#/appointments') ||
       search.includes('view=app') || search.includes('app=1') || pathname.startsWith('/app')) {
     let tab: TabType = 'dashboard';
     if (hash.includes('kiosk')) tab = 'kiosk';
     else if (hash.includes('doctor')) tab = 'doctor';
     else if (hash.includes('ledger')) tab = 'ledger';
     else if (hash.includes('appointments')) tab = 'appointments';
-    else if (hash.includes('visual-qa')) tab = 'visual-qa';
-    else if (hash.includes('showroom')) tab = 'showroom';
-    else if (hash.includes('mock-api')) tab = 'mock-api';
 
     return { view: 'app', tab };
   }

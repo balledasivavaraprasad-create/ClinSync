@@ -4,7 +4,7 @@ import { initLandingInteractions } from './landingInteractions';
 import { useTheme } from '../../lib/theme';
 
 export interface LandingPageProps {
-  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'showroom' | 'mock-api' | 'visual-qa') => void;
+  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor') => void;
   onOpenLogin?: () => void;
 }
 
@@ -1538,12 +1538,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
                   style={{ textAlign: 'left', color: 'inherit', font: 'inherit', padding: '4px 0' }}
                 >
                   Doctor Console
-                </button>
-                <button
-                  onClick={() => onLaunchApp('visual-qa')}
-                  style={{ textAlign: 'left', color: 'inherit', font: 'inherit', padding: '4px 0' }}
-                >
-                  Visual QA (G6)
                 </button>
               </div>
             </div>

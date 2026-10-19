@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Lock,
   Users,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 
 interface IdentityConfirmationModalProps {
@@ -192,12 +194,14 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
 
             {/* Secondary Verification: DOB */}
             <div className="space-y-2">
-              <label
-                htmlFor="dob-input"
-                className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
-              >
-                Enter your Date of Birth (Secondary Verification):
-              </label>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="dob-input"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono"
+                >
+                  Enter your Date of Birth (Secondary Verification):
+                </label>
+              </div>
               <div className="relative">
                 <Input
                   id="dob-input"
@@ -218,6 +222,81 @@ export const IdentityConfirmationModal: React.FC<IdentityConfirmationModalProps>
               <span className="text-[11px] text-slate-400 block font-mono">
                 Example: {currentCandidate.dob_year}-05-12 (Enter full birth date as registered in your records)
               </span>
+
+              {/* Sample Login Quick Options */}
+              <div className="pt-2">
+                <span className="text-[11px] uppercase tracking-wider text-cyan-400/90 font-mono font-semibold flex items-center mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  Quick Sample Login (Demo Access):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    data-testid="sample-login-cand1-btn"
+                    onClick={() => {
+                      setSelectedCandidateIndex(0);
+                      setDob('1982-05-12');
+                      setConsentGiven(true);
+                      setErrorMessage(null);
+                      setUncertainState(false);
+                      // Auto trigger confirmation for instant login
+                      onConfirmed({
+                        confirmed: true,
+                        patient_id: 'pat_synth_001',
+                        display_name: 'Eleanor Johnson',
+                        identity_status: 'CONFIRMED',
+                      });
+                    }}
+                    className="p-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-left transition-all cursor-pointer group flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-white group-hover:text-cyan-300 flex items-center">
+                        <Zap className="w-3.5 h-3.5 mr-1 text-cyan-400" />
+                        Sample Login: Eleanor J.
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        DOB: 1982-05-12 (Cardiology)
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-cyan-400 group-hover:translate-x-0.5 transition-transform">
+                      Login →
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    data-testid="sample-login-cand2-btn"
+                    onClick={() => {
+                      setSelectedCandidateIndex(1);
+                      setDob('1968-09-24');
+                      setConsentGiven(true);
+                      setErrorMessage(null);
+                      setUncertainState(false);
+                      // Auto trigger confirmation for instant login
+                      onConfirmed({
+                        confirmed: true,
+                        patient_id: 'pat_synth_002',
+                        display_name: 'Marcus Patel',
+                        identity_status: 'CONFIRMED',
+                      });
+                    }}
+                    className="p-2.5 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-left transition-all cursor-pointer group flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-white group-hover:text-teal-300 flex items-center">
+                        <Zap className="w-3.5 h-3.5 mr-1 text-teal-400" />
+                        Sample Login: Marcus P.
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        DOB: 1968-09-24 (Neurology)
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-teal-400 group-hover:translate-x-0.5 transition-transform">
+                      Login →
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Consent Checkbox */}
