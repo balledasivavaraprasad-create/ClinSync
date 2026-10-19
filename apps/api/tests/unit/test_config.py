@@ -17,6 +17,9 @@ def test_settings_default_values():
     assert settings.SQLITE_WAL_MODE is True
     assert settings.LLM_PROVIDER == "gemini"
     assert settings.LLM_FALLBACK_PROVIDER == "none"
+    assert "http://localhost:3000" in settings.CORS_ORIGINS
+    assert "http://localhost:5173" in settings.CORS_ORIGINS
+    assert "http://localhost:4173" in settings.CORS_ORIGINS
 
 
 def test_settings_override():

@@ -106,7 +106,14 @@ async def validation_exception_handler(
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Handle Starlette / FastAPI HTTPExceptions."""
-    code = ErrorCode.NOT_FOUND if exc.status_code == 404 else ErrorCode.INTERNAL_ERROR
+    if exc.status_code == 404:
+        code = ErrorCode.NOT_FOUND
+    elif exc.status_code == 403:
+        code = ErrorCode.ACCESS_DENIED
+    elif exc.status_code in (400, 422):
+        code = ErrorCode.VALIDATION_ERROR
+    else:
+        code = ErrorCode.INTERNAL_ERROR
     payload = ErrorDetail(
         code=code,
         message=str(exc.detail),

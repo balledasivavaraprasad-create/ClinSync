@@ -1,6 +1,10 @@
 """Integration tests for database constraints, foreign key enforcement, and rollback."""
 
+from pathlib import Path
+
 import pytest
+from alembic import command
+from alembic.config import Config
 from app.models.encounter import Encounter
 from app.models.patient import Patient
 from sqlalchemy.exc import IntegrityError
@@ -45,3 +49,20 @@ def test_transaction_rollback_preserves_state(db_session: Session):
     # Verify initial patient is still present
     initial = db_session.query(Patient).filter_by(id=patient_id).first()
     assert initial is not None
+
+
+def test_alembic_upgrade_downgrade_cycle(tmp_path):
+    """Verify that all Alembic migrations upgrade and downgrade cleanly on fresh SQLite."""
+    temp_db = tmp_path / "alembic_cycle.db"
+    ini_path = Path(__file__).resolve().parents[2] / "alembic.ini"
+    cfg = Config(str(ini_path))
+    cfg.set_main_option("sqlalchemy.url", f"sqlite:///{temp_db.as_posix()}")
+
+    # 1. Upgrade to head
+    command.upgrade(cfg, "head")
+
+    # 2. Downgrade back to base
+    command.downgrade(cfg, "base")
+
+    # 3. Re-upgrade to head
+    command.upgrade(cfg, "head")
