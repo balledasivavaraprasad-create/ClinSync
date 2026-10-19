@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Play,
   Pause,
@@ -22,7 +22,7 @@ interface AudioBriefPlayerProps {
 }
 
 export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
-  audioUrl = '/synthetic_audio_brief_demo.mp3',
+  audioUrl = '/audio/brief_eleanor_60s.mp3',
   transcriptText,
   durationSeconds = 62,
   isAvailable = true,
@@ -34,6 +34,9 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [showFullTranscript, setShowFullTranscript] = useState<boolean>(true);
+  const [actualDuration, setActualDuration] = useState<number>(durationSeconds);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -55,6 +58,11 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
     };
   }, []);
 
+  // Sync actual duration when durationSeconds prop changes
+  useEffect(() => {
+    setActualDuration(durationSeconds);
+  }, [durationSeconds]);
+
   // Format MM:SS
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -62,63 +70,72 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
     return `${mins}:${remaining < 10 ? '0' : ''}${remaining}`;
   };
 
-  // Playback & Speech Synthesis
+  // Keep HTML5 Audio element in sync with player state
   useEffect(() => {
-    if (isPlaying) {
-      // 1. Trigger Web Speech Synthesis if available
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const onLoadedMetadata = () => {
+      if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+        setActualDuration(Math.round(audio.duration));
+      }
+    };
+
+    const onEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      stopSpeech();
+    };
+
+    const onError = () => {
+      console.warn('Audio tag encountered load/decode error for URL:', audioUrl);
+      // Fallback: If HTML5 audio fails, trigger Web Speech Synthesis
       if (
+        isPlaying &&
         typeof window !== 'undefined' &&
         'speechSynthesis' in window &&
         typeof window.SpeechSynthesisUtterance !== 'undefined'
       ) {
         try {
-          if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          } else {
-            window.speechSynthesis.cancel();
-            const utterance = new window.SpeechSynthesisUtterance(transcriptText);
-            utterance.rate = playbackRate;
-            utterance.volume = isMuted ? 0 : 1;
-
-            const voices = window.speechSynthesis.getVoices();
-            const voice =
-              voices.find(
-                (v) =>
-                  v.lang.startsWith('en') &&
-                  (v.name.includes('Natural') ||
-                    v.name.includes('Neural') ||
-                    v.name.includes('Google') ||
-                    v.name.includes('Online'))
-              ) ||
-              voices.find((v) => v.lang.startsWith('en')) ||
-              voices[0];
-            if (voice) {
-              utterance.voice = voice;
-            }
-
-            utterance.onend = () => {
-              setIsPlaying(false);
-              setCurrentTime(0);
-            };
-
-            utterance.onerror = (e) => {
-              if (e.error !== 'interrupted' && e.error !== 'canceled') {
-                console.warn('Speech synthesis playback notice:', e);
-              }
-            };
-
-            utteranceRef.current = utterance;
-            window.speechSynthesis.speak(utterance);
-          }
-        } catch (err) {
-          console.warn('Could not initiate window.speechSynthesis:', err);
+          window.speechSynthesis.cancel();
+          const utterance = new window.SpeechSynthesisUtterance(transcriptText);
+          utterance.rate = playbackRate;
+          utterance.volume = isMuted ? 0 : 1;
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+          };
+          utteranceRef.current = utterance;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.warn('Speech synthesis fallback error:', e);
         }
       }
+    };
 
-      // 2. Scrubber progression loop
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('error', onError);
+    };
+  }, [audioUrl, isPlaying, transcriptText, playbackRate, isMuted]);
+
+  // Playback timer loop (serves as backup & visual clock synchronization)
+  useEffect(() => {
+    if (isPlaying && (!audioRef.current || audioRef.current.paused)) {
       timerRef.current = setInterval(() => {
         setCurrentTime((prev) => {
-          if (prev >= durationSeconds) {
+          if (prev >= actualDuration) {
             setIsPlaying(false);
             stopSpeech();
             return 0;
@@ -127,15 +144,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
         });
       }, 1000 / playbackRate);
     } else {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        try {
-          if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.pause();
-          }
-        } catch {
-          // ignore error
-        }
-      }
+      stopSpeech();
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -144,7 +153,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, playbackRate, durationSeconds, transcriptText, isMuted]);
+  }, [isPlaying, playbackRate, actualDuration]);
 
   // Adjust utterance rate while playing
   useEffect(() => {
@@ -160,30 +169,71 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
     }
   }, [isMuted]);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!isAvailable) {
       setAudioError('Synthesized audio is unavailable for this encounter. Full text brief provided below.');
       return;
     }
     setAudioError(null);
-    setIsPlaying(!isPlaying);
-  };
+
+    const audio = audioRef.current;
+    if (audio) {
+      if (isPlaying) {
+        audio.pause();
+        stopSpeech();
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('Direct audio play error (autoplay blocked or network):', err);
+          });
+        }
+      }
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  }, [isAvailable, isPlaying]);
 
   const handleReset = () => {
     stopSpeech();
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
     setIsPlaying(false);
     setCurrentTime(0);
   };
 
   const cycleSpeed = () => {
-    if (playbackRate === 1.0) setPlaybackRate(1.25);
-    else if (playbackRate === 1.25) setPlaybackRate(1.5);
-    else setPlaybackRate(1.0);
+    const nextRate = playbackRate === 1.0 ? 1.25 : playbackRate === 1.25 ? 1.5 : 1.0;
+    setPlaybackRate(nextRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextRate;
+    }
   };
 
-  const progressPercent = Math.min(100, Math.round((currentTime / durationSeconds) * 100));
+  const toggleMute = () => {
+    const nextMute = !isMuted;
+    setIsMuted(nextMute);
+    if (audioRef.current) {
+      audioRef.current.muted = nextMute;
+    }
+  };
 
-  // Visual waveform bars
+  const handleSeek = (targetSecs: number) => {
+    const clamped = Math.max(0, Math.min(targetSecs, actualDuration));
+    setCurrentTime(clamped);
+    if (audioRef.current) {
+      audioRef.current.currentTime = clamped;
+    }
+  };
+
+  const progressPercent = Math.min(100, Math.round((currentTime / (actualDuration || 1)) * 100));
+
+  // Visual waveform heights for a realistic audio spectrum
   const waveformHeights = [24, 40, 56, 32, 64, 48, 80, 60, 44, 72, 88, 52, 68, 92, 48, 36, 60, 76, 40, 28];
 
   return (
@@ -191,6 +241,14 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
       data-testid="audio-brief-player"
       className="p-4 sm:p-5 rounded-2xl border border-white/[0.08] bg-[#080d19]/90 backdrop-blur-2xl text-white shadow-xl space-y-4"
     >
+      {/* Hidden real HTML5 audio element for true human voice playback */}
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        preload="metadata"
+        playsInline
+      />
+
       {/* Player Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-2">
@@ -203,11 +261,11 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
                 AI Synthesized Audio Brief
               </span>
               <Badge variant="neutral" size="sm" className="bg-white/[0.05] text-slate-300 border-white/10 text-[10px]">
-                60s Consultation Summary
+                {actualDuration >= 45 ? `${Math.round(actualDuration)}s` : '60s'} Consultation Summary
               </Badge>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Oral synthesis for {patientName} • Text fallback always accessible
+              Oral synthesis for {patientName} • ElevenLabs Human AI Voice
             </p>
           </div>
         </div>
@@ -224,7 +282,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={toggleMute}
             data-testid="audio-mute-btn"
             className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10 text-xs transition-colors cursor-pointer"
             title={isMuted ? 'Unmute' : 'Mute'}
@@ -263,29 +321,29 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
           tabIndex={0}
           aria-valuenow={currentTime}
           aria-valuemin={0}
-          aria-valuemax={durationSeconds}
+          aria-valuemax={actualDuration}
           aria-label="Audio summary progress"
           data-testid="audio-progressbar"
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
               e.preventDefault();
-              setCurrentTime((prev) => Math.min(durationSeconds, prev + 5));
+              handleSeek(currentTime + 5);
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
               e.preventDefault();
-              setCurrentTime((prev) => Math.max(0, prev - 5));
+              handleSeek(currentTime - 5);
             } else if (e.key === 'Home') {
               e.preventDefault();
-              setCurrentTime(0);
+              handleSeek(0);
             } else if (e.key === 'End') {
               e.preventDefault();
-              setCurrentTime(durationSeconds);
+              handleSeek(actualDuration);
             }
           }}
           className="w-full bg-slate-700/80 rounded-full h-2 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1 focus:ring-offset-slate-900"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const clickPos = (e.clientX - rect.left) / rect.width;
-            setCurrentTime(Math.round(clickPos * durationSeconds));
+            handleSeek(Math.round(clickPos * actualDuration));
           }}
         >
           <div
@@ -299,7 +357,7 @@ export const AudioBriefPlayer: React.FC<AudioBriefPlayerProps> = ({
           <span>{formatTime(currentTime)}</span>
           <span className="flex items-center">
             <Clock className="w-3 h-3 mr-1" />
-            {formatTime(durationSeconds)}
+            {formatTime(actualDuration)}
           </span>
         </div>
       </div>

@@ -175,6 +175,9 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
               transcriptText={brief.clinical_summary}
               patientName={patientName}
               isAvailable={brief.audio_brief_available}
+              durationSeconds={
+                encounterId === 'enc_demo_002' ? 68 : encounterId === 'enc_demo_001' ? 78 : 63
+              }
             />
           )}
 

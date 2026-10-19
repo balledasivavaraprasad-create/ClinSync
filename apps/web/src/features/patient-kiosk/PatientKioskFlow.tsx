@@ -84,12 +84,16 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
     setPatientId(patient.id);
     setPatientName(patient.name);
     setEncounterId(encounter.id);
+    mockApi.registerNewPatientEncounter?.(patient.id, patient.name, encounter.id);
     setCurrentStep('interview');
   };
 
   // 4. Interview completed -> advance to summary
   const handleInterviewComplete = (facts: ClinicalFact[]) => {
     setCollectedFacts(facts);
+    if (patientName && encounterId) {
+      mockApi.registerNewPatientEncounter?.(patientId, patientName, encounterId);
+    }
     setCurrentStep('summary');
   };
 

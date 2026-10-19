@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Slider } from '../../components/ui/Slider';
@@ -17,6 +17,9 @@ import {
   CheckCircle2,
   Clock,
   ShieldAlert,
+  Volume2,
+  VolumeX,
+  Sparkles,
 } from 'lucide-react';
 
 export interface IntakeQuestion {
@@ -27,78 +30,213 @@ export interface IntakeQuestion {
   subtitle: string;
   quickChips: string[];
   inputType: 'text' | 'chips' | 'slider';
+  audioUrl?: string;
 }
 
-const INTAKE_QUESTIONS: IntakeQuestion[] = [
-  {
-    id: 'q1_chief_complaint',
-    fieldKey: 'chief_complaint',
-    category: 'Chief Complaint',
-    prompt: 'What primary health symptom or discomfort brings you in today?',
-    subtitle: 'Speak naturally or tap a common symptom below.',
-    quickChips: [
-      'Persistent dry cough',
-      'Chest tightness / pain',
-      'Mild fever & chills',
-      'Stomach / abdominal pain',
-      'Joint & muscle aches',
-    ],
-    inputType: 'text',
-  },
-  {
-    id: 'q2_duration',
-    fieldKey: 'duration',
-    category: 'Symptom Duration',
-    prompt: 'How long have you been experiencing this symptom?',
-    subtitle: 'Knowing when it began helps our triage doctor evaluate urgency.',
-    quickChips: [
-      'Just started this morning',
-      'About 2 to 3 days',
-      'Approximately 1 week',
-      'More than 2 weeks',
-    ],
-    inputType: 'chips',
-  },
-  {
-    id: 'q3_severity',
-    fieldKey: 'severity',
-    category: 'Pain & Severity Score',
-    prompt: 'On a scale from 0 to 10, how severe is your discomfort right now?',
-    subtitle: '0 is no discomfort at all; 10 is the worst pain imaginable.',
-    quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
-    inputType: 'slider',
-  },
-  {
-    id: 'q4_associated',
-    fieldKey: 'associated_symptoms',
-    category: 'Associated Symptoms',
-    prompt: 'Are you experiencing any other accompanying symptoms?',
-    subtitle: 'Select any that apply or say none.',
-    quickChips: [
+/**
+ * Adaptive Clinical Questioning Engine
+ * Dynamically computes the next conversational question based on the patient's previous answers.
+ */
+export function getAdaptiveQuestions(answers: Record<string, string>): IntakeQuestion[] {
+  const complaint = (answers['chief_complaint'] || '').toLowerCase();
+
+  // Dynamic Step 1 based on reported chief complaint
+  let step1: IntakeQuestion;
+  if (
+    complaint.includes('chest') ||
+    complaint.includes('heart') ||
+    complaint.includes('tightness') ||
+    complaint.includes('pressure')
+  ) {
+    step1 = {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Symptom Timeline & Radiation',
+      prompt:
+        "I understand you are experiencing chest tightness. Let us make sure our triage team has the full picture. How long have you felt this tightness, and does it spread to your neck, shoulder, or arm?",
+      subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
+      quickChips: [
+        'Started this morning',
+        'About 2 to 3 days, mild pressure',
+        'Radiates slightly to left arm',
+        'Constant heaviness for a week',
+      ],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_chest.mp3',
+    };
+  } else if (
+    complaint.includes('cough') ||
+    complaint.includes('wheez') ||
+    complaint.includes('throat') ||
+    complaint.includes('breath')
+  ) {
+    step1 = {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Cough Character & Progression',
+      prompt:
+        'I hear you on that cough. Let us evaluate this for the triage team. How many days have you had this cough, and are you bringing up any phlegm or running a fever?',
+      subtitle: 'Distinguishing dry vs productive cough helps determine respiratory treatment.',
+      quickChips: [
+        'Dry cough for 3 days',
+        'Productive with yellow phlegm',
+        'Accompanied by mild fever',
+        'Worse at night and early morning',
+      ],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_cough.mp3',
+    };
+  } else if (
+    complaint.includes('stomach') ||
+    complaint.includes('abdom') ||
+    complaint.includes('belly') ||
+    complaint.includes('nausea')
+  ) {
+    step1 = {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Abdominal Pain Specifics',
+      prompt:
+        'I am sorry to hear you are having abdominal discomfort. How long has this pain been present, and is it sharp, cramping, or worse after eating?',
+      subtitle: 'Localizing abdominal pain guides appropriate abdominal evaluation.',
+      quickChips: [
+        'Started suddenly after a meal',
+        'Cramping pain for 2 days',
+        'Dull ache across upper abdomen',
+        'Severe sharp pain on right side',
+      ],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_stomach.mp3',
+    };
+  } else if (
+    complaint.includes('fever') ||
+    complaint.includes('chill') ||
+    complaint.includes('temp')
+  ) {
+    step1 = {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Fever Duration & Systemic Signs',
+      prompt:
+        'I understand you have been having fever and chills. How many days has your temperature been elevated, and have you noticed any body aches or fatigue?',
+      subtitle: 'Timeline and associated systemic signs indicate infection status.',
+      quickChips: [
+        'Fever started last night',
+        'Low-grade fever for 3 days',
+        'High fever with shaking chills',
+        'Fever with severe muscle aches',
+      ],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_fever.mp3',
+    };
+  } else {
+    step1 = {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Symptom Duration & Onset',
+      prompt:
+        'Thank you for sharing that. How long have you been experiencing this symptom, and did it start suddenly or develop gradually over several days?',
+      subtitle: 'Knowing when it began helps our triage doctor evaluate urgency.',
+      quickChips: [
+        'Just started this morning',
+        'About 2 to 3 days',
+        'Approximately 1 week',
+        'More than 2 weeks',
+      ],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_general.mp3',
+    };
+  }
+
+  // Dynamic Step 3 quick chips tailored to reported symptoms
+  let step3Chips: string[];
+  if (complaint.includes('chest')) {
+    step3Chips = [
+      'Shortness of breath on exertion',
+      'Dizziness / lightheadedness',
+      'Cold sweats',
+      'Nausea or reduced appetite',
+      'No other symptoms',
+    ];
+  } else if (complaint.includes('cough') || complaint.includes('fever')) {
+    step3Chips = [
+      'Sore throat & hoarseness',
+      'Nasal congestion & runny nose',
+      'Chills and body aches',
+      'Headache or fatigue',
+      'No other symptoms',
+    ];
+  } else {
+    step3Chips = [
       'Mild fever',
       'Nausea or reduced appetite',
       'Fatigue / weakness',
       'Headache',
       'No other symptoms',
-    ],
-    inputType: 'chips',
-  },
-  {
-    id: 'q5_medications',
-    fieldKey: 'medications_allergies',
-    category: 'Medications & Allergies',
-    prompt: 'Do you take any regular prescription medications or have known drug allergies?',
-    subtitle: 'This ensures patient safety during treatment planning.',
-    quickChips: [
-      'Blood pressure medication',
-      'Asthma inhaler',
-      'Penicillin allergy',
-      'Over-the-counter vitamins only',
-      'No medications or allergies',
-    ],
-    inputType: 'text',
-  },
-];
+    ];
+  }
+
+  return [
+    {
+      id: 'q1_chief_complaint',
+      fieldKey: 'chief_complaint',
+      category: 'Chief Complaint',
+      prompt: 'What primary health symptom or discomfort brings you in today?',
+      subtitle: 'Speak naturally or tap a common symptom below.',
+      quickChips: [
+        'Persistent dry cough',
+        'Chest tightness / pain',
+        'Mild fever & chills',
+        'Stomach / abdominal pain',
+        'Joint & muscle aches',
+      ],
+      inputType: 'text',
+      audioUrl: '/audio/receptionist/q1_welcome.mp3',
+    },
+    step1,
+    {
+      id: 'q3_severity',
+      fieldKey: 'severity',
+      category: 'Pain & Severity Score',
+      prompt:
+        'On a scale from 0 to 10, where 0 is no discomfort at all and 10 is the worst pain imaginable, how severe would you rate your discomfort right now?',
+      subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+      quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
+      inputType: 'slider',
+      audioUrl: '/audio/receptionist/q3_severity.mp3',
+    },
+    {
+      id: 'q4_associated',
+      fieldKey: 'associated_symptoms',
+      category: 'Associated Symptoms',
+      prompt:
+        'Are you experiencing any other accompanying symptoms today, such as nausea, shortness of breath, headache, or unusual fatigue?',
+      subtitle: 'Select any that apply or say none.',
+      quickChips: step3Chips,
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q4_associated.mp3',
+    },
+    {
+      id: 'q5_medications',
+      fieldKey: 'medications_allergies',
+      category: 'Medications & Allergies',
+      prompt:
+        'Lastly, to ensure your safety during treatment, do you take any regular prescription medications, or do you have any known allergies, especially to antibiotics like penicillin?',
+      subtitle: 'This ensures patient safety during treatment planning.',
+      quickChips: [
+        'Blood pressure medication',
+        'Asthma inhaler',
+        'Penicillin allergy',
+        'Over-the-counter vitamins only',
+        'No medications or allergies',
+      ],
+      inputType: 'text',
+      audioUrl: '/audio/receptionist/q5_medications.mp3',
+    },
+  ];
+}
+
+export const INTAKE_QUESTIONS = getAdaptiveQuestions({});
 
 // Red-flag terms that trigger emergency escalation
 const RED_FLAG_KEYWORDS = [
@@ -159,8 +297,47 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   // Extracted clinical facts accumulator
   const [extractedFacts, setExtractedFacts] = useState<ClinicalFact[]>([]);
 
-  const currentQuestion = INTAKE_QUESTIONS[currentStepIndex];
-  const progressPercent = Math.round(((currentStepIndex + 1) / INTAKE_QUESTIONS.length) * 100);
+  const [isAiSpeaking, setIsAiSpeaking] = useState<boolean>(false);
+  const [aiAudioMuted, setAiAudioMuted] = useState<boolean>(false);
+  const aiAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const dynamicQuestions = useMemo(() => getAdaptiveQuestions(answers), [answers]);
+  const currentQuestion = dynamicQuestions[currentStepIndex] || dynamicQuestions[0];
+  const progressPercent = Math.round(((currentStepIndex + 1) / dynamicQuestions.length) * 100);
+
+  // Play ElevenLabs voice question automatically on step transition
+  const playReceptionistVoice = useCallback((url?: string) => {
+    if (!url || aiAudioMuted) return;
+    const audio = aiAudioRef.current;
+    if (audio) {
+      audio.src = url;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsAiSpeaking(true))
+          .catch(() => setIsAiSpeaking(false));
+      }
+    }
+  }, [aiAudioMuted]);
+
+  useEffect(() => {
+    if (currentQuestion?.audioUrl) {
+      playReceptionistVoice(currentQuestion.audioUrl);
+    }
+    return () => {
+      if (aiAudioRef.current) {
+        aiAudioRef.current.pause();
+      }
+      setIsAiSpeaking(false);
+    };
+  }, [currentStepIndex, currentQuestion?.audioUrl, playReceptionistVoice]);
+
+  const handleReplayAiVoice = () => {
+    resetTimer();
+    if (currentQuestion?.audioUrl) {
+      playReceptionistVoice(currentQuestion.audioUrl);
+    }
+  };
 
   // Inactivity countdown
   useEffect(() => {
@@ -205,7 +382,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       setMicPermissionNotice(null);
       setClarificationNotice(null);
     }
-  }, [currentStepIndex, answers, currentQuestion]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIndex]);
 
   // Check for red flag symptoms
   const checkForRedFlags = (text: string): boolean => {
@@ -294,6 +472,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
     // Reset captured speech buffer for new voice turn
     speechCapturedRef.current = '';
+    setAudioState('listening');
+    isListeningRef.current = true;
 
     // Check microphone permission when navigator mediaDevices is available
     if (
@@ -311,6 +491,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         if (isDenied) {
           setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
           setModality('touch');
+          setAudioState('idle');
+          isListeningRef.current = false;
           return;
         }
       }
@@ -457,7 +639,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       setExtractedFacts(updatedFacts);
 
       // Advance or complete
-      if (currentStepIndex + 1 < INTAKE_QUESTIONS.length) {
+      if (currentStepIndex + 1 < dynamicQuestions.length) {
         setCurrentStepIndex(currentStepIndex + 1);
       } else {
         // Complete interview
@@ -557,7 +739,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           {/* Progress Bar */}
           <div className="flex flex-col items-end">
             <span className="text-xs font-semibold text-slate-300">
-              Question {currentStepIndex + 1} of {INTAKE_QUESTIONS.length}
+              Question {currentStepIndex + 1} of {dynamicQuestions.length}
             </span>
             <div className="w-36 bg-white/[0.06] rounded-full h-2 mt-1.5 overflow-hidden border border-white/10">
               <div
@@ -582,8 +764,73 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
       {/* Main Question Card */}
       <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        {/* Hidden audio element for real ElevenLabs receptionist voice playback */}
+        <audio
+          ref={aiAudioRef}
+          onEnded={() => setIsAiSpeaking(false)}
+          onError={() => setIsAiSpeaking(false)}
+          playsInline
+        />
+
         <div className="h-1.5 bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-500" />
-        <div className="pt-7 pb-3 px-6 sm:px-8 border-b border-white/[0.06]">
+        <div className="pt-6 pb-3 px-6 sm:px-8 border-b border-white/[0.06]">
+          {/* ElevenLabs AI Receptionist Voice Banner */}
+          <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between shadow-inner">
+            <div className="flex items-center space-x-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all shadow-md ${
+                  isAiSpeaking
+                    ? 'bg-gradient-to-tr from-cyan-400 to-teal-300 text-slate-950 scale-105 shadow-cyan-400/40 animate-pulse'
+                    : 'bg-white/[0.06] text-cyan-300 border border-white/10'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-bold text-white tracking-wide">
+                    ClinSync AI Receptionist
+                  </span>
+                  <span className="text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono">
+                    ElevenLabs Bella Voice
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  {isAiSpeaking ? 'Speaking question to you in human voice...' : 'Interactive intake assistant • Speaks each question'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={handleReplayAiVoice}
+                data-testid="replay-voice-btn"
+                className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/30 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
+                title="Replay receptionist question voice"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>{isAiSpeaking ? 'Speaking...' : 'Replay Voice'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextMuted = !aiAudioMuted;
+                  setAiAudioMuted(nextMuted);
+                  if (nextMuted && aiAudioRef.current) {
+                    aiAudioRef.current.pause();
+                    setIsAiSpeaking(false);
+                  }
+                }}
+                data-testid="mute-ai-voice-btn"
+                className="p-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10 text-xs transition-colors cursor-pointer"
+                title={aiAudioMuted ? 'Unmute AI voice' : 'Mute AI voice'}
+              >
+                {aiAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase font-mono tracking-wider text-cyan-300 bg-cyan-500/15 px-3 py-1 rounded-lg border border-cyan-500/30">
               {currentQuestion.category}
@@ -853,7 +1100,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           >
             {submitting ? (
               'Saving...'
-            ) : currentStepIndex + 1 === INTAKE_QUESTIONS.length ? (
+            ) : currentStepIndex + 1 === dynamicQuestions.length ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Finish Intake

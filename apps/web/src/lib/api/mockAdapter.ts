@@ -83,7 +83,7 @@ function synthesizeBriefFromFacts(
   let clinicalSummary = '';
   if (encounterId === 'enc_demo_001' && facts.length === mockClinicalFacts.length) {
     clinicalSummary =
-      '44-year-old female presenting with 3 days of progressive retrosternal chest tightness. Blood pressure elevated at 142/88. Currently on Lisinopril 10mg daily. Documented severe allergy to Penicillin. Note discrepancy regarding symptom onset timeline between oral statement and external referral.';
+      'Good morning, Doctor. This is the sixty-second clinical intake synthesis for Eleanor Johnson, a forty-four-year-old female presenting to outpatient triage with subacute retrosternal chest tightness progressing over the past three days. The patient describes a persistent central pressure sensation without acute radiation to the left arm or jaw, worsening primarily with moderate exertion. Baseline triage vitals demonstrate an elevated blood pressure of 142/88 mmHg, a regular heart rate of 76 beats per minute, respiratory rate of 16, and oxygen saturation stable at 98% on ambient room air. Her current active medications include Lisinopril 10mg once daily for essential hypertension, and she has a documented severe allergy to Penicillin resulting in hives and angioedema. Of critical clinical note, an explicit timeline discrepancy was identified between the external community clinic referral citing two weeks and her direct oral statement of three days. The patient remains hemodynamically stable, ambulatory, and prepared for your targeted examination.';
   } else {
     const parts: string[] = [
       `Clinical brief for ${patientName}. Presenting with chief complaint of ${chiefComplaint}.`,
@@ -135,6 +135,13 @@ function synthesizeBriefFromFacts(
     unresolved.push('Verify reported symptoms and clinical history with patient.');
   }
 
+  const audioUrl =
+    encounterId === 'enc_demo_001'
+      ? '/audio/brief_eleanor_60s.mp3'
+      : encounterId === 'enc_demo_002'
+      ? '/audio/brief_marcus_60s.mp3'
+      : '/audio/brief_new_patient_60s.mp3';
+
   return {
     encounter_id: encounterId,
     patient_name: patientName,
@@ -143,7 +150,7 @@ function synthesizeBriefFromFacts(
     citations: citations.length > 0 ? citations : mockCitations,
     unresolved_questions: unresolved,
     audio_brief_available: true,
-    audio_brief_url: '/synthetic_audio_brief.mp3',
+    audio_brief_url: audioUrl,
   };
 }
 
@@ -486,6 +493,29 @@ export const mockApi = {
     };
   },
 
+  registerNewPatientEncounter(
+    patientId: string,
+    patientName: string,
+    encounterId: string,
+    triageNote?: string
+  ) {
+    const existing = inMemoryDoctorQueue.find((q) => q.encounter_id === encounterId);
+    if (!existing) {
+      inMemoryDoctorQueue.unshift({
+        encounter_id: encounterId,
+        patient_id: patientId,
+        patient_name: patientName,
+        appointment_time: 'Now (Just Registered)',
+        department: 'Triage / General Medicine',
+        priority: 'ELEVATED',
+        triage_note:
+          triageNote ||
+          'Newly registered patient intake completed at Kiosk Station A. 60s consultation brief synthesized.',
+        status: 'PENDING_REVIEW',
+      });
+    }
+  },
+
   // 14. GET /encounters/{encounter_id}/brief
   async getDoctorBrief(encounterId: string): Promise<DoctorBriefResponse> {
     const facts =
@@ -503,7 +533,7 @@ export const mockApi = {
           patient_name: 'Marcus Patel (52M)',
           chief_complaint: 'Routine 6-month lipid review with stable baseline ECG',
           clinical_summary:
-            '52-year-old male presenting for scheduled 6-month cardiovascular and lipid follow-up. Blood pressure optimal at 118/76. Baseline 12-lead ECG confirmed normal sinus rhythm without ischemic changes. Current Atorvastatin 20mg daily tolerated without myalgias.',
+            'Good morning, Doctor. Here is the scheduled consultation handoff for Marcus Patel, a fifty-two-year-old male attending his routine six-month cardiovascular and metabolic follow-up. The patient reports feeling generally well with no recurrent chest pressure, orthopnea, palpitations, or decreased exercise tolerance. He continues on daily Atorvastatin twenty milligrams with excellent adherence and reports no muscle aches, cramps, or associated statin adverse effects. Today triage observations demonstrate an optimal resting blood pressure of 118/76 mmHg, a regular resting pulse at 64 beats per minute, and normal oxygenation. A baseline twelve-lead resting electrocardiogram obtained this morning confirms normal sinus rhythm without ischemic changes or conduction delays compared with his prior records. Key pending action items for this encounter include confirming fasting lipid panel review and setting his annual preventive cardiology schedule. Mr. Patel is resting comfortably and ready for your consultation.',
           citations: [
             {
               citation_id: 'cite_m01',
@@ -517,17 +547,67 @@ export const mockApi = {
           ],
           unresolved_questions: [
             'Confirm fasting lipid panel collection prior to visit.',
+            'Confirm annual preventive cardiology follow-up interval.',
           ],
           audio_brief_available: true,
-          audio_brief_url: '/synthetic_audio_brief.mp3',
+          audio_brief_url: '/audio/brief_marcus_60s.mp3',
         },
         request_id: `req_${Math.random().toString(36).substring(7)}`,
       };
     }
 
-    const briefData = synthesizeBriefFromFacts(encounterId, facts);
+    if (
+      encounterId === 'enc_demo_001' &&
+      (!inMemoryEncounterFacts[encounterId] ||
+        inMemoryEncounterFacts[encounterId].length === mockClinicalFacts.length)
+    ) {
+      return {
+        data: {
+          encounter_id: encounterId,
+          patient_name: 'Eleanor Johnson (44F)',
+          chief_complaint: 'Subacute retrosternal chest tightness with hypertensive trend',
+          clinical_summary:
+            'Good morning, Doctor. This is the sixty-second clinical intake synthesis for Eleanor Johnson, a forty-four-year-old female presenting to outpatient triage with subacute retrosternal chest tightness progressing over the past three days. The patient describes a persistent central pressure sensation without acute radiation to the left arm or jaw, worsening primarily with moderate exertion. Baseline triage vitals demonstrate an elevated blood pressure of 142/88 mmHg, a regular heart rate of 76 beats per minute, respiratory rate of 16, and oxygen saturation stable at 98% on ambient room air. Her current active medications include Lisinopril 10mg once daily for essential hypertension, and she has a documented severe allergy to Penicillin resulting in hives and angioedema. Of critical clinical note, an explicit timeline discrepancy was identified between the external community clinic referral citing two weeks and her direct oral statement of three days. The patient remains hemodynamically stable, ambulatory, and prepared for your targeted examination.',
+          citations: mockCitations,
+          unresolved_questions: [
+            'Verify true symptom duration (3 days vs 2 weeks).',
+            'Confirm last dose of Lisinopril.',
+          ],
+          audio_brief_available: true,
+          audio_brief_url: '/audio/brief_eleanor_60s.mp3',
+        },
+        request_id: `req_${Math.random().toString(36).substring(7)}`,
+      };
+    }
+
+    const queuedPatient = inMemoryDoctorQueue.find((q) => q.encounter_id === encounterId);
+    const patDisplayName = queuedPatient ? queuedPatient.patient_name : inMemoryEncounterPatients[encounterId]?.patient_name || 'Newly Registered Patient';
+
+    // If dynamic facts exist, synthesize from facts
+    if (inMemoryEncounterFacts[encounterId] && inMemoryEncounterFacts[encounterId].length > 0) {
+      const briefData = synthesizeBriefFromFacts(encounterId, inMemoryEncounterFacts[encounterId], patDisplayName);
+      return {
+        data: briefData,
+        request_id: `req_${Math.random().toString(36).substring(7)}`,
+      };
+    }
+
+    // Dynamic / Newly registered encounter brief (Guaranteed 45-60s comprehensive clinical handoff)
     return {
-      data: briefData,
+      data: {
+        encounter_id: encounterId,
+        patient_name: patDisplayName,
+        chief_complaint: queuedPatient?.triage_note || 'Recent symptom onset with ambulatory triage presentation',
+        clinical_summary:
+          `Good morning, Doctor. Here is the newly registered consultation handoff for ${patDisplayName}, who just completed intake at Kiosk Station A. The patient registered as a new outpatient presentation, completing identity verification and preliminary symptom screening. They report onset of symptoms over the past forty-eight hours, noting moderate localized discomfort rated at four out of ten on the clinical numeric scale. Vital signs captured at the triage kiosk indicate stable hemodynamics with regular pulse and oxygenation within normal parameters. During intake dialogue, the patient provided detailed symptom characteristics and confirmed no acute red-flag respiratory distress. Their medication history and known sensitivities have been documented in the digital ledger for reconciliation against prior records. The complete clinical context ledger, evidence citations, and differential considerations have been compiled and are awaiting your review and physician sign-off in exam room two.`,
+        citations: mockCitations,
+        unresolved_questions: [
+          'Review documented symptom onset and progression timeline.',
+          'Confirm prescription medications and OTC supplements.',
+        ],
+        audio_brief_available: true,
+        audio_brief_url: '/audio/brief_new_patient_60s.mp3',
+      },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };
   },
