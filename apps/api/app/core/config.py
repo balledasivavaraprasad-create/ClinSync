@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = ""
 
+    # Speech / Voice Synthesis (Optional)
+    ELEVENLABS_API_KEY: str = ""
+
     # Tracing
     TRACE_ENABLED: bool = False
     TRACE_PUBLIC_KEY: str = ""
