@@ -3,6 +3,8 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { ThemeToggle } from '../../lib/theme';
+import { LanguageSelectorDropdown } from '../../components/shared/LanguageSelectorDropdown';
+import { useLanguage } from '../../lib/i18n';
 import {
   Stethoscope,
   Tablet,
@@ -36,6 +38,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onBackToLanding,
   initialRole = 'doctor',
 }) => {
+  const { t } = useLanguage();
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
   const [userId, setUserId] = useState<string>('dr_clara_chen');
   const [password, setPassword] = useState<string>('demo1234');
@@ -128,7 +131,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <LanguageSelectorDropdown testId="login-language-selector" align="right" />
           <ThemeToggle />
           <button
             onClick={onBackToLanding}
@@ -161,7 +165,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               data-testid="role-tab-doctor"
             >
               <Stethoscope className="w-3.5 h-3.5" />
-              <span>Doctor</span>
+              <span>{t('auth.doctor_role', 'Doctor')}</span>
             </button>
             <button
               type="button"
@@ -178,7 +182,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               data-testid="role-tab-kiosk"
             >
               <Tablet className="w-3.5 h-3.5" />
-              <span>Patient Kiosk</span>
+              <span>{t('auth.kiosk_role', 'Patient Kiosk')}</span>
             </button>
             <button
               type="button"
@@ -195,7 +199,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               data-testid="role-tab-auditor"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>QA / Ledger</span>
+              <span>{t('auth.auditor_role', 'QA / Ledger')}</span>
             </button>
           </div>
 
@@ -207,10 +211,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   <Lock className="w-5 h-5 text-teal-400" />
                   <span>
                     {selectedRole === 'doctor'
-                      ? 'Physician Sign-In'
+                      ? t('auth.physician_signin', 'Physician Sign-In')
                       : selectedRole === 'kiosk'
-                      ? 'Tablet Kiosk Activation'
-                      : 'Clinical Auditor Access'}
+                      ? t('auth.kiosk_activation', 'Tablet Kiosk Activation')
+                      : t('auth.auditor_access', 'Clinical Auditor Access')}
                   </span>
                 </CardTitle>
                 <Badge variant="info" className="text-teal-300 border-teal-500/30 bg-teal-500/10">
@@ -241,10 +245,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div className="space-y-1.5">
                   <label htmlFor="login-userid" className="block text-xs font-medium text-slate-300">
                     {selectedRole === 'doctor'
-                      ? 'Staff Physician ID'
+                      ? t('auth.staff_id_label', 'Staff Physician ID')
                       : selectedRole === 'kiosk'
-                      ? 'Kiosk Station Identifier'
-                      : 'Auditor ID'}
+                      ? t('auth.kiosk_id_label', 'Kiosk Station Identifier')
+                      : t('auth.auditor_id_label', 'Auditor ID')}
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -269,7 +273,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label htmlFor="login-passcode" className="block text-xs font-medium text-slate-300">
-                      Security Passcode / Badge Token
+                      {t('auth.passcode_label', 'Security Passcode / Badge Token')}
                     </label>
                     <span className="text-[11px] text-cyan-400 font-mono">Demo: demo1234</span>
                   </div>
@@ -295,7 +299,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       onChange={(e) => setRememberWorkstation(e.target.checked)}
                       className="rounded bg-[#050811] border-white/20 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-[#05070d] accent-cyan-400"
                     />
-                    <span>Remember workstation</span>
+                    <span>{t('auth.remember_workstation', 'Remember workstation')}</span>
                   </label>
                   <span className="text-slate-500 font-mono text-[11px]">TLS 1.3 Encrypted</span>
                 </div>
@@ -309,10 +313,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 >
                   <span>
                     {selectedRole === 'doctor'
-                      ? 'Sign In to Doctor Console'
+                      ? t('auth.signin_btn', 'Sign In to Doctor Console')
                       : selectedRole === 'kiosk'
-                      ? 'Launch Patient Kiosk'
-                      : 'Access Ledger & QA'}
+                      ? t('auth.launch_kiosk', 'Launch Patient Kiosk')
+                      : t('auth.access_ledger', 'Access Ledger & QA')}
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -322,7 +326,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               <div className="mt-5 pt-4 border-t border-white/[0.08] space-y-2">
                 <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Quick Demo Profiles (1-Click Fill)</span>
+                  <span>{t('auth.sample_logins_title', 'Quick Demo Profiles (1-Click Fill)')}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   <button

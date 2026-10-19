@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Dialog } from '../../components/ui/Dialog';
 import {
@@ -37,6 +37,13 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
 }) => {
   const { isLight } = useTheme();
   const [language, setLanguage] = useState<SupportedLanguage>(selectedLanguage);
+
+  useEffect(() => {
+    if (selectedLanguage && selectedLanguage !== language) {
+      setLanguage(selectedLanguage);
+    }
+  }, [selectedLanguage]);
+
   const [highContrast, setHighContrast] = useState<boolean>(false);
   const [isStaffHelpOpen, setIsStaffHelpOpen] = useState<boolean>(false);
   const [staffNotified, setStaffNotified] = useState<boolean>(false);
