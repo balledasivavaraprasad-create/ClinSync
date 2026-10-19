@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { KioskWelcome } from './KioskWelcome';
 import { IdentityConfirmationModal } from './IdentityConfirmationModal';
 import { NewPatientForm } from '../patient-registration/NewPatientForm';
@@ -10,6 +10,7 @@ import { KioskLayout } from '../../layouts/KioskLayout';
 import { mockApi } from '../../lib/api/mockAdapter';
 import type { IdentityCandidate, ClinicalFact, Encounter } from '../../lib/api/types';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './languages';
+import { useLanguage } from '../../lib/i18n';
 
 export type KioskFlowStep =
   | 'welcome'
@@ -30,7 +31,17 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
   const [collectedFacts, setCollectedFacts] = useState<ClinicalFact[]>([]);
   const [candidates, setCandidates] = useState<IdentityCandidate[]>([]);
   const [candidate, setCandidate] = useState<IdentityCandidate | undefined>(undefined);
-  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('en');
+  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage();
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>(globalLanguage);
+
+  useEffect(() => {
+    setSelectedLanguage(globalLanguage);
+  }, [globalLanguage]);
+
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    setSelectedLanguage(lang);
+    setGlobalLanguage(lang);
+  };
 
   // 1. Returning patient check-in initiated
   const handleSelectReturning = async () => {
@@ -118,7 +129,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
             onSelectReturning={handleSelectReturning}
             onSelectNew={() => setCurrentStep('new-patient')}
             selectedLanguage={selectedLanguage}
-            onLanguageChange={setSelectedLanguage}
+            onLanguageChange={handleLanguageChange}
             onEmergencyEscalation={() => {
               // Direct emergency escalation
               setEncounterId(`enc_emerg_${Date.now()}`);

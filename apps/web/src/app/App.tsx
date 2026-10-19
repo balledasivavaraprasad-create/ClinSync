@@ -4,6 +4,7 @@ import { LandingPage } from '../features/landing';
 import { LoginPage, type LoginSuccessPayload } from '../features/authentication';
 import { ErrorState } from '../components/shared/ErrorState';
 import { ThemeProvider } from '../lib/theme';
+import { LanguageProvider } from '../lib/i18n';
 
 type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'profile';
 
@@ -138,23 +139,25 @@ export const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <ErrorBoundary>
-        {route === 'landing' ? (
-          <LandingPage onLaunchApp={handleLaunchApp} onOpenLogin={handleOpenLogin} />
-        ) : route === 'login' ? (
-          <LoginPage
-            onLoginSuccess={handleLoginSuccess}
-            onBackToLanding={handleBackToLanding}
-          />
-        ) : (
-          <MainView
-            initialTab={activeTab}
-            currentUser={currentUser}
-            onBackToLanding={handleBackToLanding}
-            onOpenLogin={handleOpenLogin}
-          />
-        )}
-      </ErrorBoundary>
+      <LanguageProvider>
+        <ErrorBoundary>
+          {route === 'landing' ? (
+            <LandingPage onLaunchApp={handleLaunchApp} onOpenLogin={handleOpenLogin} />
+          ) : route === 'login' ? (
+            <LoginPage
+              onLoginSuccess={handleLoginSuccess}
+              onBackToLanding={handleBackToLanding}
+            />
+          ) : (
+            <MainView
+              initialTab={activeTab}
+              currentUser={currentUser}
+              onBackToLanding={handleBackToLanding}
+              onOpenLogin={handleOpenLogin}
+            />
+          )}
+        </ErrorBoundary>
+      </LanguageProvider>
     </ThemeProvider>
   );
 };

@@ -27,6 +27,8 @@ import { Dialog } from '../../components/ui/Dialog';
 import { Button } from '../../components/ui/Button';
 import { ThemeToggle, useTheme } from '../../lib/theme';
 import { ProfileDropdownMenu } from '../patient-profile';
+import { LanguageSelectorDropdown } from '../../components/shared/LanguageSelectorDropdown';
+import { useLanguage } from '../../lib/i18n';
 
 export type DashboardTabType =
   | 'dashboard'
@@ -90,6 +92,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   children,
 }) => {
   const { isLight } = useTheme();
+  const { t } = useLanguage();
   const [activeDateTab, setActiveDateTab] = useState<'queue' | 'today' | 'week' | 'month'>('today');
   const [selectedEncounter, setSelectedEncounter] = useState<DashboardEncounterItem | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<DashboardDocumentItem | null>(null);
@@ -283,12 +286,12 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard, testId: 'tab-dashboard' },
-    { id: 'kiosk', label: 'Patient Kiosk', icon: Tablet, testId: 'tab-kiosk' },
-    { id: 'ledger', label: 'Clinical Ledger', icon: FileSpreadsheet, testId: 'tab-ledger-diff' },
-    { id: 'appointments', label: 'Smart Booking', icon: Calendar, testId: 'tab-appointments' },
-    { id: 'doctor', label: 'Doctor Console', icon: Stethoscope, testId: 'tab-doctor-console' },
-    { id: 'profile', label: 'Patient Records', icon: User, testId: 'tab-patient-profile' },
+    { id: 'dashboard', label: t('nav.dashboard', 'Command Center'), icon: LayoutDashboard, testId: 'tab-dashboard' },
+    { id: 'kiosk', label: t('nav.kiosk', 'Patient Kiosk'), icon: Tablet, testId: 'tab-kiosk' },
+    { id: 'ledger', label: t('nav.ledger', 'Clinical Ledger'), icon: FileSpreadsheet, testId: 'tab-ledger-diff' },
+    { id: 'appointments', label: t('nav.appointments', 'Smart Booking'), icon: Calendar, testId: 'tab-appointments' },
+    { id: 'doctor', label: t('nav.doctor', 'Doctor Console'), icon: Stethoscope, testId: 'tab-doctor-console' },
+    { id: 'profile', label: t('nav.profile', 'Patient Records'), icon: User, testId: 'tab-patient-profile' },
   ] as const;
 
   const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
@@ -374,7 +377,8 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
         </div>
 
         {/* User / Hospital Auth Status & Theme Preference */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <LanguageSelectorDropdown testId="dashboard-language-selector" align="right" />
           <ThemeToggle />
           <ProfileDropdownMenu
             currentUser={currentUser}
