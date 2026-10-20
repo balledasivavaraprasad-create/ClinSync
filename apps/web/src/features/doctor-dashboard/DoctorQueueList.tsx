@@ -112,11 +112,14 @@ export const DoctorQueueList: React.FC<DoctorQueueListProps> = ({
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-white">
-                Patient Triage Queue
+              <CardTitle className="text-base font-bold text-white flex items-center space-x-2">
+                <span>Patients</span>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  {queue.length}
+                </span>
               </CardTitle>
               <p className="text-xs text-slate-400">
-                {queue.length} scheduled consultations today
+                <span>Patient Triage Queue</span> • Assigned Cases
               </p>
             </div>
           </div>

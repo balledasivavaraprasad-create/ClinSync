@@ -333,8 +333,8 @@ describe('ClinSync Patient Profile & Hospital Portal Suite', () => {
     });
   });
 
-  describe('3. Hospital Portal & Doctor Console Integration', () => {
-    it('renders the Patient Profile & History tab in the doctor console and displays patient record', async () => {
+  describe('3. Hospital Portal & Doctor Console Role Separation', () => {
+    it('verifies doctor console excludes patient profile and booking tabs while PatientProfileHub serves patient records', async () => {
       render(
         <ThemeProvider>
           <DoctorDashboardHub doctorId="dr_clara_chen" initialEncounterId="enc_demo_001" />
@@ -342,18 +342,13 @@ describe('ClinSync Patient Profile & Hospital Portal Suite', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('doc-tab-profile')).toBeInTheDocument();
+        expect(screen.getByTestId('doc-tab-brief')).toBeInTheDocument();
       });
 
-      // Switch to Patient Profile & History tab in doctor console
-      fireEvent.click(screen.getByTestId('doc-tab-profile'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('tab-content-profile')).toBeInTheDocument();
-      });
-
-      expect(screen.getByText('Hospital Master Record')).toBeInTheDocument();
-      expect(screen.getAllByText('MRN-EJ-829104').length).toBeGreaterThan(0);
+      // Doctor console must not contain patient profile / booking tabs
+      expect(screen.queryByTestId('doc-tab-profile')).not.toBeInTheDocument();
+      expect(screen.getByTestId('doc-tab-ledger')).toBeInTheDocument();
+      expect(screen.getByTestId('doc-tab-diff')).toBeInTheDocument();
     });
   });
 });

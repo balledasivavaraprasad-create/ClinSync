@@ -464,10 +464,9 @@ describe('TASK-P1-501: Doctor Console, Briefing UI & Audio Player Suite', () => 
       fireEvent.click(screen.getByTestId('doc-tab-diff'));
       expect(screen.getByTestId('tab-content-diff')).toBeInTheDocument();
 
-      // Tab 4: Patient Profile (Diagnostic Documents removed to eliminate redundancy with Clinical Ledger)
+      // Patient Profile and booking options are strictly patient-facing and removed from Doctor Console
       expect(screen.queryByTestId('doc-tab-documents')).not.toBeInTheDocument();
-      fireEvent.click(screen.getByTestId('doc-tab-profile'));
-      expect(screen.getByTestId('tab-content-profile')).toBeInTheDocument();
+      expect(screen.queryByTestId('doc-tab-profile')).not.toBeInTheDocument();
     });
 
     it('opens document viewer modal when citation is clicked', async () => {

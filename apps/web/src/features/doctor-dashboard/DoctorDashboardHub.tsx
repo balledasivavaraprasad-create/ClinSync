@@ -23,9 +23,7 @@ import {
   AlertCircle,
   RefreshCw,
   CheckCircle2,
-  User,
 } from 'lucide-react';
-import { PatientProfileHub } from '../patient-profile';
 
 interface DoctorDashboardHubProps {
   doctorId?: string;
@@ -45,8 +43,8 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
   const [selectedEncounterId, setSelectedEncounterId] = useState<string>(initialEncounterId);
   const [selectedPatientName, setSelectedPatientName] = useState<string>('Eleanor Johnson');
 
-  // 3. Clinical Data for Active Encounter
-  const [activeTab, setActiveTab] = useState<'brief' | 'ledger' | 'diff' | 'documents' | 'profile'>('brief');
+  // 3. Clinical Data for Active Encounter (Doctor reviews assigned patients and clinical details)
+  const [activeTab, setActiveTab] = useState<'brief' | 'ledger' | 'diff'>('brief');
   const [brief, setBrief] = useState<DoctorBriefResponse['data'] | null>(null);
   const [isBriefLoading, setIsBriefLoading] = useState<boolean>(true);
   const [briefError, setBriefError] = useState<string | null>(null);
@@ -193,7 +191,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-mono uppercase tracking-wider text-cyan-700 dark:text-cyan-400 font-semibold">
-                Active Consultation Case
+                <span>Patient Details</span> • <span>Active Consultation Case</span>
               </span>
               <Badge variant="neutral" size="sm" className="font-mono text-[10px]">
                 {selectedEncounterId}
@@ -209,7 +207,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
             </h2>
             {activePatientItem && (
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {activePatientItem.department} • Scheduled {activePatientItem.appointment_time}
+                {activePatientItem.department} • Scheduled {activePatientItem.appointment_time} • {activePatientItem.triage_note}
               </p>
             )}
           </div>
@@ -325,20 +323,6 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
               )}
             </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('profile')}
-              data-testid="doc-tab-profile"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'profile'
-                  ? 'bg-white dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-300 border border-slate-300 dark:border-cyan-400/40 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Patient Profile & History</span>
-            </button>
           </div>
 
           {/* Tab 1: Evidence Brief & Audio */}
@@ -410,18 +394,6 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                 diffData={diffData}
                 isLoading={isDiffLoading}
                 onRefresh={() => fetchEncounterData(selectedEncounterId)}
-              />
-            </div>
-          )}
-
-
-
-          {/* Tab 5: Hospital Patient Record / Master Profile */}
-          {activeTab === 'profile' && (
-            <div data-testid="tab-content-profile" className="pt-2">
-              <PatientProfileHub
-                patientId={selectedEncounterId === 'enc_demo_002' ? 'pat_synth_002' : 'pat_synth_001'}
-                isClinicianView={true}
               />
             </div>
           )}
