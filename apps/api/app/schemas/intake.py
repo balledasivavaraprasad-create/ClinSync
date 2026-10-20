@@ -44,7 +44,7 @@ class IntakeStateData(BaseModel):
         default_factory=list, description="Clinical facts extracted during intake"
     )
     current_step: Optional[int] = Field(None, description="Current intake step")
-    total_steps: Optional[int] = Field(5, description="Total expected intake turns")
+    total_steps: Optional[int] = Field(None, description="Total expected intake turns, if bounded")
     extracted_facts_this_turn: list[ClinicalFact] = Field(
         default_factory=list, description="Facts extracted in this specific turn"
     )

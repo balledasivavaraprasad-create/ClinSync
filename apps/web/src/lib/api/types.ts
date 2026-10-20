@@ -190,7 +190,7 @@ export interface IntakeStateResponse {
   data: {
     encounter_id: string;
     current_step: number;
-    total_steps: number;
+    total_steps?: number;
     next_question: {
       id: string;
       text: string;

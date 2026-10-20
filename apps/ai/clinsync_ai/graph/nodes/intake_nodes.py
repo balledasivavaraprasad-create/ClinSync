@@ -16,7 +16,7 @@ ACUTE_RED_FLAGS = [
     r"\b(?:crushing|severe)\s+chest\s+pain\b",
     r"\bchest\s+pain\s+(?:radiat|spread)",
     r"\b(?:severe\s+)?chest\s+pain\b",
-    r"\b(?:sudden|acute)\s+(?:numbness|paralysis|weakness)\s+on\s+one\s+side\b",
+    r"\b(?:sudden|acute)\s+(?:numbness|paralysis|weakness)\b",
     r"\bfacial\s+droop\b",
     r"\bcan(?:'t|not)\s+breathe\b",
     r"\bsevere\s+shortness\s+of\s+breath\b",
@@ -420,29 +420,43 @@ def check_stopping_node(state: IntakeState) -> dict[str, Any]:
     if state.emergency_detected:
         return {"status": "ESCALATE_EMERGENCY", "next_question": None}
 
-    # Condition A: Patient signaled they are finished
+    # Condition A: Patient signaled they are finished or have nothing more to add
     for comp_pat in COMPLETION_PHRASES:
         if re.search(comp_pat, input_text):
             return {"status": "COMPLETED", "next_question": None}
 
-    # Condition B: Max turn count limit reached (Bounded Loop Guardrail)
+    # Condition B: Max turn count limit reached (Bounded Loop Safety Guardrail)
     if state.turn_count >= state.max_turns:
+        is_complete = len(state.missing_fields) == 0
         return {
             "status": "COMPLETED",
             "next_question": None,
             "notes": state.notes
-            + [f"Intake reached maximum bounded turn count ({state.max_turns})."],
+            + [
+                f"Intake reached maximum bounded turn count ({state.max_turns})."
+                + (" Incomplete: missing " + ", ".join(state.missing_fields) if not is_complete else "")
+            ],
         }
 
-    # Condition C: All core required intake fields collected
-    required_core = {"chief_complaint", "duration_onset"}
-    if (
-        required_core.issubset(set(state.known_fields.keys()))
-        and len(state.uncertain_fields) == 0
-        and len(state.conflicting_fields) == 0
-    ):
-        if state.turn_count >= 2:
-            return {"status": "COMPLETED", "next_question": None}
+    # Condition C: Adaptive Clinical Stopping Criteria
+    # Simple complaints (e.g. sprained ankle, minor localized rash) can conclude in 2-3 turns.
+    # Complex or systemic complaints (chest tightness, respiratory distress, abdominal pain, fever)
+    # require associated symptoms or severity assessment before completing.
+    cc = (state.known_fields.get("chief_complaint") or state.chief_complaint or "").lower()
+    is_complex = any(k in cc for k in ["chest", "heart", "breath", "shortness", "abdom", "stomach", "fever", "dizzy", "headache"])
+
+    if len(state.uncertain_fields) == 0 and len(state.conflicting_fields) == 0:
+        if is_complex:
+            # Complex symptoms require core facts plus associated symptoms or severity progression
+            has_core = {"chief_complaint", "duration_onset"}.issubset(set(state.known_fields.keys()))
+            has_detail = bool(state.known_fields.get("associated_symptoms") or state.known_fields.get("severity_progression"))
+            # Complex symptoms continue gathering critical history if missing_fields remain
+            if len(state.missing_fields) == 0 and has_core and has_detail and state.turn_count >= 3:
+                return {"status": "COMPLETED", "next_question": None}
+        else:
+            # Simple, non-complex symptoms can safely conclude after 2 turns
+            if {"chief_complaint", "duration_onset"}.issubset(set(state.known_fields.keys())) and state.turn_count >= 2:
+                return {"status": "COMPLETED", "next_question": None}
 
     return {"status": "IN_PROGRESS"}
 

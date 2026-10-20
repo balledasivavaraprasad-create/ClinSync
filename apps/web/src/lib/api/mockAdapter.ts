@@ -39,6 +39,9 @@ import {
   mockCitations,
 } from './mockData';
 
+// In-memory store for active intake turn counters
+const inMemoryIntakeTurns: Record<string, number> = {};
+
 // In-memory stores for dynamic encounter lifecycle and facts
 const inMemoryEncounterFacts: Record<string, ClinicalFact[]> = {
   enc_demo_001: [...mockClinicalFacts],
@@ -373,7 +376,10 @@ export const mockApi = {
     encounterId: string,
     req: IntakeAnswerRequest
   ): Promise<IntakeStateResponse> {
-    const isLastTurn = req.question_id === 'q_final' || req.question_id === 'q5_allergies';
+    const rawLower = (req.transcription || '').toLowerCase().trim();
+    const isExplicitDone = ['that is all', "that's all", 'nothing else', 'no other symptoms', 'none', 'nothing'].some(
+      (phrase) => rawLower.includes(phrase)
+    );
 
     let concept = 'Reported Symptom';
     let factType: ClinicalFact['fact_type'] = 'symptom';
@@ -385,10 +391,13 @@ export const mockApi = {
     } else if (req.question_id?.includes('duration')) {
       concept = 'Symptom Duration';
       factType = 'symptom';
-    } else if (req.question_id?.includes('pain')) {
+    } else if (req.question_id?.includes('severity') || req.question_id?.includes('pain')) {
       concept = 'Discomfort Rating';
       factType = 'symptom';
       unit = 'pain_scale_10';
+    } else if (req.question_id?.includes('associated')) {
+      concept = 'Associated Symptoms';
+      factType = 'symptom';
     } else if (req.question_id?.includes('med')) {
       concept = 'Current Medication';
       factType = 'medication';
@@ -421,6 +430,8 @@ export const mockApi = {
       inMemoryEncounterFacts[encounterId] = [];
     }
     inMemoryEncounterFacts[encounterId].push(dynamicFact);
+    inMemoryIntakeTurns[encounterId] = (inMemoryIntakeTurns[encounterId] || 1) + 1;
+    const currentStep = inMemoryIntakeTurns[encounterId];
 
     // Update or insert queue item so Doctor console can see it
     const existingQueueItem = inMemoryDoctorQueue.find((q) => q.encounter_id === encounterId);
@@ -440,20 +451,22 @@ export const mockApi = {
       existingQueueItem.triage_note = `Chief Complaint: ${req.transcription}`;
     }
 
+    const isComplete = isExplicitDone || req.question_id === 'q_final' || req.question_id === 'q_conclude';
+
     return {
       data: {
         encounter_id: encounterId,
-        current_step: isLastTurn ? 3 : 2,
-        total_steps: 3,
-        next_question: isLastTurn
+        current_step: currentStep,
+        total_steps: undefined,
+        next_question: isComplete
           ? null
           : {
-              id: 'q_final',
-              text: 'Have you experienced any shortness of breath or radiating arm pain?',
-              category: 'symptom_localization',
+              id: `q_adaptive_${currentStep}`,
+              text: 'Are there any other symptoms or relevant medical history to report?',
+              category: 'clinical_followup',
             },
         extracted_facts_this_turn: [dynamicFact],
-        intake_complete: isLastTurn,
+        intake_complete: isComplete,
       },
       request_id: `req_${Math.random().toString(36).substring(7)}`,
     };

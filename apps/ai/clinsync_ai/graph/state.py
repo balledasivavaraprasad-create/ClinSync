@@ -71,7 +71,7 @@ class IntakeState(BaseModel):
     patient_id: str
     status: WorkflowStatus = "IN_PROGRESS"
     turn_count: int = 0
-    max_turns: int = 5
+    max_turns: int = 10
     input_modality: Literal["VOICE", "TOUCH_TEXT"] = "VOICE"
 
     # Clinical fields tracking

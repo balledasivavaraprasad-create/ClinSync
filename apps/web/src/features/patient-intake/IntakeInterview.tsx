@@ -43,261 +43,351 @@ export interface IntakeQuestion {
  * Adaptive Clinical Questioning Engine
  * Dynamically computes the next conversational question based on previous inputs & Mem0 Agent Memory.
  */
-function getAdaptiveQuestions(
-  answers: Record<string, string>,
-  memoryHarness?: AgentMemoryHarness
-): IntakeQuestion[] {
-  const complaint = (answers['chief_complaint'] || '').toLowerCase();
+export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
+  id: 'q1_chief_complaint',
+  fieldKey: 'chief_complaint',
+  category: 'Chief Complaint',
+  prompt: 'What primary health symptom or discomfort brings you in today?',
+  subtitle: 'Speak naturally or tap a common symptom below.',
+  quickChips: [
+    'Persistent dry cough',
+    'Chest tightness / pain',
+    'Mild fever & chills',
+    'Stomach / abdominal pain',
+    'Joint & muscle aches',
+  ],
+  inputType: 'text',
+  audioUrl: '/audio/receptionist/q1_welcome.mp3',
+};
 
-  // Dynamic Step 1 based on reported chief complaint
-  let step1: IntakeQuestion;
-  if (
-    complaint.includes('chest') ||
-    complaint.includes('heart') ||
-    complaint.includes('tightness') ||
-    complaint.includes('pressure')
-  ) {
-    step1 = {
-      id: 'q2_duration',
-      fieldKey: 'duration',
-      category: 'Symptom Timeline & Radiation',
-      prompt:
-        "I understand you are experiencing chest tightness. Let us make sure our triage team has the full picture. How long have you felt this tightness, and does it spread to your neck, shoulder, or arm?",
-      subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
-      quickChips: [
-        'Started this morning',
-        'About 2 to 3 days, mild pressure',
-        'Radiates slightly to left arm',
-        'Constant heaviness for a week',
-      ],
-      inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_chest.mp3',
-    };
-  } else if (
-    complaint.includes('cough') ||
-    complaint.includes('wheez') ||
-    complaint.includes('throat') ||
-    complaint.includes('breath')
-  ) {
-    step1 = {
-      id: 'q2_duration',
-      fieldKey: 'duration',
-      category: 'Cough Character & Progression',
-      prompt:
-        'I hear you on that cough. Let us evaluate this for the triage team. How many days have you had this cough, and are you bringing up any phlegm or running a fever?',
-      subtitle: 'Distinguishing dry vs productive cough helps determine respiratory treatment.',
-      quickChips: [
-        'Dry cough for 3 days',
-        'Productive with yellow phlegm',
-        'Accompanied by mild fever',
-        'Worse at night and early morning',
-      ],
-      inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_cough.mp3',
-    };
-  } else if (
-    complaint.includes('stomach') ||
-    complaint.includes('abdom') ||
-    complaint.includes('belly') ||
-    complaint.includes('nausea')
-  ) {
-    step1 = {
-      id: 'q2_duration',
-      fieldKey: 'duration',
-      category: 'Abdominal Pain Specifics',
-      prompt:
-        'I am sorry to hear you are having abdominal discomfort. How long has this pain been present, and is it sharp, cramping, or worse after eating?',
-      subtitle: 'Localizing abdominal pain guides appropriate abdominal evaluation.',
-      quickChips: [
-        'Started suddenly after a meal',
-        'Cramping pain for 2 days',
-        'Dull ache across upper abdomen',
-        'Severe sharp pain on right side',
-      ],
-      inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_stomach.mp3',
-    };
-  } else if (
-    complaint.includes('fever') ||
-    complaint.includes('chill') ||
-    complaint.includes('temp')
-  ) {
-    step1 = {
-      id: 'q2_duration',
-      fieldKey: 'duration',
-      category: 'Fever Duration & Systemic Signs',
-      prompt:
-        'I understand you have been having fever and chills. How many days has your temperature been elevated, and have you noticed any body aches or fatigue?',
-      subtitle: 'Timeline and associated systemic signs indicate infection status.',
-      quickChips: [
-        'Fever started last night',
-        'Low-grade fever for 3 days',
-        'High fever with shaking chills',
-        'Fever with severe muscle aches',
-      ],
-      inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_fever.mp3',
-    };
-  } else {
-    step1 = {
-      id: 'q2_duration',
-      fieldKey: 'duration',
-      category: 'Symptom Duration & Onset',
-      prompt:
-        'Thank you for sharing that. How long have you been experiencing this symptom, and did it start suddenly or develop gradually over several days?',
-      subtitle: 'Knowing when it began helps our triage doctor evaluate urgency.',
-      quickChips: [
-        'Just started this morning',
-        'About 2 to 3 days',
-        'Approximately 1 week',
-        'More than 2 weeks',
-      ],
+/**
+ * Evaluates the evolving conversation and dynamically determines the next
+ * clinically relevant follow-up question or signals completion (null).
+ */
+export function determineNextAdaptiveQuestion(
+  answers: Record<string, string>,
+  stepIndex: number,
+  _memoryHarness?: AgentMemoryHarness
+): IntakeQuestion | null {
+  const complaint = (answers['chief_complaint'] || '').toLowerCase();
+  const lastKey = Object.keys(answers).pop() || '';
+  const lastAnswer = (answers[lastKey] || '').toLowerCase().trim();
+
+  // 1. Patient signaled they have nothing more to add
+  const completionSignals = ["that's all", 'that is all', 'nothing else', 'no other symptoms', 'nothing more', 'no other issues'];
+  if (completionSignals.some((sig) => lastAnswer.includes(sig)) || (stepIndex >= 2 && ['no', 'none', 'nothing', 'nope'].includes(lastAnswer))) {
+    return null;
+  }
+
+  // 2. Maximum safety limit (safety bound to prevent infinite loops)
+  if (stepIndex >= 9) {
+    return null;
+  }
+
+  // 3. Ambiguity check: if patient gives very short or ambiguous response on duration
+  if (lastKey === 'duration' && (lastAnswer === 'a while' || lastAnswer === 'not sure' || lastAnswer === 'recently' || lastAnswer === 'some time')) {
+    return {
+      id: 'q_clarify_duration',
+      fieldKey: 'duration_clarification',
+      category: 'Clarification',
+      prompt: 'Could you give an estimate of about how many hours or days it has been present?',
+      subtitle: 'An approximate timeline helps the clinical team prioritize your assessment.',
+      quickChips: ['Just started today', 'Past 2 to 3 days', 'About 1 week', 'More than 2 weeks'],
       inputType: 'chips',
       audioUrl: '/audio/receptionist/q2_general.mp3',
     };
   }
 
-  // Dynamic Step 3 quick chips tailored to reported symptoms
-  let step3Chips: string[];
-  if (complaint.includes('chest')) {
-    step3Chips = [
-      'Shortness of breath on exertion',
-      'Dizziness / lightheadedness',
-      'Cold sweats',
-      'Nausea or reduced appetite',
-      'No other symptoms',
-    ];
-  } else if (complaint.includes('cough') || complaint.includes('fever')) {
-    step3Chips = [
-      'Sore throat & hoarseness',
-      'Nasal congestion & runny nose',
-      'Chills and body aches',
-      'Headache or fatigue',
-      'No other symptoms',
-    ];
-  } else {
-    step3Chips = [
-      'Mild fever',
-      'Nausea or reduced appetite',
-      'Fatigue / weakness',
-      'Headache',
-      'No other symptoms',
-    ];
+  // 4. Branch A: Chest Discomfort / Cardiac Symptoms
+  if (complaint.includes('chest') || complaint.includes('heart') || complaint.includes('tightness') || complaint.includes('pressure')) {
+    if (!answers['duration']) {
+      return {
+        id: 'q2_duration_chest',
+        fieldKey: 'duration',
+        category: 'Symptom Timeline & Radiation',
+        prompt: 'How long have you felt this chest tightness, and does it spread to your neck, jaw, shoulder, or left arm?',
+        subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
+        quickChips: [
+          'Started this morning',
+          'About 2 to 3 days, mild pressure',
+          'Radiates slightly to left arm',
+          'Constant heaviness for a week',
+        ],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q2_chest.mp3',
+      };
+    }
+    if (!answers['severity']) {
+      return {
+        id: 'q3_severity_chest',
+        fieldKey: 'severity',
+        category: 'Discomfort Rating & Exertion',
+        prompt: 'On a scale from 0 to 10, how severe is your chest discomfort right now, and does it worsen with physical exertion?',
+        subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+        quickChips: ['3 - Mild', '5 - Moderate', '8 - Severe', 'Worse when walking'],
+        inputType: 'slider',
+        audioUrl: '/audio/receptionist/q3_severity.mp3',
+      };
+    }
+    if (!answers['associated_symptoms']) {
+      return {
+        id: 'q4_associated_chest',
+        fieldKey: 'associated_symptoms',
+        category: 'Accompanying Symptoms',
+        prompt: 'Are you experiencing any shortness of breath, cold sweats, dizziness, or nausea today?',
+        subtitle: 'Select any that apply or enter none.',
+        quickChips: [
+          'Shortness of breath on exertion',
+          'Dizziness / lightheadedness',
+          'Cold sweats',
+          'Nausea or reduced appetite',
+          'No other symptoms',
+        ],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q4_associated.mp3',
+      };
+    }
+    if (!answers['medications_allergies']) {
+      return {
+        id: 'q5_meds_chest',
+        fieldKey: 'medications_allergies',
+        category: 'Cardiovascular Medications',
+        prompt: 'Do you take any regular prescription medications for blood pressure or your heart, and do you have any drug allergies?',
+        subtitle: 'This information ensures safe consultation and treatment planning.',
+        quickChips: [
+          'Blood pressure medication (e.g., Lisinopril, Amlodipine)',
+          'Cholesterol medication (Statin)',
+          'Aspirin daily',
+          'Penicillin allergy',
+          'No regular medications or allergies',
+        ],
+        inputType: 'text',
+        audioUrl: '/audio/receptionist/q5_medications.mp3',
+      };
+    }
+    if (!answers['final_review']) {
+      return {
+        id: 'q6_review_chest',
+        fieldKey: 'final_review',
+        category: 'Final Review',
+        prompt: 'Is there anything else regarding your heart or chest symptoms you would like the doctor to know before your consult?',
+        subtitle: 'Share any past episodes or questions for your physician.',
+        quickChips: ['First time experiencing this', 'Similar episode 6 months ago', 'Nothing more to add'],
+        inputType: 'text',
+      };
+    }
+    return null;
   }
 
-  // Memory-informed question personalization
-  const q2Context = memoryHarness?.generateFollowUpQuestion(
-    1,
-    'duration',
-    step1.prompt,
-    step1.subtitle,
-    step1.quickChips
-  );
+  // 5. Branch B: Cough / Respiratory / Breathing
+  if (complaint.includes('cough') || complaint.includes('wheez') || complaint.includes('throat') || complaint.includes('breath')) {
+    if (!answers['duration']) {
+      return {
+        id: 'q2_duration_cough',
+        fieldKey: 'duration',
+        category: 'Cough Character & Progression',
+        prompt: 'How many days have you had this cough, and are you bringing up any yellow/green phlegm or running a fever?',
+        subtitle: 'Distinguishing dry vs productive cough helps determine respiratory treatment.',
+        quickChips: [
+          'Dry cough for 3 days',
+          'Productive with yellow phlegm',
+          'Accompanied by mild fever',
+          'Worse at night and early morning',
+        ],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q2_cough.mp3',
+      };
+    }
+    if (!answers['breathing_difficulty']) {
+      return {
+        id: 'q3_breathing_cough',
+        fieldKey: 'breathing_difficulty',
+        category: 'Breathing & Wheezing Assessment',
+        prompt: 'Are you having any difficulty catching your breath, wheezing, or tightness in your lungs when walking or resting?',
+        subtitle: 'Assessing respiratory effort helps evaluate oxygenation and bronchodilator needs.',
+        quickChips: [
+          'Mild shortness of breath when climbing stairs',
+          'Noticeable wheezing when exhaling',
+          'Breathing is completely normal',
+          'Worse when lying flat',
+        ],
+        inputType: 'chips',
+      };
+    }
+    if (!answers['associated_symptoms']) {
+      return {
+        id: 'q4_associated_cough',
+        fieldKey: 'associated_symptoms',
+        category: 'Accompanying Symptoms',
+        prompt: 'Have you noticed any sore throat, nasal congestion, chills, or headache alongside your cough?',
+        subtitle: 'Select any that apply or describe your symptoms.',
+        quickChips: [
+          'Sore throat & hoarseness',
+          'Nasal congestion & runny nose',
+          'Chills and body aches',
+          'Headache or fatigue',
+          'No other symptoms',
+        ],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q4_associated.mp3',
+      };
+    }
+    if (!answers['medications_allergies']) {
+      return {
+        id: 'q5_meds_cough',
+        fieldKey: 'medications_allergies',
+        category: 'Respiratory Medications & Allergies',
+        prompt: 'Do you use an asthma inhaler or take any allergy or blood pressure medications, or have any antibiotic allergies?',
+        subtitle: 'This prevents drug interactions and ensures safe prescribing.',
+        quickChips: ['Albuterol inhaler as needed', 'Antihistamines / decongestants', 'Penicillin allergy', 'No medications or allergies'],
+        inputType: 'text',
+        audioUrl: '/audio/receptionist/q5_medications.mp3',
+      };
+    }
+    return null;
+  }
 
-  const q3Default: IntakeQuestion = {
-    id: 'q3_severity',
-    fieldKey: 'severity',
-    category: 'Pain & Severity Score',
-    prompt:
-      'On a scale from 0 to 10, where 0 is no discomfort at all and 10 is the worst pain imaginable, how severe would you rate your discomfort right now?',
-    subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
-    quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
-    inputType: 'slider',
-    audioUrl: '/audio/receptionist/q3_severity.mp3',
-  };
-  const q3Context = memoryHarness?.generateFollowUpQuestion(
-    2,
-    'severity',
-    q3Default.prompt,
-    q3Default.subtitle,
-    q3Default.quickChips
-  );
+  // 6. Branch C: Abdominal Pain / Gastrointestinal
+  if (complaint.includes('stomach') || complaint.includes('abdom') || complaint.includes('belly') || complaint.includes('nausea')) {
+    if (!answers['duration']) {
+      return {
+        id: 'q2_duration_abdom',
+        fieldKey: 'duration',
+        category: 'Abdominal Pain Specifics',
+        prompt: 'How long has this abdominal discomfort been present, and is it sharp, cramping, or worse after eating?',
+        subtitle: 'Localizing abdominal pain guides appropriate abdominal evaluation.',
+        quickChips: [
+          'Started suddenly after a meal',
+          'Cramping pain for 2 days',
+          'Dull ache across upper abdomen',
+          'Severe sharp pain on right side',
+        ],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q2_stomach.mp3',
+      };
+    }
+    if (!answers['associated_gi']) {
+      return {
+        id: 'q3_associated_gi',
+        fieldKey: 'associated_gi',
+        category: 'Associated Digestive Symptoms',
+        prompt: 'Have you experienced any nausea, vomiting, fever, or noticeable changes in your bowel habits?',
+        subtitle: 'Associated digestive signs help our clinical team localize the issue.',
+        quickChips: ['Mild nausea, no vomiting', 'Frequent diarrhea', 'Loss of appetite', 'No other digestive symptoms'],
+        inputType: 'chips',
+      };
+    }
+    if (!answers['severity']) {
+      return {
+        id: 'q4_severity_abdom',
+        fieldKey: 'severity',
+        category: 'Pain Severity Score',
+        prompt: 'On a scale from 0 to 10, how severe would you rate your stomach discomfort right now?',
+        subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+        quickChips: ['2 - Mild', '4 - Moderate', '7 - Significant', '9 - Severe'],
+        inputType: 'slider',
+        audioUrl: '/audio/receptionist/q3_severity.mp3',
+      };
+    }
+    if (!answers['medications_allergies']) {
+      return {
+        id: 'q5_meds_abdom',
+        fieldKey: 'medications_allergies',
+        category: 'Medications & Allergies',
+        prompt: 'Have you taken any antacids, pain relievers like ibuprofen, or prescription medications for this, and do you have any allergies?',
+        subtitle: 'Helps avoid medications that irritate the gastrointestinal tract.',
+        quickChips: ['Took antacids with some relief', 'Took ibuprofen / NSAIDs', 'No medications taken', 'Penicillin allergy'],
+        inputType: 'text',
+        audioUrl: '/audio/receptionist/q5_medications.mp3',
+      };
+    }
+    return null;
+  }
 
-  const q4Default: IntakeQuestion = {
-    id: 'q4_associated',
-    fieldKey: 'associated_symptoms',
-    category: 'Associated Symptoms',
-    prompt:
-      'Are you experiencing any other accompanying symptoms today, such as nausea, shortness of breath, headache, or unusual fatigue?',
-    subtitle: 'Select any that apply or say none.',
-    quickChips: step3Chips,
-    inputType: 'chips',
-    audioUrl: '/audio/receptionist/q4_associated.mp3',
-  };
-  const q4Context = memoryHarness?.generateFollowUpQuestion(
-    3,
-    'associated_symptoms',
-    q4Default.prompt,
-    q4Default.subtitle,
-    q4Default.quickChips
-  );
+  // 7. Branch D: Simple / Localized Concern (e.g. ankle sprain, knee ache, minor rash)
+  // Concludes in 2 to 3 questions once key facts are confirmed!
+  if (complaint.includes('ankle') || complaint.includes('knee') || complaint.includes('wrist') || complaint.includes('sprain') || complaint.includes('rash') || complaint.includes('ear')) {
+    if (!answers['duration']) {
+      return {
+        id: 'q2_onset_simple',
+        fieldKey: 'duration',
+        category: 'Onset & Trigger Activity',
+        prompt: 'When did this begin, and was it caused by a specific twist, injury, or recent activity?',
+        subtitle: 'Understanding the mechanism of injury directs physical exam and imaging.',
+        quickChips: ['Twisted it while walking today', 'Sports injury yesterday', 'Developed gradually over 3 days', 'Woke up with it'],
+        inputType: 'chips',
+        audioUrl: '/audio/receptionist/q2_general.mp3',
+      };
+    }
+    if (!answers['functional_impact']) {
+      return {
+        id: 'q3_impact_simple',
+        fieldKey: 'functional_impact',
+        category: 'Functional Assessment',
+        prompt: 'Are you able to put weight on it and walk, and have you noticed any significant swelling or bruising?',
+        subtitle: 'Weight-bearing ability helps the physician rule out fractures or acute tears.',
+        quickChips: ['Can bear weight with mild limp', 'Cannot put any weight on it', 'Mild swelling, no bruising', 'Significant swelling'],
+        inputType: 'chips',
+      };
+    }
+    // Simple presentation is sufficiently characterized after 2-3 focused turns!
+    return null;
+  }
 
-  const q5Default: IntakeQuestion = {
-    id: 'q5_medications',
-    fieldKey: 'medications_allergies',
-    category: 'Medications & Allergies',
-    prompt:
-      'Lastly, to ensure your safety during treatment, do you take any regular prescription medications, or do you have any known allergies, especially to antibiotics like penicillin?',
-    subtitle: 'This ensures patient safety during treatment planning.',
-    quickChips: [
-      'Blood pressure medication',
-      'Asthma inhaler',
-      'Penicillin allergy',
-      'Over-the-counter vitamins only',
-      'No medications or allergies',
-    ],
-    inputType: 'text',
-    audioUrl: '/audio/receptionist/q5_medications.mp3',
-  };
-  const q5Context = memoryHarness?.generateFollowUpQuestion(
-    4,
-    'medications_allergies',
-    q5Default.prompt,
-    q5Default.subtitle,
-    q5Default.quickChips
-  );
+  // 8. General / Fallback Adaptive Interview
+  if (!answers['duration']) {
+    return {
+      id: 'q2_duration',
+      fieldKey: 'duration',
+      category: 'Symptom Duration & Onset',
+      prompt: 'Thank you for sharing that. How long have you been experiencing this symptom, and did it start suddenly or develop gradually?',
+      subtitle: 'Knowing when it began helps our triage doctor evaluate urgency.',
+      quickChips: ['Just started this morning', 'About 2 to 3 days', 'Approximately 1 week', 'More than 2 weeks'],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q2_general.mp3',
+    };
+  }
 
-  return [
-    {
-      id: 'q1_chief_complaint',
-      fieldKey: 'chief_complaint',
-      category: 'Chief Complaint',
-      prompt: 'What primary health symptom or discomfort brings you in today?',
-      subtitle: 'Speak naturally or tap a common symptom below.',
-      quickChips: [
-        'Persistent dry cough',
-        'Chest tightness / pain',
-        'Mild fever & chills',
-        'Stomach / abdominal pain',
-        'Joint & muscle aches',
-      ],
+  if (!answers['severity']) {
+    return {
+      id: 'q3_severity',
+      fieldKey: 'severity',
+      category: 'Discomfort & Severity Score',
+      prompt: 'On a scale from 0 to 10, how severe would you rate your discomfort right now?',
+      subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+      quickChips: ['0 - None', '3 - Mild', '5 - Moderate', '8 - Severe', '10 - Worst'],
+      inputType: 'slider',
+      audioUrl: '/audio/receptionist/q3_severity.mp3',
+    };
+  }
+
+  if (!answers['associated_symptoms']) {
+    return {
+      id: 'q4_associated',
+      fieldKey: 'associated_symptoms',
+      category: 'Associated Symptoms',
+      prompt: 'Are you experiencing any other accompanying symptoms today, such as fever, fatigue, nausea, or unusual weakness?',
+      subtitle: 'Select any that apply or describe other sensations.',
+      quickChips: ['Mild fever & chills', 'Unusual fatigue / weakness', 'Headache', 'No other symptoms'],
+      inputType: 'chips',
+      audioUrl: '/audio/receptionist/q4_associated.mp3',
+    };
+  }
+
+  if (!answers['medications_allergies']) {
+    return {
+      id: 'q5_medications',
+      fieldKey: 'medications_allergies',
+      category: 'Medications & Allergies',
+      prompt: 'Lastly, to ensure your safety during treatment, do you take any regular prescription medications, or do you have any known allergies?',
+      subtitle: 'This ensures patient safety during treatment planning.',
+      quickChips: ['Blood pressure medication', 'Asthma inhaler', 'Penicillin allergy', 'No regular medications or allergies'],
       inputType: 'text',
-      audioUrl: '/audio/receptionist/q1_welcome.mp3',
-    },
-    {
-      ...step1,
-      prompt: q2Context?.prompt || step1.prompt,
-      subtitle: q2Context?.subtitle || step1.subtitle,
-      quickChips: q2Context?.recommendedChips || step1.quickChips,
-    },
-    {
-      ...q3Default,
-      prompt: q3Context?.prompt || q3Default.prompt,
-      subtitle: q3Context?.subtitle || q3Default.subtitle,
-    },
-    {
-      ...q4Default,
-      prompt: q4Context?.prompt || q4Default.prompt,
-      subtitle: q4Context?.subtitle || q4Default.subtitle,
-      quickChips: q4Context?.recommendedChips || q4Default.quickChips,
-    },
-    {
-      ...q5Default,
-      prompt: q5Context?.prompt || q5Default.prompt,
-      subtitle: q5Context?.subtitle || q5Default.subtitle,
-      quickChips: q5Context?.recommendedChips || q5Default.quickChips,
-    },
-  ];
+      audioUrl: '/audio/receptionist/q5_medications.mp3',
+    };
+  }
+
+  return null;
 }
 
 // Red-flag terms that trigger emergency escalation
@@ -315,7 +405,7 @@ const RED_FLAG_KEYWORDS = [
   'unconscious',
 ];
 
-interface IntakeInterviewProps {
+export interface IntakeInterviewProps {
   encounterId: string;
   patientName: string;
   language?: string;
@@ -366,12 +456,23 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   // Mem0-compatible Agent Memory Harness
   const memoryHarnessRef = useRef<AgentMemoryHarness>(new AgentMemoryHarness());
 
-  const dynamicQuestions = useMemo(
-    () => getAdaptiveQuestions(answers, memoryHarnessRef.current),
-    [answers]
-  );
-  const currentQuestion = dynamicQuestions[currentStepIndex] || dynamicQuestions[0];
-  const progressPercent = Math.round(((currentStepIndex + 1) / dynamicQuestions.length) * 100);
+  // Dynamic adaptive question tracking
+  const [currentQuestion, setCurrentQuestion] = useState<IntakeQuestion>(INITIAL_INTAKE_QUESTION);
+  const [questionHistory, setQuestionHistory] = useState<IntakeQuestion[]>([INITIAL_INTAKE_QUESTION]);
+
+  // Clinical coverage estimation based on acquired clinical facets
+  const coveragePercent = useMemo(() => {
+    let score = 25; // Initial complaint
+    if (answers['duration'] || answers['duration_onset']) score += 25;
+    if (answers['severity'] || answers['severity_progression']) score += 20;
+    if (answers['associated_symptoms'] || answers['associated_gi'] || answers['functional_impact'] || answers['breathing_difficulty']) score += 15;
+    if (answers['medications_allergies']) score += 15;
+    return Math.min(score, 100);
+  }, [answers]);
+
+  const isReadyToFinish = useMemo(() => {
+    return Object.keys(answers).length >= 2;
+  }, [answers]);
 
   // Play ElevenLabs voice question automatically on step transition
   const playReceptionistVoice = useCallback((url?: string) => {
@@ -399,7 +500,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       }
       setIsAiSpeaking(false);
     };
-  }, [currentStepIndex, currentQuestion?.audioUrl, playReceptionistVoice]);
+  }, [currentQuestion, playReceptionistVoice]);
 
   const handleReplayAiVoice = () => {
     resetTimer();
@@ -451,8 +552,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       setMicPermissionNotice(null);
       setClarificationNotice(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepIndex]);
+  }, [currentQuestion]);
 
   // Check for red flag symptoms
   const checkForRedFlags = (text: string): boolean => {
@@ -900,12 +1000,20 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       const updatedFacts = [...extractedFacts, ...turnFacts];
       setExtractedFacts(updatedFacts);
 
-      // Advance or complete
-      if (currentStepIndex + 1 < dynamicQuestions.length) {
-        setCurrentStepIndex(currentStepIndex + 1);
-      } else {
-        // Complete interview
+      // Dynamically determine the next adaptive follow-up question
+      const nextQ = determineNextAdaptiveQuestion(
+        updatedAnswers,
+        currentStepIndex + 1,
+        memoryHarnessRef.current
+      );
+
+      if (nextQ === null) {
+        // Clinical stopping criteria met or patient signaled completion
         onComplete(updatedFacts);
+      } else {
+        setQuestionHistory((prev) => [...prev, nextQ]);
+        setCurrentQuestion(nextQ);
+        setCurrentStepIndex((prev) => prev + 1);
       }
     } catch {
       // Guard against erasing answers on error
@@ -921,8 +1029,17 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const handlePrevious = () => {
     resetTimer();
     if (currentStepIndex > 0) {
-      setCurrentStepIndex(currentStepIndex - 1);
+      const prevIndex = currentStepIndex - 1;
+      setCurrentStepIndex(prevIndex);
+      if (questionHistory[prevIndex]) {
+        setCurrentQuestion(questionHistory[prevIndex]);
+      }
     }
+  };
+
+  const handleFinishEarly = () => {
+    resetTimer();
+    onComplete(extractedFacts);
   };
 
   // Emergency Red-Flag Banner Screen
@@ -998,15 +1115,23 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Progress Bar */}
+          {/* Dynamic Adaptive Progress Indicator without rigid total */}
           <div className="flex flex-col items-end">
-            <span className="text-xs font-semibold text-slate-300">
-              Question {currentStepIndex + 1} of {dynamicQuestions.length}
-            </span>
-            <div className="w-36 bg-white/[0.06] rounded-full h-2 mt-1.5 overflow-hidden border border-white/10">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-cyan-300 font-mono" data-testid="intake-question-counter">
+                Question {currentStepIndex + 1}
+              </span>
+              <span className="text-[10px] bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded font-mono">
+                {currentQuestion.category}
+              </span>
+            </div>
+            <div
+              className="w-36 bg-white/[0.06] rounded-full h-2 mt-1.5 overflow-hidden border border-white/10"
+              title="Clinical information coverage"
+            >
               <div
                 className="bg-gradient-to-r from-teal-400 to-cyan-400 h-2 rounded-full transition-all duration-300 shadow-sm shadow-cyan-400/40"
-                style={{ width: `${progressPercent}%` }}
+                style={{ width: `${coveragePercent}%` }}
               />
             </div>
           </div>
@@ -1415,17 +1540,33 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         </div>
 
         <div className="flex items-center justify-between bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
-          <Button
-            type="button"
-            variant="outline"
-            data-testid="prev-question-btn"
-            onClick={handlePrevious}
-            disabled={currentStepIndex === 0 || submitting}
-            className="text-slate-300 hover:text-white border-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Previous
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="prev-question-btn"
+              onClick={handlePrevious}
+              disabled={currentStepIndex === 0 || submitting}
+              className="text-slate-300 hover:text-white border-white/10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Previous
+            </Button>
+
+            {currentStepIndex >= 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                data-testid="finish-early-btn"
+                onClick={handleFinishEarly}
+                disabled={submitting}
+                className="text-xs text-slate-400 hover:text-cyan-300"
+              >
+                Finished / Review Summary
+              </Button>
+            )}
+          </div>
 
           <Button
             type="button"
@@ -1437,7 +1578,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           >
             {submitting ? (
               'Saving...'
-            ) : currentStepIndex + 1 === dynamicQuestions.length ? (
+            ) : isReadyToFinish && currentStepIndex >= 3 ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Finish Intake

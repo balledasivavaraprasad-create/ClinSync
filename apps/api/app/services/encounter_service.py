@@ -226,23 +226,110 @@ class EncounterService:
         )
         turn_count = len(all_facts)
 
-        # Determine next question from progression
-        next_question: Optional[str] = None
-        for step in ADAPTIVE_QUESTION_FLOW:
-            if step["key"] == normalized_key:
-                next_question = step["next_question"]
-                break
+        # Adaptive clinical question determination
+        raw_lower = req.raw_response.strip().lower()
 
-        if next_question is None and turn_count < 4:
-            next_question = "Do you have any other symptoms, allergies, or medications to report?"
-        elif turn_count >= 5 or next_question is None:
+        # Check for acute red flags
+        emergency_indicators = [
+            "crushing chest pain", "severe chest pain", "can't breathe", "cannot breathe",
+            "struggling to breathe", "coughing up blood", "passed out", "blacked out",
+            "worst headache of my life", "thunderclap headache", "throat closing"
+        ]
+        is_emergency = any(em in raw_lower for em in emergency_indicators)
+
+        # Check for explicit patient completion signals
+        completion_phrases = ["that's all", "that is all", "nothing else", "no other symptoms", "nothing more", "nope, that's it"]
+        is_patient_done = any(cp in raw_lower for cp in completion_phrases) or (raw_lower in ["no", "none", "nothing", "nope"] and turn_count >= 2) or normalized_key in ["medical_history", "history", "final_notes"]
+
+        next_question: Optional[str] = None
+
+        if is_emergency:
+            encounter.intake_status = "ESCALATE_EMERGENCY"
+            next_question = None
+            db.commit()
+        elif is_patient_done:
             encounter.intake_status = "COMPLETED"
             next_question = None
             db.commit()
+        elif turn_count >= 10:
+            # Configurable safety bound to prevent endless questioning
+            encounter.intake_status = "COMPLETED"
+            next_question = None
+            db.commit()
+        else:
+            # Identify chief complaint from current or prior facts
+            cc_facts = [f for f in all_facts if "complaint" in f.concept.lower() or f.fact_type == "symptom"]
+            primary_complaint = (cc_facts[0].value.lower() if cc_facts else raw_lower)
+
+            # Determine already collected concept domains
+            known_concepts = {f.concept.lower() for f in all_facts}
+
+            # Symptom-specific adaptive branches
+            if any(k in primary_complaint for k in ["chest", "heart", "tightness", "pressure"]):
+                if "duration" not in known_concepts and "onset" not in known_concepts:
+                    next_question = "How long have you experienced this chest tightness, and does it spread to your neck, shoulder, or arm?"
+                elif "severity" not in known_concepts and "pain" not in known_concepts:
+                    next_question = "On a scale from 0 to 10, how severe is your discomfort right now, and does it worsen with physical activity?"
+                elif "associated" not in known_concepts and "symptoms" not in known_concepts:
+                    next_question = "Are you experiencing any shortness of breath, cold sweats, dizziness, or nausea?"
+                elif "medication" not in known_concepts and "medications" not in known_concepts:
+                    next_question = "Do you take any regular heart or blood pressure medications, or do you have any drug allergies?"
+                else:
+                    next_question = "Is there any other symptom or detail regarding your heart and chest you would like the doctor to know?"
+
+            elif any(k in primary_complaint for k in ["cough", "breath", "wheez", "throat", "phlegm"]):
+                if "duration" not in known_concepts and "onset" not in known_concepts:
+                    next_question = "How many days have you had this cough, and are you bringing up any yellow/green phlegm or blood?"
+                elif "breathing" not in known_concepts and "shortness" not in known_concepts:
+                    next_question = "Do you have any shortness of breath, wheezing, or difficulty catching your breath when walking?"
+                elif "associated" not in known_concepts:
+                    next_question = "Have you noticed any fever, chills, sore throat, or body aches?"
+                elif "medication" not in known_concepts:
+                    next_question = "Do you use any inhalers or take regular prescription medications, and do you have any allergies?"
+                else:
+                    next_question = "Do you have any other respiratory symptoms to report?"
+
+            elif any(k in primary_complaint for k in ["abdom", "stomach", "belly", "nausea"]):
+                if "duration" not in known_concepts and "onset" not in known_concepts:
+                    next_question = "How long has this abdominal pain been present, and is it sharp, cramping, or burning?"
+                elif "triggers" not in known_concepts:
+                    next_question = "Does the discomfort worsen after eating, and have you experienced any nausea, vomiting, or bowel changes?"
+                elif "severity" not in known_concepts:
+                    next_question = "On a scale from 0 to 10, how severe is your stomach pain right now?"
+                elif "medication" not in known_concepts:
+                    next_question = "Are you taking any antacids or medications, or do you have any known medication allergies?"
+                else:
+                    next_question = "Is there any other symptom or medical history related to your stomach you would like to share?"
+
+            elif any(k in primary_complaint for k in ["ankle", "knee", "wrist", "sprain", "rash", "ear"]):
+                # Simple localized complaints can conclude quickly once onset and functional impact are clear
+                if "duration" not in known_concepts and "onset" not in known_concepts:
+                    next_question = "When did this occur, and did an injury or specific activity trigger it?"
+                elif turn_count >= 2:
+                    encounter.intake_status = "COMPLETED"
+                    next_question = None
+                    db.commit()
+                else:
+                    next_question = "Are you able to bear weight, and have you taken any pain relievers for it?"
+
+            else:
+                # General adaptive intake flow
+                if "duration" not in known_concepts:
+                    next_question = "How long have you had these symptoms, and did they begin suddenly or gradually?"
+                elif "severity" not in known_concepts:
+                    next_question = "On a scale from 0 to 10, how would you rate your discomfort or pain level?"
+                elif "medication" not in known_concepts:
+                    next_question = "Are you currently taking any prescription medications, or do you have any allergies?"
+                elif turn_count >= 3:
+                    encounter.intake_status = "COMPLETED"
+                    next_question = None
+                    db.commit()
+                else:
+                    next_question = "Do you have any other symptoms or relevant medical history to report?"
 
         fact_schema = ClinicalFactSchema.model_validate(fact)
         all_fact_schemas = [ClinicalFactSchema.model_validate(f) for f in all_facts]
-        is_complete = encounter.intake_status == "COMPLETED"
+        is_complete = encounter.intake_status in ("COMPLETED", "ESCALATE_EMERGENCY")
 
         return IntakeStateData(
             encounter_id=encounter.id,
@@ -251,7 +338,7 @@ class EncounterService:
             next_question=next_question,
             extracted_facts=all_fact_schemas,
             current_step=turn_count,
-            total_steps=5,
+            total_steps=None,
             extracted_facts_this_turn=[fact_schema],
             intake_complete=is_complete,
         )

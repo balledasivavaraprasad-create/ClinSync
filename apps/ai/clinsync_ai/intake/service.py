@@ -65,7 +65,7 @@ class AdaptiveIntakeService:
         self,
         encounter_id: str,
         patient_id: str = "PATIENT-DEMO-001",
-        max_turns: int = 5,
+        max_turns: int = 10,
     ) -> IntakeState:
         """Retrieve existing intake session or initialize a fresh state."""
         if encounter_id not in self._sessions:

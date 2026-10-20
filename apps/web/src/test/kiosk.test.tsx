@@ -267,7 +267,8 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
         />
       );
 
-      expect(screen.getByText(/Question 1 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/Question 1\b/i)).toBeInTheDocument();
+      expect(screen.queryByText(/of 5/i)).not.toBeInTheDocument();
       expect(screen.getByText(/What primary health symptom/i)).toBeInTheDocument();
 
       // Enter response
@@ -279,7 +280,8 @@ describe('TASK-P1-201: Patient Kiosk and Adaptive Intake UI', () => {
       fireEvent.click(screen.getByTestId('next-question-btn'));
 
       await waitFor(() => {
-        expect(screen.getByText(/Question 2 of 5/i)).toBeInTheDocument();
+        expect(screen.getByText(/Question 2\b/i)).toBeInTheDocument();
+        expect(screen.queryByText(/of 5/i)).not.toBeInTheDocument();
       });
     });
 
