@@ -67,7 +67,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
         speak: vi.fn().mockImplementation((utterance: SpeechSynthesisUtterance) => {
           speechSynthUtterances.push(utterance);
           spokenUtterances.push(utterance.text);
-          if (utterance.onstart) utterance.onstart(new Event('start') as any);
+          if (utterance.onstart) utterance.onstart(new Event('start') as unknown as SpeechSynthesisEvent);
         }),
         pause: vi.fn(),
         resume: vi.fn(),
@@ -252,7 +252,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
 
   // Test F — Answer association
   it('Test F: verifies patient response is attached to the canonical question ID and field key in the ledger', async () => {
-    let session = createConversationalSession('enc_sync_06', 'Eleanor Johnson', 'en');
+    const session = createConversationalSession('enc_sync_06', 'Eleanor Johnson', 'en');
 
     // Turn 1: answering chief complaint
     const activeQ1 = {
@@ -312,7 +312,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
     // Both ElevenLabs and Web Speech unavailable
     vi.spyOn(ElevenLabsModule, 'synthesizeSpeech').mockRejectedValueOnce(new Error('Network error'));
     const originalSpeechSynth = window.speechSynthesis;
-    (window as any).speechSynthesis = undefined;
+    (window as unknown as { speechSynthesis: unknown }).speechSynthesis = undefined;
 
     try {
       render(

@@ -511,13 +511,6 @@ export function processPatientUtterance(
 
   const coverage = calculateCoverage(updatedKnownFields);
   const complaintLower = (updatedKnownFields['chief_complaint'] || '').toLowerCase();
-  const isSimpleLocalized =
-    ['rash', 'cut', 'scratch', 'scrape', 'papercut', 'bite', 'finger', 'toe', 'itch', 'bruise'].some((term) =>
-      complaintLower.includes(term)
-    ) &&
-    !complaintLower.includes('chest') &&
-    !complaintLower.includes('breath') &&
-    !complaintLower.includes('abdom');
 
   // Step 3: Formulate Dialogue Action & Response
   let responseText = '';
@@ -548,11 +541,10 @@ export function processPatientUtterance(
     responseText =
       'Thank you! Your intake answers have been verified and synced to the doctor console. You may now proceed to document upload or slot scheduling.';
   }
-  // Case C: Patient explicitly signaled completion or simple complaint ready to conclude
+  // Case C: Patient explicitly signaled completion or max intake turns reached (6 questions)
   else if (
     signals.completionSignaled ||
-    (isSimpleLocalized && session.turnCount >= 1 && updatedKnownFields['duration']) ||
-    (coverage >= 70 && session.turnCount >= 2)
+    session.turnCount >= 6
   ) {
     actionType = 'summarize_confirm';
     updatedKnownFields['awaiting_confirmation'] = 'true';

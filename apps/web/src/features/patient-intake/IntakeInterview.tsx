@@ -76,14 +76,14 @@ export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
 export function determineNextAdaptiveQuestion(
   answers: Record<string, string>,
   stepIndex: number,
-  _memoryHarness?: AgentMemoryHarness
+  _memoryHarness?: AgentMemoryHarness,
+  _questionHistory?: IntakeQuestion[]
 ): IntakeQuestion | null {
-  const complaint = (answers['chief_complaint'] || '').toLowerCase();
   const lastKey = Object.keys(answers).pop() || '';
   const lastAnswer = (answers[lastKey] || '').toLowerCase().trim();
   const allAnswersText = Object.values(answers).join(' ').toLowerCase();
 
-  // 1. Patient signaled they have nothing more to add
+  // 1. Patient explicitly signaled they have nothing more to add
   const completionSignals = [
     "that's all",
     'that is all',
@@ -104,37 +104,12 @@ export function determineNextAdaptiveQuestion(
     return null;
   }
 
-  // 2. Maximum safety limit
-  if (stepIndex >= 9) {
+  // 2. Maximum safety limit: exactly 6 dynamic questions in a full intake session
+  if (stepIndex >= 6) {
     return null;
   }
 
-  // 3. Clinical Signal Extraction
-  const hasMentionedDuration =
-    Boolean(answers['duration'] || answers['duration_onset'] || answers['duration_clarification']) ||
-    /\b(?:since\s+|for\s+\d+|started\s+|days?|weeks?|months?|hours?|yesterday|morning|today|last\s+night|recently|a\s+while)\b/i.test(
-      allAnswersText
-    );
-
-  const hasMentionedSeverity =
-    Boolean(answers['severity'] || answers['severity_progression'] || answers['pain_rating']) ||
-    /\b(?:mild|moderate|severe|sharp|dull|throbbing|cramping|terrible|killing|unbearable|excruciating|slight|\d+\s*(?:out\s*of|\/)\s*10)\b/i.test(
-      allAnswersText
-    );
-
-  const hasMentionedAssociated =
-    Boolean(answers['associated_symptoms'] || answers['associated_gi'] || answers['breathing_difficulty']) ||
-    /\b(?:fever|chills|sweat|nausea|vomit|dizzy|lightheaded|headache|diarrhea|wheez|swelling|burning|itching)\b/i.test(
-      allAnswersText
-    );
-
-  const hasMentionedMeds =
-    Boolean(answers['medications_allergies']) ||
-    /\b(?:medication|medicine|pill|tablet|inhaler|aspirin|tylenol|advil|ibuprofen|paracetamol|lisinopril|statin|metformin|antibiotic|allergy|allergic|penicillin|no\s+meds)\b/i.test(
-      allAnswersText
-    );
-
-  // 4. Ambiguity check: duration
+  // 3. Clinical Ambiguity Clarification Check
   if (
     lastKey === 'duration' &&
     (lastAnswer === 'a while' || lastAnswer === 'not sure' || lastAnswer === 'recently' || lastAnswer === 'some time')
@@ -150,73 +125,143 @@ export function determineNextAdaptiveQuestion(
     };
   }
 
-  // 5. Categorize complaint complexity
-  const isSimpleLocalized =
-    ['rash', 'cut', 'scratch', 'scrape', 'papercut', 'bite', 'finger', 'toe', 'itch', 'bruise', 'burn'].some((term) =>
-      complaint.includes(term)
-    ) &&
-    !complaint.includes('chest') &&
-    !complaint.includes('breath') &&
-    !complaint.includes('abdom');
+  // 4. Clinical Signal & Domain Extraction
+  const rawComplaint = (answers['chief_complaint'] || Object.values(answers)[0] || '').trim();
+  const complaint = rawComplaint.toLowerCase();
 
-  // Simple Localized -> Concludes in 2 Questions!
-  if (isSimpleLocalized) {
-    if (stepIndex === 1 && !hasMentionedDuration) {
-      return {
-        id: 'q2_duration_localized',
-        fieldKey: 'duration',
-        category: 'Onset & Progression',
-        prompt: 'When did you first notice this, and is it itching, burning, or spreading to other areas?',
-        subtitle: 'Onset timeline helps evaluate whether this is acute or chronic.',
-        quickChips: ['Started yesterday, mild itch', 'Just noticed it today', 'About 3 days, not spreading', 'Itches when touched'],
-        inputType: 'chips',
-      };
-    }
-    return null;
-  }
+  const cleanSymptom = rawComplaint
+    .replace(
+      /^(i have|i've had|i am having|i am feeling|im feeling|i feel|feeling|experiencing|suffering from|there is|a bit of)\s+/i,
+      ''
+    )
+    .trim() || 'symptoms';
 
-  // Cardiac / Chest Discomfort
-  if (
+  const hasMentionedDuration =
+    Boolean(answers['duration'] || answers['duration_onset'] || answers['duration_clarification']) ||
+    /\b(?:since\s+|for\s+\d+|started\s+|days?|weeks?|months?|hours?|yesterday|morning|today|last\s+night)\b/i.test(
+      allAnswersText
+    );
+
+  const durationMatch = allAnswersText.match(
+    /\b(?:since\s+[^,.]+|for\s+\d+\s+days?|for\s+\d+\s+hours?|for\s+about\s+\d+\s+days?|started\s+[^,.]+|yesterday|today|this\s+morning)\b/i
+  );
+  const reportedDurationRef = durationMatch ? durationMatch[0] : 'since onset';
+
+  // Domain categorization
+  const isCardiac =
     complaint.includes('chest') ||
     complaint.includes('heart') ||
     complaint.includes('tightness') ||
-    complaint.includes('pressure')
-  ) {
-    if (!answers['duration'] && !hasMentionedDuration) {
+    complaint.includes('pressure') ||
+    complaint.includes('palpitat') ||
+    complaint.includes('squeezing');
+
+  const isRespiratory =
+    complaint.includes('cough') ||
+    complaint.includes('wheez') ||
+    complaint.includes('throat') ||
+    complaint.includes('breath') ||
+    complaint.includes('sputum') ||
+    complaint.includes('phlegm') ||
+    complaint.includes('lung') ||
+    complaint.includes('asthma');
+
+  const isAbdominal =
+    complaint.includes('stomach') ||
+    complaint.includes('abdom') ||
+    complaint.includes('belly') ||
+    complaint.includes('nausea') ||
+    complaint.includes('vomit') ||
+    complaint.includes('cramp') ||
+    complaint.includes('diarrhea') ||
+    complaint.includes('bowel') ||
+    complaint.includes('reflux') ||
+    complaint.includes('heartburn') ||
+    complaint.includes('digest');
+
+  const isNeuro =
+    complaint.includes('headache') ||
+    complaint.includes('migraine') ||
+    complaint.includes('head') ||
+    complaint.includes('dizzy') ||
+    complaint.includes('lightheaded') ||
+    complaint.includes('vertigo') ||
+    complaint.includes('vision') ||
+    complaint.includes('numb') ||
+    complaint.includes('tingl');
+
+  const isMusculoskeletal =
+    complaint.includes('knee') ||
+    complaint.includes('back') ||
+    complaint.includes('shoulder') ||
+    complaint.includes('neck') ||
+    complaint.includes('ankle') ||
+    complaint.includes('wrist') ||
+    complaint.includes('joint') ||
+    complaint.includes('muscle') ||
+    complaint.includes('sprain') ||
+    complaint.includes('strain') ||
+    complaint.includes('hip') ||
+    complaint.includes('leg') ||
+    complaint.includes('arm') ||
+    complaint.includes('swollen') ||
+    complaint.includes('stiff');
+
+  const isDermatological =
+    complaint.includes('rash') ||
+    complaint.includes('itch') ||
+    complaint.includes('burn') ||
+    complaint.includes('cut') ||
+    complaint.includes('scratch') ||
+    complaint.includes('scrape') ||
+    complaint.includes('bite') ||
+    complaint.includes('sting') ||
+    complaint.includes('skin') ||
+    complaint.includes('hive') ||
+    complaint.includes('bruise') ||
+    complaint.includes('papercut');
+
+  const isSystemic =
+    complaint.includes('fever') ||
+    complaint.includes('chill') ||
+    complaint.includes('sweat') ||
+    complaint.includes('fatigue') ||
+    complaint.includes('tired') ||
+    complaint.includes('weak') ||
+    complaint.includes('body ache');
+
+  // =========================================================================
+  // Question 2 (Turn 2, stepIndex === 1)
+  // Focus: Onset Timeline, Character & Progression
+  // =========================================================================
+  if (stepIndex === 1) {
+    if (isCardiac) {
+      if (!hasMentionedDuration) {
+        return {
+          id: 'q2_duration_chest',
+          turnId: 2,
+          fieldKey: 'duration',
+          category: 'Symptom Timeline & Radiation',
+          prompt:
+            'I understand you are experiencing chest tightness. How long have you felt this tightness, and does it spread to your neck, jaw, shoulder, or left arm?',
+          subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
+          quickChips: [
+            'Started this morning',
+            'About 2 to 3 days, mild pressure',
+            'Radiates slightly to left arm',
+            'Constant heaviness for a week',
+          ],
+          inputType: 'chips',
+        };
+      }
       return {
-        id: 'q2_duration_chest',
-        turnId: stepIndex + 1,
-        fieldKey: 'duration',
-        category: 'Symptom Timeline & Radiation',
-        prompt: 'I understand you are experiencing chest tightness. How long have you felt this tightness, and does it spread to your neck, jaw, shoulder, or left arm?',
-        subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
-        quickChips: [
-          'Started this morning',
-          'About 2 to 3 days, mild pressure',
-          'Radiates slightly to left arm',
-          'Constant heaviness for a week',
-        ],
-        inputType: 'chips',
-      };
-    }
-    if (!answers['severity'] && !hasMentionedSeverity) {
-      return {
-        id: 'q3_severity_chest',
-        fieldKey: 'severity',
-        category: 'Discomfort Rating & Exertion',
-        prompt: 'On a scale from 0 to 10, how severe is your chest discomfort right now, and does it worsen with physical exertion?',
-        subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
-        quickChips: ['3 - Mild', '5 - Moderate', '8 - Severe', 'Worse when walking'],
-        inputType: 'slider',
-      };
-    }
-    if (!answers['associated_symptoms'] && !hasMentionedAssociated) {
-      return {
-        id: 'q4_associated_chest',
+        id: 'q2_associated_chest',
+        turnId: 2,
         fieldKey: 'associated_symptoms',
         category: 'Accompanying Symptoms',
-        prompt: 'Are you experiencing any shortness of breath, cold sweats, dizziness, or nausea today?',
-        subtitle: 'Select any that apply or enter none.',
+        prompt:
+          'Since your chest tightness started this morning, are you experiencing any shortness of breath, cold sweats, dizziness, or nausea today?',
+        subtitle: 'Select any accompanying symptoms that apply.',
         quickChips: [
           'Shortness of breath on exertion',
           'Dizziness / lightheadedness',
@@ -227,50 +272,15 @@ export function determineNextAdaptiveQuestion(
         inputType: 'chips',
       };
     }
-    if (!answers['medications_allergies'] && !hasMentionedMeds) {
-      return {
-        id: 'q5_meds_chest',
-        fieldKey: 'medications_allergies',
-        category: 'Cardiovascular Medications',
-        prompt: 'Do you take any regular prescription medications for blood pressure or your heart, and do you have any drug allergies?',
-        subtitle: 'This information ensures safe consultation and treatment planning.',
-        quickChips: [
-          'Blood pressure medication (e.g., Lisinopril, Amlodipine)',
-          'Cholesterol medication (Statin)',
-          'Aspirin daily',
-          'Penicillin allergy',
-          'No regular medications or allergies',
-        ],
-        inputType: 'text',
-      };
-    }
-    if (!answers['final_review'] && stepIndex < 6) {
-      return {
-        id: 'q6_review_chest',
-        fieldKey: 'final_review',
-        category: 'Final Review',
-        prompt: 'Is there anything else regarding your heart or chest symptoms you would like the doctor to know before your consult?',
-        subtitle: 'Share any past episodes or questions for your physician.',
-        quickChips: ['First time experiencing this', 'Similar episode 6 months ago', 'Nothing more to add'],
-        inputType: 'text',
-      };
-    }
-    return null;
-  }
 
-  // Respiratory / Cough
-  if (
-    complaint.includes('cough') ||
-    complaint.includes('wheez') ||
-    complaint.includes('throat') ||
-    complaint.includes('breath')
-  ) {
-    if (!answers['duration'] && !hasMentionedDuration) {
+    if (isRespiratory) {
       return {
         id: 'q2_duration_cough',
+        turnId: 2,
         fieldKey: 'duration',
         category: 'Cough Character & Progression',
-        prompt: 'How many days have you had this cough, and are you bringing up any yellow/green phlegm or running a fever?',
+        prompt:
+          'How many days have you had this cough, and are you bringing up any yellow/green phlegm or running a fever?',
         subtitle: 'Distinguishing dry vs productive cough helps determine respiratory treatment.',
         quickChips: [
           'Dry cough for 3 days',
@@ -281,41 +291,15 @@ export function determineNextAdaptiveQuestion(
         inputType: 'chips',
       };
     }
-    if (!answers['breathing_difficulty'] && !hasMentionedAssociated) {
-      return {
-        id: 'q3_breathing_cough',
-        fieldKey: 'breathing_difficulty',
-        category: 'Breathing & Wheezing Assessment',
-        prompt: 'Are you having any difficulty catching your breath, wheezing, or tightness in your lungs when walking or resting?',
-        subtitle: 'Assessing respiratory effort helps evaluate oxygenation and bronchodilator needs.',
-        quickChips: [
-          'Mild shortness of breath when climbing stairs',
-          'Noticeable wheezing when exhaling',
-          'Breathing is completely normal',
-          'Worse when lying flat',
-        ],
-        inputType: 'chips',
-      };
-    }
-    if (stepIndex >= 3 || hasMentionedAssociated) {
-      return null;
-    }
-    return null;
-  }
 
-  // Abdominal
-  if (
-    complaint.includes('stomach') ||
-    complaint.includes('abdom') ||
-    complaint.includes('belly') ||
-    complaint.includes('nausea')
-  ) {
-    if (!answers['duration'] && !hasMentionedDuration) {
+    if (isAbdominal) {
       return {
         id: 'q2_duration_abdom',
+        turnId: 2,
         fieldKey: 'duration',
         category: 'Abdominal Pain Specifics',
-        prompt: 'How long has this abdominal discomfort been present, and is it sharp, cramping, or worse after eating?',
+        prompt:
+          'How long has this abdominal discomfort been present, and is it sharp, cramping, or worse after eating?',
         subtitle: 'Localizing abdominal pain guides appropriate abdominal evaluation.',
         quickChips: [
           'Started suddenly after a meal',
@@ -326,9 +310,261 @@ export function determineNextAdaptiveQuestion(
         inputType: 'chips',
       };
     }
-    if (!answers['associated_gi'] && !hasMentionedAssociated) {
+
+    if (isNeuro) {
       return {
-        id: 'q3_gi_associated',
+        id: 'q2_duration_neuro',
+        turnId: 2,
+        fieldKey: 'duration',
+        category: 'Onset & Sensation',
+        prompt: `I understand you are experiencing ${cleanSymptom}. When did this first start, and is it a constant ache, throbbing, or sharp stabbing pain?`,
+        subtitle: 'Characterizing the pain pattern helps differentiate tension, migraine, or sinus pressure.',
+        quickChips: [
+          'Started today, constant throbbing',
+          'Past 2 to 3 days, comes in waves',
+          'Sharp stabbing pain since morning',
+          'Dull constant pressure for a week',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isMusculoskeletal) {
+      return {
+        id: 'q2_duration_msk',
+        turnId: 2,
+        fieldKey: 'duration',
+        category: 'Onset & Injury Context',
+        prompt: `When did this ${cleanSymptom} first occur, and did it happen after a specific injury, strain, or physical activity?`,
+        subtitle: 'Identifying physical triggers informs orthopedic assessment.',
+        quickChips: [
+          'Happened during sports / exercise',
+          'Started after lifting something heavy',
+          'Gradual onset over several days',
+          'Sudden stiffness and pain upon waking',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isDermatological) {
+      return {
+        id: 'q2_duration_derm',
+        turnId: 2,
+        fieldKey: 'duration',
+        category: 'Onset & Progression',
+        prompt: `When did you first notice this ${cleanSymptom}, and is it itching, burning, or spreading to other areas?`,
+        subtitle: 'Onset timeline helps evaluate whether this is acute or spreading.',
+        quickChips: [
+          'Started yesterday, mild itch',
+          'Just noticed it today',
+          'About 3 days, not spreading',
+          'Itches when touched',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isSystemic) {
+      return {
+        id: 'q2_duration_systemic',
+        turnId: 2,
+        fieldKey: 'duration',
+        category: 'Timeline & Pattern',
+        prompt: `How many days have you been feeling ${cleanSymptom}, and has your temperature or fatigue been fluctuating or steadily rising?`,
+        subtitle: 'Assessing systemic trends helps determine infection timeline.',
+        quickChips: [
+          'Started in the last 24 hours',
+          'Fluctuating over the last 3 days',
+          'Persistent for about a week',
+          'Worse in the evenings',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    return {
+      id: 'q2_duration_general',
+      turnId: 2,
+      fieldKey: 'duration',
+      category: 'Symptom Timeline',
+      prompt: `When did your ${cleanSymptom} first begin, and have symptoms been improving, worsening, or staying about the same?`,
+      subtitle: 'Acute vs subacute onset determines consultation priority.',
+      quickChips: [
+        'Started in the last 24 hours',
+        'Present for 2 to 3 days',
+        'Gradually worsening over a week',
+        'Intermittent over the past month',
+      ],
+      inputType: 'chips',
+    };
+  }
+
+  // =========================================================================
+  // Question 3 (Turn 3, stepIndex === 2)
+  // Focus: Discomfort Rating (0-10), Radiation & Daily Functional Impact
+  // =========================================================================
+  if (stepIndex === 2) {
+    if (isCardiac) {
+      return {
+        id: 'q3_severity_chest',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Discomfort Rating & Exertion',
+        prompt:
+          'On a scale from 0 to 10, how severe is your chest discomfort right now, and does it worsen with physical exertion?',
+        subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
+        quickChips: ['3 - Mild', '5 - Moderate', '8 - Severe', 'Worse when walking'],
+        inputType: 'slider',
+      };
+    }
+
+    if (isRespiratory) {
+      return {
+        id: 'q3_severity_cough',
+        turnId: 3,
+        fieldKey: 'breathing_difficulty',
+        category: 'Discomfort Rating & Respiratory Effort',
+        prompt:
+          'On a scale from 0 to 10, how severe is your breathing discomfort or cough right now, and does it interfere with sleeping or walking?',
+        subtitle: 'Assessing respiratory severity guides oxygenation evaluation.',
+        quickChips: ['3 - Mild', '5 - Moderate wheezing', '8 - Severe tightness', 'Disrupts sleep'],
+        inputType: 'slider',
+      };
+    }
+
+    if (isNeuro) {
+      return {
+        id: 'q3_severity_neuro',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Pain Rating & Sensitivity',
+        prompt: `Considering that your ${cleanSymptom} has been present ${reportedDurationRef}, on a scale from 0 to 10, how intense is the pain right now, and does it make it difficult to focus or look at lights?`,
+        subtitle: 'Quantifies pain intensity and photosensitivity.',
+        quickChips: ['3 - Mild ache', '6 - Moderate, hard to concentrate', '8 - Severe throbbing', 'Disrupts normal activities'],
+        inputType: 'slider',
+      };
+    }
+
+    if (isAbdominal) {
+      return {
+        id: 'q3_severity_abdom',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Pain Rating & Radiation',
+        prompt:
+          'On a scale from 0 to 10, how severe is your abdominal discomfort right now, and does the pain radiate to your back or sides?',
+        subtitle: 'Pain rating and radiation patterns clarify digestive urgency.',
+        quickChips: ['3 - Mild cramps', '5 - Moderate pain', '8 - Severe stabbing pain', 'Radiates to lower back'],
+        inputType: 'slider',
+      };
+    }
+
+    if (isMusculoskeletal) {
+      return {
+        id: 'q3_severity_msk',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Discomfort Rating & Mobility',
+        prompt: `Considering your ${cleanSymptom}, on a scale from 0 to 10, how intense is the pain right now, and are you able to bear weight or move the joint?`,
+        subtitle: 'Assesses functional joint limitation and weight-bearing capability.',
+        quickChips: ['3 - Mild discomfort', '6 - Moderate, limping/restricted', '8 - Severe, cannot bear weight', 'Sharp pain with movement'],
+        inputType: 'slider',
+      };
+    }
+
+    if (isDermatological) {
+      return {
+        id: 'q3_severity_derm',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Irritation & Discomfort Rating',
+        prompt:
+          'On a scale from 0 to 10, how intense is the itching or irritation, and does it disrupt your sleep or daily tasks?',
+        subtitle: 'Severity rating helps determine whether prescription anti-itch or topical therapy is indicated.',
+        quickChips: ['2 - Mild itch', '5 - Moderate, constantly scratching', '8 - Severe burning sensation', 'Disrupts sleep'],
+        inputType: 'slider',
+      };
+    }
+
+    return {
+      id: 'q3_severity_general',
+      turnId: 3,
+      fieldKey: 'severity',
+      category: 'Discomfort & Daily Impact',
+      prompt: `On a scale from 0 to 10, how intense is your ${cleanSymptom} right now, and does it interfere with your work or sleep?`,
+      subtitle: 'Quantifies symptom severity to inform clinical decision-making.',
+      quickChips: ['2 - Mild annoyance', '4 - Moderate discomfort', '7 - Severe, disrupts sleep', 'Interferes with daily work'],
+      inputType: 'slider',
+    };
+  }
+
+  // =========================================================================
+  // Question 4 (Turn 4, stepIndex === 3)
+  // Focus: Accompanying & Associated Symptoms / Red Flags
+  // =========================================================================
+  if (stepIndex === 3) {
+    if (isCardiac) {
+      return {
+        id: 'q4_associated_chest',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Accompanying Symptoms',
+        prompt: 'Are you experiencing any shortness of breath, cold sweats, dizziness, or nausea today?',
+        subtitle: 'Screening for secondary cardiovascular indicators.',
+        quickChips: [
+          'Shortness of breath on exertion',
+          'Dizziness / lightheadedness',
+          'Cold sweats',
+          'Nausea or reduced appetite',
+          'No other symptoms',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isRespiratory) {
+      return {
+        id: 'q4_associated_cough',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Breathing & Wheezing Assessment',
+        prompt:
+          'Are you having any difficulty catching your breath, wheezing, or tightness in your lungs when walking or resting?',
+        subtitle: 'Assessing respiratory effort helps evaluate bronchodilator needs.',
+        quickChips: [
+          'Mild shortness of breath when climbing stairs',
+          'Noticeable wheezing when exhaling',
+          'Breathing is completely normal',
+          'Worse when lying flat',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isNeuro) {
+      return {
+        id: 'q4_associated_neuro',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Associated Neurological Symptoms',
+        prompt: `Alongside your ${cleanSymptom}, are you experiencing any dizziness, nausea, vision changes, sensitivity to noise, or neck stiffness?`,
+        subtitle: 'Screens for systemic neurological and vestibular involvement.',
+        quickChips: [
+          'Nausea or reduced appetite',
+          'Sensitivity to light and sound',
+          'Dizziness or lightheadedness',
+          'Blurred vision or aura',
+          'No other associated symptoms',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isAbdominal) {
+      return {
+        id: 'q4_associated_abdom',
+        turnId: 4,
         fieldKey: 'associated_gi',
         category: 'Gastrointestinal Signs',
         prompt: 'Have you had any nausea, vomiting, fever, or noticeable change in your bowel habits?',
@@ -342,39 +578,226 @@ export function determineNextAdaptiveQuestion(
         inputType: 'chips',
       };
     }
-    if (stepIndex >= 3) {
-      return null;
-    }
-    return null;
-  }
 
-  // General / Fallback
-  if (!answers['duration'] && !hasMentionedDuration) {
+    if (isMusculoskeletal) {
+      return {
+        id: 'q4_associated_msk',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Associated Joint & Neuromuscular Signs',
+        prompt: `Along with your ${cleanSymptom}, have you noticed any visible swelling, redness, joint clicking or locking, or numbness in the limb?`,
+        subtitle: 'Detects joint effusion, mechanical obstruction, or nerve impingement.',
+        quickChips: [
+          'Noticeable swelling around joint',
+          'Warmth and redness',
+          'Joint feels locked or unstable',
+          'Tingling or numbness in extremities',
+          'No visible swelling',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isDermatological) {
+      return {
+        id: 'q4_associated_derm',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Associated Dermatological & Systemic Signs',
+        prompt:
+          'Are you having any facial swelling, difficulty breathing or swallowing, fever, or blistering?',
+        subtitle: 'Screens for allergic hypersensitivity or secondary bacterial infection.',
+        quickChips: [
+          'Mild peeling or flaking',
+          'Warm to the touch',
+          'No facial swelling or fever',
+          'Spreading slightly',
+        ],
+        inputType: 'chips',
+      };
+    }
+
     return {
-      id: 'q2_duration_general',
-      fieldKey: 'duration',
-      category: 'Symptom Timeline',
-      prompt: 'When did your symptoms first begin, and have they been improving, worsening, or staying about the same?',
-      subtitle: 'Acute vs subacute onset determines consultation priority.',
+      id: 'q4_associated_general',
+      turnId: 4,
+      fieldKey: 'associated_symptoms',
+      category: 'Associated Systemic Symptoms',
+      prompt: `Are you experiencing any other accompanying symptoms today, such as fever, dizziness, nausea, fatigue, or body aches?`,
+      subtitle: 'Secondary systemic signs help clarify diagnostic context.',
       quickChips: [
-        'Started in the last 24 hours',
-        'Present for 2 to 3 days',
-        'Gradually worsening over a week',
-        'Intermittent over the past month',
+        'Low-grade fever & chills',
+        'Dizziness or lightheadedness',
+        'Fatigue and body aches',
+        'Mild nausea',
+        'No other symptoms',
       ],
       inputType: 'chips',
     };
   }
 
-  if (!answers['severity'] && !hasMentionedSeverity) {
+  // =========================================================================
+  // Question 5 (Turn 5, stepIndex === 4)
+  // Focus: Triggers, Relieving/Aggravating Factors & Prior Treatments
+  // =========================================================================
+  if (stepIndex === 4) {
+    if (isCardiac) {
+      return {
+        id: 'q5_triggers_chest',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Aggravating Factors & Relief Attempts',
+        prompt:
+          'Does physical exertion, deep breathing, or resting make your chest symptoms worse or better, and have you taken any medications like aspirin, nitroglycerin, or antacids?',
+        subtitle: 'Helps differentiate cardiac angina from musculoskeletal or gastroesophageal discomfort.',
+        quickChips: [
+          'Worse when walking/exerting',
+          'Took aspirin earlier today',
+          'Took an antacid with no relief',
+          'Relieved slightly with rest',
+          "Haven't taken any medications",
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isRespiratory) {
+      return {
+        id: 'q5_triggers_cough',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Respiratory Triggers & Treatments',
+        prompt:
+          'Does cold air, exertion, or lying flat trigger more coughing or breathing trouble, and have you used an inhaler, cough syrup, or hot steam?',
+        subtitle: 'Identifies postural triggers and evaluates response to prior bronchodilator or antitussive therapy.',
+        quickChips: [
+          'Worse when lying down at night',
+          'Used an asthma inhaler (Albuterol)',
+          'Tried cough medicine/syrup',
+          'Triggered by cold air or dust',
+          'No treatments taken yet',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isNeuro) {
+      return {
+        id: 'q5_triggers_neuro',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Headache Triggers & Prior Treatments',
+        prompt: `Does bright light, sound, or movement worsen your ${cleanSymptom}, and have you taken any pain relievers like acetaminophen or ibuprofen, or rested in a quiet dark room?`,
+        subtitle: 'Helps evaluate migraine triggers and prior analgesic responsiveness.',
+        quickChips: [
+          'Took ibuprofen (Advil/Motrin)',
+          'Took acetaminophen (Tylenol)',
+          'Resting in a dark room helps',
+          'Worse with screen time / lights',
+          "Haven't taken any pain medication",
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isAbdominal) {
+      return {
+        id: 'q5_triggers_abdom',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Dietary Triggers & Interventions',
+        prompt:
+          'Does eating certain foods, drinking liquids, or changing posture relieve or worsen the discomfort, and have you taken any antacids or pain relievers?',
+        subtitle: 'Clarifies relationship to food intake and efficacy of gastric acid reducers.',
+        quickChips: [
+          'Worse immediately after meals',
+          'Took an antacid (Tums/Omeprazole)',
+          'Drinking warm fluids helps',
+          'Worse when lying flat',
+          'No medications taken',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isMusculoskeletal) {
+      return {
+        id: 'q5_triggers_msk',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Mechanical Triggers & Interventions',
+        prompt: `Does walking, bending, or bearing weight worsen the pain, and have you applied ice, heat, or taken any anti-inflammatory painkillers?`,
+        subtitle: 'Evaluates mechanical loading and response to conservative RICE or NSAID measures.',
+        quickChips: [
+          'Applied ice pack / compression',
+          'Took anti-inflammatory (Ibuprofen)',
+          'Pain worsens with weight-bearing',
+          'Resting and elevating helps',
+          'No treatment applied yet',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (isDermatological) {
+      return {
+        id: 'q5_triggers_derm',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Environmental Triggers & Topicals',
+        prompt:
+          'Have you been exposed to any new soaps, detergents, cosmetics, plants, or pets, and have you applied any topical creams or ointments?',
+        subtitle: 'Screens for contact dermatitis triggers and documented prior topical therapies.',
+        quickChips: [
+          'New soap or laundry detergent',
+          'Applied hydrocortisone cream',
+          'Applied moisturizer / lotion',
+          'Outdoors / plant exposure',
+          'No new exposures identified',
+        ],
+        inputType: 'chips',
+      };
+    }
+
     return {
-      id: 'q3_severity_general',
-      fieldKey: 'severity',
-      category: 'Discomfort & Daily Impact',
-      prompt: 'On a scale from 0 to 10, how intense is your discomfort, and does it interfere with your work or sleep?',
-      subtitle: 'Quantifies symptom severity to inform clinical decision-making.',
-      quickChips: ['2 - Mild annoyance', '4 - Moderate discomfort', '7 - Severe, disrupts sleep', 'Interferes with daily work'],
-      inputType: 'slider',
+      id: 'q5_triggers_general',
+      turnId: 5,
+      fieldKey: 'triggers_treatments',
+      category: 'Triggers & Relieving Factors',
+      prompt: `Does anything specific seem to trigger or relieve your ${cleanSymptom}, and have you taken any medications or home remedies to relieve it?`,
+      subtitle: 'Clarifies modifying factors and therapeutic attempts.',
+      quickChips: [
+        'Took over-the-counter pain relief',
+        'Resting helps reduce symptoms',
+        'Worse with physical activity',
+        'Nothing seems to help',
+        "Haven't tried any remedies yet",
+      ],
+      inputType: 'chips',
+    };
+  }
+
+  // =========================================================================
+  // Question 6 (Turn 6, stepIndex === 5)
+  // Focus: Medical History, Medications, Allergies & Consult Priorities
+  // =========================================================================
+  if (stepIndex === 5) {
+    return {
+      id: 'q6_review_medical_history',
+      turnId: 6,
+      fieldKey: 'medical_history_review',
+      category: 'Medication & Medical History Review',
+      prompt:
+        'To complete your intake for the physician: do you have any chronic medical conditions, regular prescription medications, drug allergies, or specific questions you want prioritized during your consultation?',
+      subtitle: 'This final clinical review equips your attending doctor with full context before exam.',
+      quickChips: [
+        'No regular medications or drug allergies',
+        'Blood pressure medication (e.g., Lisinopril, Amlodipine)',
+        'Asthma / respiratory history',
+        'Diabetes / routine prescriptions',
+        'Penicillin / antibiotic allergy',
+        'Want doctor to check if imaging/tests needed',
+      ],
+      inputType: 'text',
     };
   }
 
@@ -447,14 +870,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const [questionHistory, setQuestionHistory] = useState<IntakeQuestion[]>([INITIAL_INTAKE_QUESTION]);
   const [clinicalDictation, setClinicalDictation] = useState<ClinicalDictationResult | null>(null);
 
-  // Clinical coverage estimation
+  // Clinical coverage estimation across 6 dynamic questions
   const coveragePercent = useMemo(() => {
-    return sessionRef.current.currentCoverage || 25;
-  }, [sessionRef.current.currentCoverage, answers]);
+    return Math.min(100, Math.max(17, Math.round(((currentStepIndex + 1) / 6) * 100)));
+  }, [currentStepIndex]);
 
   const isReadyToFinish = useMemo(() => {
-    return Object.keys(answers).length >= 2 || sessionRef.current.turnCount >= 2;
-  }, [answers, sessionRef.current.turnCount]);
+    return Object.keys(answers).length >= 2 || currentStepIndex >= 2;
+  }, [answers, currentStepIndex]);
 
   // Audio & Web Speech Recognition references
   const recognitionRef = useRef<unknown>(null);
@@ -1026,8 +1449,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       };
       setAnswers(updatedAnswers);
 
-      // Check conclusion
-      if (turnResult.shouldConclude) {
+      // Check conclusion: only conclude if patient explicitly signaled completion or stepIndex reached 6
+      if (turnResult.shouldConclude && currentStepIndex >= 5) {
         onComplete(updatedFacts);
         return;
       }
@@ -1035,7 +1458,9 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       // 4. Adaptively determine the next question
       const nextQ = determineNextAdaptiveQuestion(
         updatedAnswers,
-        currentStepIndex + 1
+        currentStepIndex + 1,
+        undefined,
+        questionHistory
       );
 
       if (nextQ === null) {
@@ -1043,7 +1468,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         onComplete(updatedFacts);
       } else {
         // Establish single canonical prompt for UI, TTS, and ledger
-        const canonicalPrompt = turnResult.assistantResponseText || nextQ.prompt;
+        const canonicalPrompt = nextQ.prompt;
         const enhancedQ: IntakeQuestion = {
           ...nextQ,
           turnId: currentStepIndex + 2,

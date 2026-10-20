@@ -87,7 +87,7 @@ describe('Adaptive Patient Intake Questioning Engine', () => {
       expect(nextQ?.category).toMatch(/Medication/i);
     });
 
-    it('concludes minor localized complaint in exactly 2 questions without forcing 5', () => {
+    it('dynamically adapts through all 6 clinical reasoning steps for localized complaint', () => {
       // Turn 1: Patient reports rash
       const turn1 = { chief_complaint: 'Small rash on my left arm' };
       const q2 = determineNextAdaptiveQuestion(turn1, 1);
@@ -97,11 +97,34 @@ describe('Adaptive Patient Intake Questioning Engine', () => {
       // Turn 2: Patient reports duration and onset
       const turn2 = { ...turn1, duration: 'Started yesterday, mild itch' };
       const q3 = determineNextAdaptiveQuestion(turn2, 2);
-      // Must conclude at step 2!
-      expect(q3).toBeNull();
+      expect(q3).not.toBeNull();
+      expect(q3?.fieldKey).toBe('severity');
+
+      // Turn 3: Discomfort & functional impact
+      const turn3 = { ...turn2, severity: '4/10' };
+      const q4 = determineNextAdaptiveQuestion(turn3, 3);
+      expect(q4).not.toBeNull();
+      expect(q4?.fieldKey).toBe('associated_symptoms');
+
+      // Turn 4: Associated signs & triggers
+      const turn4 = { ...turn3, associated_symptoms: 'No facial swelling or fever' };
+      const q5 = determineNextAdaptiveQuestion(turn4, 4);
+      expect(q5).not.toBeNull();
+      expect(q5?.fieldKey).toBe('triggers_treatments');
+
+      // Turn 5: Medical history review
+      const turn5 = { ...turn4, triggers_treatments: 'Applied hydrocortisone cream' };
+      const q6 = determineNextAdaptiveQuestion(turn5, 5);
+      expect(q6).not.toBeNull();
+      expect(q6?.fieldKey).toBe('medical_history_review');
+
+      // Concludes after 6 questions!
+      const turn6 = { ...turn5, medical_history_review: 'No allergies' };
+      const q7 = determineNextAdaptiveQuestion(turn6, 6);
+      expect(q7).toBeNull();
     });
 
-    it('concludes routine cough complaint in exactly 3 questions without forcing 5', () => {
+    it('dynamically adapts through all 6 clinical reasoning steps for cough complaint', () => {
       const turn1 = { chief_complaint: 'Dry seasonal cough' };
       const q2 = determineNextAdaptiveQuestion(turn1, 1);
       expect(q2).not.toBeNull();
@@ -113,8 +136,22 @@ describe('Adaptive Patient Intake Questioning Engine', () => {
 
       const turn3 = { ...turn2, breathing_difficulty: 'Breathing is completely normal' };
       const q4 = determineNextAdaptiveQuestion(turn3, 3);
-      // Concludes at step 3!
-      expect(q4).toBeNull();
+      expect(q4).not.toBeNull();
+      expect(q4?.fieldKey).toBe('associated_symptoms');
+
+      const turn4 = { ...turn3, associated_symptoms: 'Mild throat tickle' };
+      const q5 = determineNextAdaptiveQuestion(turn4, 4);
+      expect(q5).not.toBeNull();
+      expect(q5?.fieldKey).toBe('triggers_treatments');
+
+      const turn5 = { ...turn4, triggers_treatments: 'Warm tea with honey' };
+      const q6 = determineNextAdaptiveQuestion(turn5, 5);
+      expect(q6).not.toBeNull();
+      expect(q6?.fieldKey).toBe('medical_history_review');
+
+      const turn6 = { ...turn5, medical_history_review: 'No regular medications' };
+      const q7 = determineNextAdaptiveQuestion(turn6, 6);
+      expect(q7).toBeNull();
     });
 
     it('skips duration question when patient already provided timeline in initial chief complaint', () => {
