@@ -39,6 +39,11 @@ import {
   type ConversationalIntakeSession,
   ACUTE_RED_FLAGS,
 } from '../../lib/clinical/conversationalEngine';
+import {
+  extractClinicalSemantics,
+  detectPatientLanguage,
+  buildClinicallyReasonedQuestion,
+} from '../../lib/clinical/semanticClinicalParser';
 
 export interface IntakeQuestion {
   id: string;
@@ -73,11 +78,29 @@ export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
   inputType: 'text',
 };
 
+export const INITIAL_TELUGU_QUESTION: IntakeQuestion = {
+  id: 'q1_chief_complaint',
+  turnId: 1,
+  fieldKey: 'chief_complaint',
+  category: 'ప్రధాన సమస్య (Chief Complaint)',
+  prompt: 'క్లిన్‌సింక్‌కు స్వాగతం. ఈరోజు మీరు ఏ ప్రాథమిక ఆరోగ్య సమస్య లేదా అసౌకర్యంతో వచ్చారు?',
+  subtitle: 'నేను మీ AI సహాయకురాలిని. సహజంగా మాట్లాడండి లేదా కింద ఉన్న ఎంపికలను ఎంచుకోండి.',
+  quickChips: [
+    'నిన్నటి నుండి జ్వరం & చలి',
+    'ఎడతెగని పొడి దగ్గు',
+    'ఛాతీలో బిగుతు / నొప్పి',
+    'కడుపు నొప్పి & వికారం',
+    'కీళ్లు మరియు ఒంటి నొప్పులు',
+  ],
+  inputType: 'text',
+};
+
 export function determineNextAdaptiveQuestion(
   answers: Record<string, string>,
   stepIndex: number,
   _memoryHarness?: AgentMemoryHarness,
-  _questionHistory?: IntakeQuestion[]
+  _questionHistory?: IntakeQuestion[],
+  preferredLanguage?: string
 ): IntakeQuestion | null {
   const lastKey = Object.keys(answers).pop() || '';
   const lastAnswer = (answers[lastKey] || '').toLowerCase().trim();
@@ -96,10 +119,13 @@ export function determineNextAdaptiveQuestion(
     'done',
     'only this',
     'just this',
+    'ఇంతే',
+    'వేరేమీ లేదు',
+    'ఇంకేమీ లేదు',
   ];
   if (
     completionSignals.some((sig) => lastAnswer.includes(sig) || allAnswersText.includes(sig)) ||
-    (stepIndex >= 2 && ['no', 'none', 'nothing', 'nope', 'negative'].includes(lastAnswer))
+    (stepIndex >= 2 && ['no', 'none', 'nothing', 'nope', 'negative', 'లేదు', 'ఏమీ లేదు'].includes(lastAnswer))
   ) {
     return null;
   }
@@ -116,6 +142,7 @@ export function determineNextAdaptiveQuestion(
   ) {
     return {
       id: 'q_clarify_duration',
+      turnId: stepIndex + 1,
       fieldKey: 'duration_clarification',
       category: 'Clarification',
       prompt: 'Could you give an estimate of about how many hours or days it has been present?',
@@ -125,19 +152,31 @@ export function determineNextAdaptiveQuestion(
     };
   }
 
-  // 4. Clinical Signal & Domain Extraction
+  // 4. Clinical Signal & Domain Extraction with deep semantic parsing
   const rawComplaint = (answers['chief_complaint'] || Object.values(answers)[0] || '').trim();
   const complaint = rawComplaint.toLowerCase();
+  const semantics = extractClinicalSemantics(allAnswersText || rawComplaint, preferredLanguage);
 
-  const cleanSymptom = rawComplaint
-    .replace(
-      /^(i have|i've had|i am having|i am feeling|im feeling|i feel|feeling|experiencing|suffering from|there is|a bit of)\s+/i,
-      ''
-    )
-    .trim() || 'symptoms';
+  // If patient spoke or typed in Telugu (or preferred language is Telugu), provide dynamic Telugu questioning
+  if (semantics.language === 'te') {
+    const qPlan = buildClinicallyReasonedQuestion(semantics, stepIndex, answers);
+    return {
+      id: `q${stepIndex + 1}_te_${semantics.domain}`,
+      turnId: stepIndex + 1,
+      fieldKey: qPlan.fieldKey,
+      category: qPlan.category,
+      prompt: qPlan.prompt,
+      subtitle: qPlan.subtitle,
+      quickChips: qPlan.quickChips,
+      inputType: qPlan.inputType,
+    };
+  }
+
+  const cleanSymptom = semantics.primarySymptom || 'symptoms';
 
   const hasMentionedDuration =
     Boolean(answers['duration'] || answers['duration_onset'] || answers['duration_clarification']) ||
+    Boolean(semantics.timeline) ||
     /\b(?:since\s+|for\s+\d+|started\s+|days?|weeks?|months?|hours?|yesterday|morning|today|last\s+night)\b/i.test(
       allAnswersText
     );
@@ -145,10 +184,11 @@ export function determineNextAdaptiveQuestion(
   const durationMatch = allAnswersText.match(
     /\b(?:since\s+[^,.]+|for\s+\d+\s+days?|for\s+\d+\s+hours?|for\s+about\s+\d+\s+days?|started\s+[^,.]+|yesterday|today|this\s+morning)\b/i
   );
-  const reportedDurationRef = durationMatch ? durationMatch[0] : 'since onset';
+  const reportedDurationRef = durationMatch ? durationMatch[0] : (semantics.timeline || 'since onset');
 
   // Domain categorization
   const isCardiac =
+    semantics.domain === 'cardiac' ||
     complaint.includes('chest') ||
     complaint.includes('heart') ||
     complaint.includes('tightness') ||
@@ -157,6 +197,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('squeezing');
 
   const isRespiratory =
+    semantics.domain === 'respiratory' ||
     complaint.includes('cough') ||
     complaint.includes('wheez') ||
     complaint.includes('throat') ||
@@ -167,6 +208,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('asthma');
 
   const isAbdominal =
+    semantics.domain === 'gi' ||
     complaint.includes('stomach') ||
     complaint.includes('abdom') ||
     complaint.includes('belly') ||
@@ -180,6 +222,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('digest');
 
   const isNeuro =
+    semantics.domain === 'neuro' ||
     complaint.includes('headache') ||
     complaint.includes('migraine') ||
     complaint.includes('head') ||
@@ -191,6 +234,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('tingl');
 
   const isMusculoskeletal =
+    semantics.domain === 'musculoskeletal' ||
     complaint.includes('knee') ||
     complaint.includes('back') ||
     complaint.includes('shoulder') ||
@@ -208,6 +252,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('stiff');
 
   const isDermatological =
+    semantics.domain === 'dermatological' ||
     complaint.includes('rash') ||
     complaint.includes('itch') ||
     complaint.includes('burn') ||
@@ -222,6 +267,7 @@ export function determineNextAdaptiveQuestion(
     complaint.includes('papercut');
 
   const isSystemic =
+    semantics.domain === 'fever' ||
     complaint.includes('fever') ||
     complaint.includes('chill') ||
     complaint.includes('sweat') ||
@@ -365,19 +411,24 @@ export function determineNextAdaptiveQuestion(
       };
     }
 
-    if (isSystemic) {
+    if (isSystemic || semantics.domain === 'fever') {
+      const triggerPhrase = semantics.triggerOrCause
+        ? `I understand you developed a fever after ${semantics.triggerOrCause.replace(/^after\s+/i, '')}`
+        : 'I hear that you are experiencing a fever';
+      const timeRef = semantics.timeline ? ` since ${semantics.timeline.replace(/^(?:since|for)\s+/i, '')}` : '';
+
       return {
         id: 'q2_duration_systemic',
         turnId: 2,
         fieldKey: 'duration',
-        category: 'Timeline & Pattern',
-        prompt: `How many days have you been feeling ${cleanSymptom}, and has your temperature or fatigue been fluctuating or steadily rising?`,
-        subtitle: 'Assessing systemic trends helps determine infection timeline.',
+        category: 'Fever Profile & Chills',
+        prompt: `${triggerPhrase}${timeRef}. Has the fever been high or accompanied by chills, and have you checked your temperature with a thermometer?`,
+        subtitle: 'Understanding fever severity and chills helps our clinical team determine urgency.',
         quickChips: [
-          'Started in the last 24 hours',
-          'Fluctuating over the last 3 days',
-          'Persistent for about a week',
-          'Worse in the evenings',
+          'High fever with severe chills',
+          'Mild low-grade fever',
+          'Measured over 101°F / 38.3°C',
+          'Fluctuating throughout the day',
         ],
         inputType: 'chips',
       };
@@ -415,6 +466,25 @@ export function determineNextAdaptiveQuestion(
           'On a scale from 0 to 10, how severe is your chest discomfort right now, and does it worsen with physical exertion?',
         subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
         quickChips: ['3 - Mild', '5 - Moderate', '8 - Severe', 'Worse when walking'],
+        inputType: 'slider',
+      };
+    }
+
+    if (semantics.domain === 'fever' || isSystemic) {
+      return {
+        id: 'q3_severity_fever',
+        turnId: 3,
+        fieldKey: 'severity',
+        category: 'Fever Intensity & Weakness',
+        prompt:
+          'On a scale from 0 to 10, how intense is your fever and weakness right now, and is it preventing you from working or sleeping?',
+        subtitle: 'Quantifies constitutional symptoms to prioritize clinical response.',
+        quickChips: [
+          '3 - Mild exhaustion',
+          '6 - Moderate, bed-bound',
+          '8 - Severe shaking and high fever',
+          'Completely unable to eat or work',
+        ],
         inputType: 'slider',
       };
     }
@@ -518,6 +588,26 @@ export function determineNextAdaptiveQuestion(
           'Cold sweats',
           'Nausea or reduced appetite',
           'No other symptoms',
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (semantics.domain === 'fever' || isSystemic) {
+      return {
+        id: 'q4_associated_fever',
+        turnId: 4,
+        fieldKey: 'associated_symptoms',
+        category: 'Associated Infection Signs',
+        prompt:
+          'Alongside the fever, are you experiencing any cough, sore throat, severe headache, breathing difficulty, or vomiting?',
+        subtitle: 'Identifies systemic or respiratory infection indicators.',
+        quickChips: [
+          'Sore throat and nasal congestion',
+          'Severe body ache and headache',
+          'Nausea or stomach upset',
+          'Dry cough',
+          'No other associated symptoms',
         ],
         inputType: 'chips',
       };
@@ -655,6 +745,25 @@ export function determineNextAdaptiveQuestion(
           'Took an antacid with no relief',
           'Relieved slightly with rest',
           "Haven't taken any medications",
+        ],
+        inputType: 'chips',
+      };
+    }
+
+    if (semantics.domain === 'fever' || isSystemic) {
+      return {
+        id: 'q5_triggers_fever',
+        turnId: 5,
+        fieldKey: 'triggers_treatments',
+        category: 'Antipyretic Response & Relief',
+        prompt:
+          'Have you taken any fever-reducing medications like paracetamol, acetaminophen, or ibuprofen, and did it bring your temperature down?',
+        subtitle: 'Evaluating response to antipyretics guides clinical treatment.',
+        quickChips: [
+          'Took Paracetamol / Tylenol (fever dropped temporarily)',
+          'Took Ibuprofen with little relief',
+          'Resting and drinking hot fluids',
+          "Haven't taken any medications yet",
         ],
         inputType: 'chips',
       };
@@ -865,10 +974,26 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const interruptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSpokenTurnIdRef = useRef<number | null>(null);
 
-  // Dynamic adaptive question tracking
-  const [currentQuestion, setCurrentQuestion] = useState<IntakeQuestion>(INITIAL_INTAKE_QUESTION);
-  const [questionHistory, setQuestionHistory] = useState<IntakeQuestion[]>([INITIAL_INTAKE_QUESTION]);
+  // Dynamic adaptive question tracking with native language support
+  const [activeLanguage, setActiveLanguage] = useState<string>(language || 'en');
+  const [currentQuestion, setCurrentQuestion] = useState<IntakeQuestion>(
+    language === 'te' ? INITIAL_TELUGU_QUESTION : INITIAL_INTAKE_QUESTION
+  );
+  const [questionHistory, setQuestionHistory] = useState<IntakeQuestion[]>([
+    language === 'te' ? INITIAL_TELUGU_QUESTION : INITIAL_INTAKE_QUESTION,
+  ]);
   const [clinicalDictation, setClinicalDictation] = useState<ClinicalDictationResult | null>(null);
+
+  // Sync initial question if language prop updates
+  useEffect(() => {
+    if (language && language !== activeLanguage) {
+      setActiveLanguage(language);
+      if (language === 'te' && currentStepIndex === 0 && Object.keys(answers).length === 0) {
+        setCurrentQuestion(INITIAL_TELUGU_QUESTION);
+        setQuestionHistory([INITIAL_TELUGU_QUESTION]);
+      }
+    }
+  }, [language, activeLanguage, currentStepIndex, answers]);
 
   // Clinical coverage estimation across 6 dynamic questions
   const coveragePercent = useMemo(() => {
@@ -1034,10 +1159,35 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           if (window.speechSynthesis.paused) {
             window.speechSynthesis.resume();
           }
-          window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.95;
+
+          // Multilingual locale targeting for speech synthesis
+          const isTeluguText = /[\u0C00-\u0C7F]/.test(text) || activeLanguage === 'te';
+          const isHindiText = /[\u0900-\u097F]/.test(text) || activeLanguage === 'hi';
+          const isSpanishText = activeLanguage === 'es';
+
+          const targetLocale = isTeluguText
+            ? 'te-IN'
+            : isHindiText
+            ? 'hi-IN'
+            : isSpanishText
+            ? 'es-ES'
+            : 'en-US';
+
+          utterance.lang = targetLocale;
+          utterance.rate = isTeluguText ? 0.9 : 0.95;
           utterance.pitch = 1.0;
+
+          if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.getVoices) {
+            const voices = window.speechSynthesis.getVoices();
+            const matchedVoice = voices.find(
+              (v) => v.lang === targetLocale || v.lang.startsWith(targetLocale.split('-')[0])
+            );
+            if (matchedVoice) {
+              utterance.voice = matchedVoice;
+            }
+          }
+
           utterance.onstart = () => {
             if (thisTurnId === turnIdRef.current) {
               setIsAiSpeaking(true);
@@ -1071,7 +1221,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         setAudioState('idle');
       }
     },
-    [aiAudioMuted, isPaused]
+    [aiAudioMuted, isPaused, activeLanguage]
   );
 
   // Play audio when canonical question changes, debounced for StrictMode stabilization
@@ -1275,7 +1425,15 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
         const navLocale = typeof navigator !== 'undefined' ? navigator.language : '';
         const defaultEn = navLocale && navLocale.toLowerCase().startsWith('en') ? navLocale : 'en-US';
-        recognition.lang = (!language || language === 'en') ? defaultEn : language;
+        const effectiveLang =
+          activeLanguage === 'te'
+            ? 'te-IN'
+            : activeLanguage === 'hi'
+            ? 'hi-IN'
+            : activeLanguage === 'es'
+            ? 'es-ES'
+            : (!language || language === 'en' ? defaultEn : language);
+        recognition.lang = effectiveLang;
 
         recognition.onstart = () => {
           setAudioState('listening');
@@ -1455,12 +1613,20 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         return;
       }
 
-      // 4. Adaptively determine the next question
+      // 4. Adaptively detect patient native language and determine the next question
+      let langToUse = activeLanguage;
+      const detected = detectPatientLanguage(finalAnswer, activeLanguage);
+      if (detected !== activeLanguage && (detected === 'te' || activeLanguage === 'en')) {
+        langToUse = detected;
+        setActiveLanguage(detected);
+      }
+
       const nextQ = determineNextAdaptiveQuestion(
         updatedAnswers,
         currentStepIndex + 1,
         undefined,
-        questionHistory
+        questionHistory,
+        langToUse
       );
 
       if (nextQ === null) {

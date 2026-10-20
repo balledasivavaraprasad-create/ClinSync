@@ -178,6 +178,66 @@ describe('Adaptive Patient Intake Questioning Engine', () => {
       const nextQ = determineNextAdaptiveQuestion(answers, 9);
       expect(nextQ).toBeNull();
     });
+
+    it('deeply understands semantics separating symptoms from triggers (cold rain fever case)', () => {
+      const answers = {
+        chief_complaint: 'I am having a fever because I just went out yesterday in cold rain',
+      };
+      const q2 = determineNextAdaptiveQuestion(answers, 1);
+      expect(q2).not.toBeNull();
+      expect(q2?.fieldKey).toBe('duration');
+      expect(q2?.category).toContain('Fever');
+      // Must NOT naively say "When did your having a fever because I just went out yesterday in cold rain first begin"
+      expect(q2?.prompt).not.toContain('having a fever because I just went out');
+      // Must clinically acknowledge the rain exposure and inquire about fever height, chills, or temperature
+      expect(q2?.prompt).toMatch(/cold rain/i);
+      expect(q2?.prompt).toMatch(/fever/i);
+      expect(q2?.prompt).toMatch(/chills|temperature/i);
+    });
+
+    it('generates native Telugu questions when patient speaks or writes in Telugu', () => {
+      const answers = {
+        chief_complaint: 'నిన్న చలి వర్షంలో తడిశాను, నాకు జ్వరం వచ్చింది',
+      };
+      const q2 = determineNextAdaptiveQuestion(answers, 1);
+      expect(q2).not.toBeNull();
+      // Prompt must be in Telugu script and acknowledge rain trigger
+      expect(q2?.prompt).toMatch(/[\u0C00-\u0C7F]/);
+      expect(q2?.prompt).toContain('జ్వరం');
+      expect(q2?.subtitle).toMatch(/[\u0C00-\u0C7F]/);
+      expect(q2?.quickChips[0]).toMatch(/[\u0C00-\u0C7F]/);
+
+      // Turn 3: Severity rating in Telugu
+      const turn2Answers = {
+        ...answers,
+        duration: 'తీవ్రమైన జ్వరం & చలి',
+      };
+      const q3 = determineNextAdaptiveQuestion(turn2Answers, 2);
+      expect(q3).not.toBeNull();
+      expect(q3?.fieldKey).toBe('severity');
+      expect(q3?.prompt).toContain('0 నుండి 10');
+      expect(q3?.inputType).toBe('slider');
+
+      // Turn 4: Associated symptoms in Telugu
+      const turn3Answers = {
+        ...turn2Answers,
+        severity: '8/10',
+      };
+      const q4 = determineNextAdaptiveQuestion(turn3Answers, 3);
+      expect(q4).not.toBeNull();
+      expect(q4?.fieldKey).toBe('associated_symptoms');
+      expect(q4?.prompt).toContain('జ్వరంతో పాటు');
+    });
+
+    it('supports romanized Telugu phonetic speech recognition input', () => {
+      const answers = {
+        chief_complaint: 'ninna varshamlo tadisanu, jwaram vachindi',
+      };
+      const q2 = determineNextAdaptiveQuestion(answers, 1);
+      expect(q2).not.toBeNull();
+      expect(q2?.prompt).toMatch(/[\u0C00-\u0C7F]/);
+      expect(q2?.prompt).toContain('జ్వరం');
+    });
   });
 
   describe('IntakeInterview UI Adaptive Rendering', () => {
