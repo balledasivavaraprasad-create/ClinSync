@@ -51,4 +51,5 @@ artifacts/
 # Local prompt package & deliverables (distributed out-of-band)
 ClinSync_Phase_Prompt_Package/
 ClinSync_Person_Specific_Guides_and_Prompts/
+ClinSync_Hackathon_Handoff_v2/
 *.zip
