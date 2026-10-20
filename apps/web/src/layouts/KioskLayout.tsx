@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, HelpCircle, Globe, RotateCcw, ArrowLeft, Sparkles, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PatientAITransparencyLedger } from '../features/patient-intake/PatientAITransparencyLedger';
+import { ThemeToggle } from '../lib/theme';
 
 export interface KioskLayoutProps {
   title?: string;
@@ -57,11 +58,11 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
             onClick={() => setShowTransparencyModal(true)}
             data-testid="btn-patient-ai-transparency"
             className="flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-cyan-100 dark:bg-cyan-950/80 text-cyan-900 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/40 hover:bg-cyan-200 dark:hover:bg-cyan-900/60 transition-colors shadow-sm cursor-pointer"
-            title="Inspect all AI extracted facts, document sources, and anti-hallucination citations"
+            title="Inspect what the doctor will see from your conversation and papers"
           >
             <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
-            <span className="hidden sm:inline">AI Fact Inspector</span>
-            <span className="sm:hidden">Facts</span>
+            <span className="hidden sm:inline">View Visit Notes</span>
+            <span className="sm:hidden">Notes</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
           </button>
 
@@ -73,6 +74,8 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
               </span>
             </div>
           )}
+
+          <ThemeToggle />
 
           <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.04] px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10">
             <Globe className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
@@ -140,15 +143,15 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
           <div className="bg-white dark:bg-[#090e1d] border border-slate-200 dark:border-white/15 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-white/10">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Patient AI Fact Grounding & Ledger
+                    What the Doctor Will See
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Real-time provenance citations and anti-hallucination verification
+                    Everything recorded from your conversation and papers, ready for your doctor
                   </p>
                 </div>
               </div>
@@ -162,7 +165,7 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
               </button>
             </div>
 
-            <PatientAITransparencyLedger />
+            <PatientAITransparencyLedger showCardWrapper={false} />
 
             <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 flex justify-end">
               <Button
@@ -170,7 +173,7 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
                 onClick={() => setShowTransparencyModal(false)}
                 className="px-6"
               >
-                Done Reviewing Facts
+                Done Reviewing Notes
               </Button>
             </div>
           </div>

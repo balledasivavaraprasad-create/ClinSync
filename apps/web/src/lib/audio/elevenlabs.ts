@@ -4,7 +4,10 @@
  */
 
 export const ELEVENLABS_CONFIG = {
-  apiKey: (import.meta.env.VITE_ELEVENLABS_API_KEY as string) || '',
+  apiKey:
+    (import.meta.env.VITE_ELEVENLABS_API_KEY as string) ||
+    (import.meta.env.ELEVENLABS_API_KEY as string) ||
+    'sk_5d3dec9f5341ac40f6a75d3d32752cc93835a105a24b8677',
   modelId: 'eleven_flash_v2_5',
   voices: {
     receptionist: 'EXAVITQu4vr4xnSDxMaL', // Bella (warm, empathetic female receptionist)

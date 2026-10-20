@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Users, LogOut, ArrowLeft, ShieldCheck, LayoutDashboard } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { ThemeToggle } from '../lib/theme';
 
 export interface StaffLayoutProps {
   terminalName?: string;
@@ -98,6 +99,8 @@ export const StaffLayout: React.FC<StaffLayoutProps> = ({
 
         {/* Staff Identity & Controls */}
         <div className="flex items-center space-x-3">
+          <ThemeToggle />
+
           <div className="flex items-center space-x-2 bg-slate-100 dark:bg-[#050811]/90 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs dark:shadow-inner">
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Triage:</span>

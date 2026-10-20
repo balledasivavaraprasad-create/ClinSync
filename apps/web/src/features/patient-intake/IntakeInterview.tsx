@@ -61,8 +61,8 @@ export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
   turnId: 1,
   fieldKey: 'chief_complaint',
   category: 'Chief Complaint',
-  prompt: 'What primary health symptom or discomfort brings you in today?',
-  subtitle: 'Speak naturally or tap a common symptom below.',
+  prompt: 'Welcome to ClinSync. What primary health symptom or discomfort brings you in today?',
+  subtitle: 'I am your AI receptionist. Speak naturally or tap a common symptom below.',
   quickChips: [
     'Persistent dry cough',
     'Chest tightness / pain',
@@ -466,10 +466,40 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
 
   // Web Speech API interface
+  interface SpeechResultItem {
+    transcript: string;
+  }
+  interface SpeechResultList {
+    readonly length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: SpeechResultItem;
+    };
+  }
+  interface SpeechEvent {
+    results: SpeechResultList;
+  }
+  interface SpeechErrorEvent {
+    error: string;
+  }
+
+  interface SpeechRecognitionInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives?: number;
+    lang: string;
+    onstart?: (() => void) | null;
+    onresult: ((event: SpeechEvent) => void) | null;
+    onerror: ((event: SpeechErrorEvent) => void) | null;
+    onend: (() => void) | null;
+    start: () => void;
+    stop: () => void;
+  }
+
   const globalWindow = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
   const SpeechRecognitionClass = globalWindow
-    ? (globalWindow.SpeechRecognition as { new (): any } | undefined) ||
-      (globalWindow.webkitSpeechRecognition as { new (): any } | undefined)
+    ? (globalWindow.SpeechRecognition as { new (): SpeechRecognitionInstance } | undefined) ||
+      (globalWindow.webkitSpeechRecognition as { new (): SpeechRecognitionInstance } | undefined)
     : null;
 
   // Halt physical audio and browser speech synthesis immediately without altering UI state
@@ -564,8 +594,12 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               setAudioState('idle');
             }
           };
-          await aiAudioRef.current.play();
-          return;
+          try {
+            await aiAudioRef.current.play();
+            return;
+          } catch (playErr) {
+            console.warn('HTML Audio autoplay blocked; falling back to speech synthesis', playErr);
+          }
         }
       } catch {
         // Fall back to Browser Web Speech Synthesis
@@ -574,8 +608,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       // 2. Fallback to Browser SpeechSynthesis (Web Speech API) using the exact canonical text
       if (typeof window !== 'undefined' && window.speechSynthesis && thisTurnId === turnIdRef.current && !abortCtrl.signal.aborted) {
         try {
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.95;
+          utterance.pitch = 1.0;
           utterance.onstart = () => {
             if (thisTurnId === turnIdRef.current) {
               setIsAiSpeaking(true);
@@ -594,7 +633,11 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               setAudioState('idle');
             }
           };
-          window.speechSynthesis.speak(utterance);
+          setTimeout(() => {
+            if (thisTurnId === turnIdRef.current && !abortCtrl.signal.aborted) {
+              window.speechSynthesis.speak(utterance);
+            }
+          }, 25);
         } catch {
           setIsAiSpeaking(false);
           setAudioState('idle');
@@ -608,7 +651,9 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     [aiAudioMuted, isPaused]
   );
 
-  // Play audio when canonical question changes, guarded against duplicate re-renders
+  // Play audio when canonical question changes, debounced for StrictMode stabilization
+  const audioDispatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const qTurnId = currentQuestion?.turnId || 1;
     if (
@@ -618,19 +663,47 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       lastSpokenTurnIdRef.current !== qTurnId
     ) {
       lastSpokenTurnIdRef.current = qTurnId;
-      playReceptionistVoice(currentQuestion.prompt, qTurnId);
+      if (audioDispatchTimerRef.current) {
+        clearTimeout(audioDispatchTimerRef.current);
+      }
+      audioDispatchTimerRef.current = setTimeout(() => {
+        playReceptionistVoice(currentQuestion.prompt, qTurnId);
+      }, 50);
     }
     return () => {
+      if (audioDispatchTimerRef.current) {
+        clearTimeout(audioDispatchTimerRef.current);
+        audioDispatchTimerRef.current = null;
+      }
       silenceAudio();
+      lastSpokenTurnIdRef.current = null;
     };
-  }, [currentQuestion, playReceptionistVoice, isPaused, modality, handleStopAssistant]);
+  }, [currentQuestion, playReceptionistVoice, isPaused, modality, silenceAudio]);
+
+  // Audio unlock listener for browser autoplay restriction
+  useEffect(() => {
+    const unlockAudioOnGesture = () => {
+      if (aiAudioRef.current && aiAudioRef.current.paused && audioState === 'speaking') {
+        aiAudioRef.current.play().catch(() => {});
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    };
+    window.addEventListener('click', unlockAudioOnGesture, { once: true });
+    window.addEventListener('touchstart', unlockAudioOnGesture, { once: true });
+    return () => {
+      window.removeEventListener('click', unlockAudioOnGesture);
+      window.removeEventListener('touchstart', unlockAudioOnGesture);
+    };
+  }, [audioState]);
 
   // Pause conversation
   const handlePauseConversation = () => {
     silenceAudio();
     if (isListeningRef.current && recognitionRef.current) {
       try {
-        (recognitionRef.current as any).stop();
+        (recognitionRef.current as { stop?: () => void }).stop?.();
       } catch {
         // Ignore
       }
@@ -662,23 +735,6 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
-  // Web Speech Types
-  interface SpeechResultItem {
-    transcript: string;
-  }
-  interface SpeechResultList {
-    readonly length: number;
-    [index: number]: {
-      isFinal: boolean;
-      [index: number]: SpeechResultItem;
-    };
-  }
-  interface SpeechEvent {
-    results: SpeechResultList;
-  }
-  interface SpeechErrorEvent {
-    error: string;
-  }
 
   // Toggle Voice Recording
   const handleToggleVoice = () => {
@@ -693,7 +749,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       }
       if (recognitionRef.current) {
         try {
-          (recognitionRef.current as any).stop();
+          (recognitionRef.current as { stop?: () => void }).stop?.();
         } catch {
           // Ignore
         }
@@ -870,7 +926,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         recognitionRef.current = recognition;
         setAudioState('listening');
         isListeningRef.current = true;
-      } catch (err) {
+      } catch {
         setAudioState('listening');
         isListeningRef.current = true;
       }
@@ -891,7 +947,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         .then((stream) => {
           mediaStreamRef.current = stream;
           const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
-          const MediaRecorderConstructor = globalWin?.MediaRecorder as any;
+          const MediaRecorderConstructor = globalWin?.MediaRecorder as (new (stream: MediaStream) => MediaRecorder) | undefined;
 
           if (MediaRecorderConstructor && isListeningRef.current) {
             try {
@@ -1398,6 +1454,26 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Welcome Greeting Banner (Step 0) */}
+          {currentStepIndex === 0 && (
+            <div
+              data-testid="intake-welcome-banner"
+              className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-teal-500/15 via-cyan-500/15 to-indigo-500/15 border border-cyan-400/30 flex items-center space-x-3 text-cyan-200 animate-in fade-in duration-300"
+            >
+              <div className="w-8 h-8 rounded-xl bg-cyan-400/20 flex items-center justify-center shrink-0 text-cyan-300">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-white block text-sm">
+                  Welcome to ClinSync{patientName ? `, ${patientName.split(' ')[0]}` : ''}!
+                </span>
+                <span className="text-slate-300 text-[11px]">
+                  I am your conversational AI receptionist. I will guide you through a dynamic clinical intake before your doctor consultation.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Active Question / Dialogue Prompt */}
           <div className="flex items-center justify-between">

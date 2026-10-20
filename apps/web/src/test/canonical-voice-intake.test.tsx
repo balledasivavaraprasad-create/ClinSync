@@ -96,7 +96,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
 
     // Initial question is rendered on screen
     const displayedPrompt = screen.getByTestId('canonical-question-prompt').textContent?.trim();
-    expect(displayedPrompt).toBe('What primary health symptom or discomfort brings you in today?');
+    expect(displayedPrompt).toBe('Welcome to ClinSync. What primary health symptom or discomfort brings you in today?');
 
     // Verify the text passed to TTS matches the displayed question exactly
     await waitFor(() => {
@@ -133,7 +133,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
     );
 
     const q1Prompt = screen.getByTestId('canonical-question-prompt').textContent?.trim();
-    expect(q1Prompt).toBe('What primary health symptom or discomfort brings you in today?');
+    expect(q1Prompt).toBe('Welcome to ClinSync. What primary health symptom or discomfort brings you in today?');
 
     // Answer Q1 immediately to advance to Q2
     fireEvent.change(screen.getByTestId('intake-answer-input'), {
@@ -257,7 +257,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
     // Turn 1: answering chief complaint
     const activeQ1 = {
       id: 'q1_chief_complaint',
-      prompt: 'What primary health symptom or discomfort brings you in today?',
+      prompt: 'Welcome to ClinSync. What primary health symptom or discomfort brings you in today?',
       fieldKey: 'chief_complaint',
       turnId: 1,
     };
@@ -326,7 +326,7 @@ describe('ClinSync — Canonical Question to Audio Pipeline (TASK-VOICE-CANONICA
 
       // Question is still legibly displayed
       const prompt = screen.getByTestId('canonical-question-prompt').textContent?.trim();
-      expect(prompt).toBe('What primary health symptom or discomfort brings you in today?');
+      expect(prompt).toBe('Welcome to ClinSync. What primary health symptom or discomfort brings you in today?');
 
       // Assistant returns to ready/idle state rather than getting stuck in speaking
       await waitFor(() => {

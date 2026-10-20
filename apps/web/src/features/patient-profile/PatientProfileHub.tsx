@@ -252,7 +252,7 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 pb-12">
       {/* Top Breadcrumb & Action Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/[0.08] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-white/[0.08] pb-5">
         <div className="flex items-center space-x-4">
           {onBack && (
             <button
@@ -279,17 +279,17 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2.5">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">{profile.display_name}</h1>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">{profile.display_name}</h1>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-100 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/30">
                   {isClinicianView ? 'Hospital Master Record' : 'Patient Portal'}
                 </span>
               </div>
-              <div className="flex items-center space-x-3 mt-1 text-xs text-slate-400 font-mono">
-                <span>MRN: <strong className="text-slate-200">{profile.hospital_id}</strong></span>
+              <div className="flex items-center space-x-3 mt-1 text-xs text-slate-500 dark:text-slate-400 font-mono">
+                <span>MRN: <strong className="text-slate-900 dark:text-slate-200">{profile.hospital_id}</strong></span>
                 <span>•</span>
-                <span>Age: <strong className="text-slate-200">{profile.calculated_age || '44'} yrs</strong></span>
+                <span>Age: <strong className="text-slate-900 dark:text-slate-200">{profile.calculated_age || '44'} yrs</strong></span>
                 <span>•</span>
-                <span>Blood: <strong className="text-slate-200">{profile.blood_group || 'A+'}</strong></span>
+                <span>Blood: <strong className="text-slate-900 dark:text-slate-200">{profile.blood_group || 'A+'}</strong></span>
               </div>
             </div>
           </div>
@@ -329,7 +329,7 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
       </div>
 
       {/* Subtab Navigation Pills */}
-      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-white/[0.06]">
+      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-200 dark:border-white/[0.06]">
         {[
           { id: 'personal', label: 'Personal Information', icon: User },
           { id: 'overview', label: 'Medical Overview', icon: Heart },
@@ -402,14 +402,14 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     : 'bg-white/[0.02] border-white/[0.08] backdrop-blur-xl'
                 }`}
               >
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-5">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-4 mb-5">
                   <div className="flex items-center space-x-2.5">
-                    <User className="w-4 h-4 text-cyan-500" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">
+                    <User className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                       Patient Demographics & Identifiers
                     </h3>
                   </div>
-                  <span className="text-[11px] font-mono text-emerald-400 flex items-center space-x-1">
+                  <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Identity Verified (Biometric + DOB)</span>
                   </span>
@@ -417,82 +417,82 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-xs">
                   <div>
-                    <span className="text-slate-400 block mb-1">Full Legal Name</span>
-                    <p className="text-sm font-bold text-slate-100">{profile.display_name}</p>
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Full Legal Name</span>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{profile.display_name}</p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Medical Record Number (MRN)</span>
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Medical Record Number (MRN)</span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-mono font-bold text-cyan-400 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-500/30">
+                      <span className="text-sm font-mono font-bold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-500/30">
                         {profile.hospital_id}
                       </span>
-                      <span className="text-[10px] text-slate-500">Immutable / Protected</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">Immutable / Protected</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Date of Birth & Age</span>
-                    <p className="text-sm font-semibold text-slate-200">
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Date of Birth & Age</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">
                       {profile.date_of_birth || 'May 12, 1982'} ({profile.calculated_age || 44} years)
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Blood Type</span>
-                    <p className="text-sm font-semibold text-slate-200">
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Blood Type</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">
                       {profile.blood_group || 'A-Positive (A+)'}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Contact Phone</span>
-                    <p className="text-sm font-semibold text-slate-200 flex items-center space-x-1.5">
-                      <Phone className="w-3.5 h-3.5 text-cyan-500" />
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Contact Phone</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center space-x-1.5">
+                      <Phone className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                       <span>{profile.contact_number || 'Not provided'}</span>
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Email Address</span>
-                    <p className="text-sm font-semibold text-slate-200 flex items-center space-x-1.5">
-                      <Mail className="w-3.5 h-3.5 text-cyan-500" />
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Email Address</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center space-x-1.5">
+                      <Mail className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                       <span>{profile.email || 'Not provided'}</span>
                     </p>
                   </div>
 
                   <div className="md:col-span-2">
-                    <span className="text-slate-400 block mb-1">Residential Address</span>
-                    <p className="text-sm font-semibold text-slate-200 flex items-center space-x-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Residential Address</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center space-x-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                       <span>{profile.address || 'Not provided'}</span>
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Preferred Spoken Language</span>
-                    <p className="text-sm font-semibold text-slate-200 flex items-center space-x-1.5">
-                      <Globe className="w-3.5 h-3.5 text-cyan-500" />
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Preferred Spoken Language</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center space-x-1.5">
+                      <Globe className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                       <span>{profile.preferred_language === 'en-US' ? 'English (United States)' : profile.preferred_language}</span>
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-1">Primary Health Insurance</span>
-                    <p className="text-sm font-semibold text-slate-200">
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Primary Health Insurance</span>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">
                       {profile.insurance_provider || 'Blue Cross Blue Shield'}
                     </p>
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                       ID: {profile.insurance_id || 'BCBS-8829104-A'}
                     </span>
                   </div>
                 </div>
 
                 {/* Emergency Contact Sub-card */}
-                <div className="mt-6 pt-5 border-t border-white/[0.08]">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-2">
+                <div className="mt-6 pt-5 border-t border-slate-200 dark:border-white/[0.08]">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-3 flex items-center space-x-2">
                     <Heart className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Emergency Contact Contact Information</span>
+                    <span>Emergency Contact Information</span>
                   </h4>
                   {profile.emergency_contact ? (
                     <div
@@ -501,17 +501,17 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                       }`}
                     >
                       <div>
-                        <div className="text-sm font-bold text-slate-200">
+                        <div className="text-sm font-bold text-slate-900 dark:text-slate-200">
                           {profile.emergency_contact.name}{' '}
-                          <span className="text-xs font-normal text-slate-400">
+                          <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
                             ({profile.emergency_contact.relationship})
                           </span>
                         </div>
-                        <div className="text-xs font-mono text-cyan-400 mt-0.5">
+                        <div className="text-xs font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">
                           {profile.emergency_contact.phone}
                         </div>
                       </div>
-                      <Badge variant="neutral" className="text-[10px] text-emerald-400 border-emerald-500/30">
+                      <Badge variant="success" className="text-[10px]">
                         Primary Next of Kin
                       </Badge>
                     </div>
@@ -594,21 +594,21 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                   isLight ? 'bg-slate-50 border-slate-200' : 'bg-white/[0.02] border-white/[0.06]'
                 }`}
               >
-                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-                  <Activity className="w-4 h-4 text-cyan-400" />
+                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300">
+                  <Activity className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <span>Clinical Provenance & Certainty Ledger</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[10px]">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-medium">
                     Clinician Confirmed
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                  <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 font-medium">
                     Patient Reported
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                  <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30 font-medium">
                     AI Multimodal Extracted
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 font-medium">
                     Historical EHR
                   </span>
                 </div>
@@ -622,8 +622,8 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/[0.08]'
                   }`}
                 >
-                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3 mb-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300 flex items-center space-x-2">
                       <Heart className="w-4 h-4 text-rose-500" />
                       <span>Diagnoses & Conditions</span>
                     </h3>
@@ -632,32 +632,32 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     </Badge>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-3 rounded-xl border border-rose-500/20 bg-rose-950/10">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+                    <div className="p-3 rounded-xl border border-rose-200 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-950/10">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-200">
                         <span>Acute Retrosternal Chest Tightness</span>
-                        <span className="text-[10px] text-rose-400">Presenting</span>
+                        <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">Presenting</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                         Reported onset 3 days prior. Non-radiating, exacerbated by exertion.
                       </p>
-                      <div className="flex items-center space-x-2 mt-2 text-[10px] text-blue-400">
-                        <span className="px-1.5 py-0.2 rounded bg-blue-500/15 border border-blue-500/30">
+                      <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                        <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30">
                           Patient Reported
                         </span>
                         <span className="text-slate-500 font-mono">Turn 1 Voice Intake</span>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-950/10">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+                    <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-950/10">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-200">
                         <span>Essential Hypertension</span>
-                        <span className="text-[10px] text-amber-400">Managed</span>
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">Managed</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                         Long-term outpatient management with Lisinopril 10mg daily.
                       </p>
-                      <div className="flex items-center space-x-2 mt-2 text-[10px] text-emerald-400">
-                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
+                      <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30">
                           EHR Confirmed
                         </span>
                         <span className="text-slate-500 font-mono">Dr. Miller (2021)</span>
@@ -672,43 +672,43 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/[0.08]'
                   }`}
                 >
-                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3 mb-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300 flex items-center space-x-2">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                       <span>Documented Allergies</span>
                     </h3>
-                    <Badge variant="neutral" className="text-[10px] text-amber-400 border-amber-500/30">
+                    <Badge variant="error" className="text-[10px]">
                       High Alert
                     </Badge>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-950/20">
-                      <div className="flex items-center justify-between text-xs font-bold text-rose-300">
+                    <div className="p-3 rounded-xl border border-rose-300 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/20">
+                      <div className="flex items-center justify-between text-xs font-bold text-rose-900 dark:text-rose-300">
                         <span>Penicillin (Systemic)</span>
                         <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold">
                           CRITICAL
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-300 mt-1">
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-1">
                         Severe hives and acute facial angioedema observed following oral administration.
                       </p>
-                      <div className="flex items-center space-x-2 mt-2 text-[10px] text-emerald-400">
-                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
+                      <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30">
                           Physician Verified
                         </span>
-                        <span className="text-slate-400 font-mono">EHR Ref 9921</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-mono">EHR Ref 9921</span>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl border border-white/[0.08] bg-white/[0.02]">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+                    <div className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02]">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-200">
                         <span>No Other Known Food/Latex Allergies</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                         Patient denied seafood, peanut, or environmental anaphylactic reactions.
                       </p>
-                      <div className="flex items-center space-x-2 mt-2 text-[10px] text-blue-400">
-                        <span className="px-1.5 py-0.2 rounded bg-blue-500/15 border border-blue-500/30">
+                      <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                        <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30">
                           Patient Reported
                         </span>
                       </div>
@@ -722,26 +722,26 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/[0.08]'
                   }`}
                 >
-                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
-                      <Pill className="w-4 h-4 text-cyan-500" />
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] pb-3 mb-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300 flex items-center space-x-2">
+                      <Pill className="w-4 h-4 text-cyan-600 dark:text-cyan-500" />
                       <span>Active Medications</span>
                     </h3>
-                    <Badge variant="neutral" className="text-[10px] text-cyan-400 border-cyan-500/30">
+                    <Badge variant="info" className="text-[10px]">
                       1 Active Rx
                     </Badge>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-3 rounded-xl border border-cyan-500/30 bg-cyan-950/20">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+                    <div className="p-3 rounded-xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/70 dark:bg-cyan-950/20">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-200">
                         <span>Lisinopril</span>
-                        <span className="text-[10px] text-cyan-400 font-mono">10 mg Oral</span>
+                        <span className="text-[10px] text-cyan-700 dark:text-cyan-400 font-mono font-semibold">10 mg Oral</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                         Frequency: Once daily in morning. Indication: Blood pressure maintenance.
                       </p>
-                      <div className="flex items-center space-x-2 mt-2 text-[10px] text-purple-400">
-                        <span className="px-1.5 py-0.2 rounded bg-purple-500/15 border border-purple-500/30">
+                      <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                        <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-400 border border-purple-300 dark:border-purple-500/30">
                           OCR Extracted
                         </span>
                         <span className="text-slate-500 font-mono">St. Jude Pharmacy</span>
@@ -826,22 +826,22 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                             })}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-300 leading-relaxed">{item.description}</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{item.description}</p>
 
-                        <div className="flex items-center space-x-3 mt-3 pt-3 border-t border-white/[0.06] text-[11px]">
+                        <div className="flex items-center space-x-3 mt-3 pt-3 border-t border-slate-200 dark:border-white/[0.06] text-[11px]">
                           <span
                             className={`px-2 py-0.5 rounded font-semibold uppercase tracking-wider text-[10px] ${
                               isConfirmed
-                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
                                 : isReported
-                                ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
-                                : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30'
+                                : 'bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30'
                             }`}
                           >
                             {item.provenance_type.replace('_', ' ')}
                           </span>
-                          <span className="text-slate-400">
-                            Source: <strong className="text-slate-300">{item.source}</strong>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Source: <strong className="text-slate-900 dark:text-slate-300">{item.source}</strong>
                           </span>
                         </div>
                       </div>
@@ -859,10 +859,10 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300">
                     Clinical Document Archive
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Prescription scans, ambulatory ECG records, and laboratory discharge summaries
                   </p>
                 </div>
@@ -920,14 +920,14 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center space-x-2.5">
-                          <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                          <div className="p-2 rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/30">
                             <FileText className="w-4 h-4" />
                           </div>
                           <div>
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-200 line-clamp-1">
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-200 line-clamp-1">
                               {doc.title}
                             </h4>
-                            <span className="text-[11px] font-mono text-slate-400">
+                            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                               {doc.filename}
                             </span>
                           </div>
@@ -935,35 +935,35 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                             doc.status === 'VERIFIED'
-                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
+                              : 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/30'
                           }`}
                         >
                           {doc.status}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 mt-3 pt-3 border-t border-white/[0.06]">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-200 dark:border-white/[0.06]">
                         <div>
                           <span>Date: </span>
-                          <strong className="text-slate-300">
+                          <strong className="text-slate-900 dark:text-slate-300">
                             {new Date(doc.date).toLocaleDateString()}
                           </strong>
                         </div>
                         <div>
                           <span>Size: </span>
-                          <strong className="text-slate-300 font-mono">
+                          <strong className="text-slate-900 dark:text-slate-300 font-mono">
                             {(doc.file_size_bytes / 1024).toFixed(0)} KB
                           </strong>
                         </div>
                         <div className="col-span-2">
                           <span>Source: </span>
-                          <strong className="text-slate-300">{doc.uploaded_by}</strong>
+                          <strong className="text-slate-900 dark:text-slate-300">{doc.uploaded_by}</strong>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 mt-4 pt-3 border-t border-white/[0.06]">
+                    <div className="flex items-center space-x-2 mt-4 pt-3 border-t border-slate-200 dark:border-white/[0.06]">
                       <Button
                         size="sm"
                         variant="outline"
@@ -1031,24 +1031,24 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/[0.08]'
                   }`}
                 >
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4 flex items-center space-x-2">
-                    <Pill className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300 mb-4 flex items-center space-x-2">
+                    <Pill className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                     <span>Active Prescriptions</span>
                   </h3>
 
-                  <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 space-y-2">
+                  <div className="p-4 rounded-xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50/70 dark:bg-cyan-950/20 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-slate-100">Lisinopril</span>
-                      <span className="text-xs font-mono font-bold text-cyan-400">10 mg Oral Tablet</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Lisinopril</span>
+                      <span className="text-xs font-mono font-bold text-cyan-700 dark:text-cyan-400">10 mg Oral Tablet</span>
                     </div>
-                    <div className="text-xs text-slate-400 space-y-1">
+                    <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
                       <div>Sig: Take 1 tablet by mouth daily every morning with water.</div>
                       <div>Indication: Hypertension & Cardioprotective therapy</div>
                       <div>Prescribed by: Dr. Marcus Vance, MD (Cardiology)</div>
                       <div>Refills: 2 remaining at St. Jude Hospital Pharmacy</div>
                     </div>
                     <div className="pt-2 flex justify-end">
-                      <span className="text-[10px] font-mono text-emerald-400">Status: ACTIVE</span>
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Status: ACTIVE</span>
                     </div>
                   </div>
                 </div>
@@ -1059,23 +1059,23 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] border-white/[0.08]'
                   }`}
                 >
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4 flex items-center space-x-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300 mb-4 flex items-center space-x-2">
                     <AlertTriangle className="w-4 h-4 text-rose-500" />
                     <span>Known Adverse Reactions</span>
                   </h3>
 
-                  <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-950/20 space-y-2">
+                  <div className="p-4 rounded-xl border border-rose-300 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/20 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-rose-300">Penicillin (All Classes)</span>
-                      <span className="text-xs font-bold text-rose-400 uppercase">Severe / Anaphylactoid</span>
+                      <span className="text-sm font-bold text-rose-900 dark:text-rose-300">Penicillin (All Classes)</span>
+                      <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase">Severe / Anaphylactoid</span>
                     </div>
-                    <div className="text-xs text-slate-300 space-y-1">
+                    <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
                       <div>Reaction: Urticaria (diffuse hives), facial angioedema, lightheadedness</div>
                       <div>Recorded: April 2021 (Emergency Department Ingestion)</div>
                       <div>Verification: Attending Physician Dr. Miller</div>
                     </div>
                     <div className="pt-2 flex justify-end">
-                      <span className="text-[10px] font-mono text-rose-400">Contraindicated in EHR</span>
+                      <span className="text-[10px] font-mono text-rose-600 dark:text-rose-400 font-semibold">Contraindicated in EHR</span>
                     </div>
                   </div>
                 </div>
@@ -1090,10 +1090,10 @@ export const PatientProfileHub: React.FC<PatientProfileHubProps> = ({
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-300">
                     Patient Consultation Schedule
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Review upcoming appointments or reserve a new clinical consultation slot
                   </p>
                 </div>
