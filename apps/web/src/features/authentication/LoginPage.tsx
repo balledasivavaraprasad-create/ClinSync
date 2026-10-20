@@ -46,6 +46,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const handleEnterPatientConsole = () => {
+    onLoginSuccess({
+      role: 'kiosk',
+      userId: 'patient_self_service',
+      userName: 'Patient Intake Kiosk',
+      department: 'Emergency & Urgent Ambulatory Check-in',
+    });
+  };
+
   // Quick-fill synthetic profiles
   const handleSelectPreset = (preset: {
     role: UserRole;
@@ -58,6 +67,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setUserId(preset.id);
     setPassword(preset.pass);
     setErrorMessage(null);
+    if (preset.role === 'kiosk') {
+      handleEnterPatientConsole();
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -227,35 +239,97 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </button>
           </div>
 
+          {/* Quick direct jump banner for patient self-check-in */}
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={handleEnterPatientConsole}
+              className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline inline-flex items-center space-x-1.5 transition-colors cursor-pointer bg-cyan-950/40 border border-cyan-500/20 px-3.5 py-1.5 rounded-full"
+              data-testid="link-direct-patient-kiosk"
+            >
+              <Tablet className="w-3.5 h-3.5" />
+              <span>Are you a patient? Enter into Patient Console directly &rarr;</span>
+            </button>
+          </div>
+
           {/* Login Card */}
           <Card className="border border-white/[0.08] bg-[#080c17]/90 shadow-[0_50px_140px_-30px_rgba(0,0,0,0.9)] backdrop-blur-3xl rounded-3xl text-slate-100 p-6 sm:p-8">
             <CardHeader className="space-y-1 pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl text-white font-semibold flex items-center space-x-2">
-                  <Lock className="w-5 h-5 text-teal-400" />
+                  {selectedRole === 'kiosk' ? (
+                    <Tablet className="w-5 h-5 text-cyan-400" />
+                  ) : (
+                    <Lock className="w-5 h-5 text-teal-400" />
+                  )}
                   <span>
                     {selectedRole === 'doctor'
                       ? t('auth.physician_signin', 'Physician Sign-In')
                       : selectedRole === 'kiosk'
                       ? t('auth.kiosk_activation', 'Tablet Kiosk Activation')
+                      : selectedRole === 'staff'
+                      ? 'Staff Desk Sign-In'
                       : t('auth.auditor_access', 'Clinical Auditor Access')}
                   </span>
                 </CardTitle>
-                <Badge variant="info" className="text-teal-300 border-teal-500/30 bg-teal-500/10">
-                  Secure SSO
+                <Badge
+                  variant={selectedRole === 'kiosk' ? 'success' : 'info'}
+                  className={
+                    selectedRole === 'kiosk'
+                      ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
+                      : 'text-teal-300 border-teal-500/30 bg-teal-500/10'
+                  }
+                >
+                  {selectedRole === 'kiosk' ? 'No Login Required' : 'Secure SSO'}
                 </Badge>
               </div>
               <CardDescription className="text-slate-400 text-xs">
                 {selectedRole === 'doctor'
                   ? 'Enter physician ID to access active intake queue, citations, and briefs.'
                   : selectedRole === 'kiosk'
-                  ? 'Activate bedside or check-in tablet for multimodal patient intake.'
+                  ? 'Direct patient access. No authentication or login required — proceed to check in or register.'
+                  : selectedRole === 'staff'
+                  ? 'Hospital staff terminal for patient queue triage and check-in management.'
                   : 'Audit-level verification of clinical provenance and safety rules.'}
               </CardDescription>
             </CardHeader>
 
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
+              {selectedRole === 'kiosk' ? (
+                <div className="space-y-5" data-testid="kiosk-direct-entry-container">
+                  <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/20 text-xs text-slate-300 space-y-2.5">
+                    <div className="flex items-center space-x-2 text-cyan-300 font-semibold">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <span>Patient Self-Service Console</span>
+                    </div>
+                    <p className="text-slate-400 leading-relaxed text-xs">
+                      No credentials or login required. Patients can directly register as a new patient, verify returning identity, or complete voice intake.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-slate-300">
+                      <div className="flex items-center space-x-2 bg-black/40 p-2.5 rounded-xl border border-white/5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>New Patient Registration</span>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-black/40 p-2.5 rounded-xl border border-white/5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span>Returning Patient Check-in</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleEnterPatientConsole}
+                    variant="primary"
+                    className="w-full bg-gradient-to-r from-cyan-400 to-teal-400 hover:from-cyan-300 hover:to-teal-300 text-slate-950 font-bold shadow-xl shadow-cyan-400/25 min-h-[50px] flex items-center justify-center space-x-2 text-sm rounded-xl cursor-pointer"
+                    data-testid="btn-login-submit"
+                  >
+                    <span>Enter into Patient Console</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
                 {errorMessage && (
                   <div
                     className="p-3 bg-red-950/60 border border-red-500/40 rounded-lg text-xs text-red-200 flex items-start space-x-2"
@@ -270,8 +344,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   <label htmlFor="login-userid" className="block text-xs font-medium text-slate-300">
                     {selectedRole === 'doctor'
                       ? t('auth.staff_id_label', 'Staff Physician ID')
-                      : selectedRole === 'kiosk'
-                      ? t('auth.kiosk_id_label', 'Kiosk Station Identifier')
+                      : selectedRole === 'staff'
+                      ? 'Staff Member ID'
                       : t('auth.auditor_id_label', 'Auditor ID')}
                   </label>
                   <div className="relative">
@@ -284,8 +358,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       placeholder={
                         selectedRole === 'doctor'
                           ? 'e.g. dr_clara_chen'
-                          : selectedRole === 'kiosk'
-                          ? 'e.g. kiosk_station_01'
+                          : selectedRole === 'staff'
+                          ? 'e.g. nurse_sarah_lin'
                           : 'e.g. auditor_01'
                       }
                       className="w-full min-h-[48px] pl-10 pr-4 py-2.5 rounded-xl bg-[#050811] border border-white/15 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-mono"
@@ -338,13 +412,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   <span>
                     {selectedRole === 'doctor'
                       ? t('auth.signin_btn', 'Sign In to Doctor Console')
-                      : selectedRole === 'kiosk'
-                      ? t('auth.launch_kiosk', 'Launch Patient Kiosk')
+                      : selectedRole === 'staff'
+                      ? 'Sign In to Staff Desk'
                       : t('auth.access_ledger', 'Access Ledger & QA')}
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </form>
+              )}
 
               {/* Demo Quick-Fill Presets */}
               <div className="mt-5 pt-4 border-t border-white/[0.08] space-y-2">
@@ -411,15 +486,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
                   <button
                     type="button"
-                    onClick={() =>
-                      handleSelectPreset({
-                        role: 'kiosk',
-                        id: 'kiosk_station_01',
-                        pass: 'demo1234',
-                        name: 'Intake Tablet Kiosk',
-                        dept: 'Emergency Intake',
-                      })
-                    }
+                    onClick={() => {
+                      setSelectedRole('kiosk');
+                      handleEnterPatientConsole();
+                    }}
                     className="w-full text-left p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.06] border border-white/[0.07] hover:border-cyan-400/40 text-xs transition-colors flex items-center justify-between group cursor-pointer"
                     data-testid="preset-kiosk-station"
                   >
@@ -429,12 +499,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       </div>
                       <div>
                         <div className="font-semibold text-white group-hover:text-amber-300 transition-colors">
-                          Tablet Intake Kiosk
+                          Patient Kiosk
                         </div>
-                        <div className="text-[11px] text-slate-400">Ambulatory Check-in Station</div>
+                        <div className="text-[11px] text-slate-400">Direct Patient Console • No Login Required</div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-cyan-400 font-mono font-bold">Fill &rarr;</span>
+                    <span className="text-[10px] text-cyan-400 font-mono font-bold">Enter &rarr;</span>
                   </button>
                 </div>
               </div>
