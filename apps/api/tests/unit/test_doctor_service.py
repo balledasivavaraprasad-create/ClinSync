@@ -79,11 +79,7 @@ def test_approve_encounter_updates_status_and_facts_and_audit(
     assert fact.reviewed_by == "dr_clara_chen"
 
     # Verify audit event in DB
-    audit = (
-        db_session.query(AuditEvent)
-        .filter(AuditEvent.encounter_id == encounter.id)
-        .first()
-    )
+    audit = db_session.query(AuditEvent).filter(AuditEvent.encounter_id == encounter.id).first()
     assert audit is not None
     assert audit.action == "DOCTOR_APPROVAL"
     assert audit.actor_id == "dr_clara_chen"
@@ -93,9 +89,7 @@ def test_approve_encounter_updates_status_and_facts_and_audit(
     assert new_state["status"] == "DOCTOR_REVIEWED"
 
 
-def test_approve_encounter_unconfirmed_patient_forbidden(
-    doctor_service, db_session
-):
+def test_approve_encounter_unconfirmed_patient_forbidden(doctor_service, db_session):
     unconfirmed = Patient(
         display_name="Unconfirmed Patient",
         hospital_id="HOSP-DEMO-01",
@@ -117,9 +111,7 @@ def test_approve_encounter_unconfirmed_patient_forbidden(
     )
 
     with pytest.raises(ClinSyncAppException) as exc_info:
-        doctor_service.approve_encounter(
-            db=db_session, encounter_id=encounter.id, payload=payload
-        )
+        doctor_service.approve_encounter(db=db_session, encounter_id=encounter.id, payload=payload)
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.code == "IDENTITY_NOT_CONFIRMED"
@@ -207,9 +199,7 @@ def test_get_doctor_brief_synthesizes_facts_and_citations(
     assert data.audio_status == "PENDING"
 
 
-def test_get_doctor_brief_unconfirmed_patient_forbidden(
-    doctor_service, db_session
-):
+def test_get_doctor_brief_unconfirmed_patient_forbidden(doctor_service, db_session):
     unconfirmed = Patient(
         display_name="Unconfirmed Patient",
         hospital_id="HOSP-DEMO-02",
@@ -266,9 +256,5 @@ def test_approve_encounter_with_corrections_and_rejection_flow(
     )
 
     assert res.data.status == "TRIAGED"  # Encounter status not promoted on rejection
-    audit = (
-        db_session.query(AuditEvent)
-        .filter(AuditEvent.encounter_id == enc.id)
-        .first()
-    )
+    audit = db_session.query(AuditEvent).filter(AuditEvent.encounter_id == enc.id).first()
     assert audit.action == "DOCTOR_REJECTION"

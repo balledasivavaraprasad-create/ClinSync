@@ -36,8 +36,7 @@ MINIMAL_VALID_PAYLOADS = {
         b"\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
     ),
     "image/jpeg": (
-        b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00`\x00`\x00\x00"
-        b"\xff\xdb\x00C\x00\xff\xd9"
+        b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00`\x00`\x00\x00\xff\xdb\x00C\x00\xff\xd9"
     ),
 }
 
@@ -123,9 +122,7 @@ class DocumentService:
                 ) from None
         elif req.file_size_bytes is not None:
             # Metadata-only registration fallback for mock or lightweight clients
-            file_bytes = MINIMAL_VALID_PAYLOADS.get(
-                normalized_mime, b"%PDF-1.4\n%EOF\n"
-            )
+            file_bytes = MINIMAL_VALID_PAYLOADS.get(normalized_mime, b"%PDF-1.4\n%EOF\n")
         else:
             raise ClinSyncAppException(
                 status_code=400,

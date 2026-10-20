@@ -249,9 +249,7 @@ def seed_all_demo_data(db, reset: bool = False, verbose: bool = True) -> dict[st
     slots_seeded = 0
     for s_data in slots_data:
         existing = (
-            db.query(AppointmentSlot)
-            .filter(AppointmentSlot.slot_id == s_data["slot_id"])
-            .first()
+            db.query(AppointmentSlot).filter(AppointmentSlot.slot_id == s_data["slot_id"]).first()
         )
         if not existing:
             slot = AppointmentSlot(**s_data)
@@ -316,9 +314,7 @@ def seed_all_demo_data(db, reset: bool = False, verbose: bool = True) -> dict[st
 
         # Book with Dr. Chen
         booked_slot = (
-            db.query(AppointmentSlot)
-            .filter(AppointmentSlot.slot_id == "slot_cardio_01")
-            .first()
+            db.query(AppointmentSlot).filter(AppointmentSlot.slot_id == "slot_cardio_01").first()
         )
         if booked_slot:
             booked_slot.status = "BOOKED"

@@ -52,12 +52,8 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["encounter_id"], ["encounters.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_documents_patient_id"), "documents", ["patient_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_documents_encounter_id"), "documents", ["encounter_id"], unique=False
-    )
+    op.create_index(op.f("ix_documents_patient_id"), "documents", ["patient_id"], unique=False)
+    op.create_index(op.f("ix_documents_encounter_id"), "documents", ["encounter_id"], unique=False)
     op.create_index(
         op.f("ix_documents_checksum_sha256"),
         "documents",

@@ -174,9 +174,9 @@ def test_concurrent_idempotent_replays_under_multithread(test_engine, test_setti
         results = list(executor.map(try_replay, range(4)))
 
     status_codes = [r[0] for r in results]
-    assert all(
-        code in (200, 201) for code in status_codes
-    ), f"Unexpected status codes: {status_codes}"
+    assert all(code in (200, 201) for code in status_codes), (
+        f"Unexpected status codes: {status_codes}"
+    )
 
     booking_ids = {r[1]["data"]["booking_id"] for r in results}
     assert len(booking_ids) == 1, f"Expected exactly 1 unique booking_id, got: {booking_ids}"

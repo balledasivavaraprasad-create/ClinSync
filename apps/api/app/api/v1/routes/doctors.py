@@ -1,5 +1,4 @@
-"""Doctor workstation queue routes."""
-
+from app.dependencies.auth import require_doctor_scoping
 from app.dependencies.db import get_db
 from app.dependencies.request_id import get_current_request_id
 from app.schemas.doctor import DoctorQueueResponse
@@ -21,6 +20,7 @@ def get_doctor_queue(
     doctor_id: str,
     db: Session = Depends(get_db),
     request_id: str = Depends(get_current_request_id),
+    auth: dict = Depends(require_doctor_scoping),
 ) -> DoctorQueueResponse:
     """Retrieve encounter queue for doctor."""
     return doctor_service.get_doctor_queue(

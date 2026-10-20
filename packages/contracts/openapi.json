@@ -906,6 +906,7 @@
             "enum": [
               "IDENTITY_NOT_CONFIRMED",
               "ACCESS_DENIED",
+              "RATE_LIMIT_EXCEEDED",
               "VALIDATION_ERROR",
               "DOCUMENT_PARSE_FAILED",
               "EXTRACTION_UNCERTAIN",

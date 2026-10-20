@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from app.auth.security import create_doctor_token
 from app.models.appointment import Appointment, AppointmentSlot
 from app.models.audit import AuditEvent
 from app.models.encounter import Encounter
@@ -57,7 +58,11 @@ def test_get_doctor_queue_flow(client, db_session, confirmed_patient):
     db_session.commit()
 
     # Query doctor queue
-    response = client.get("/api/v1/doctors/dr_clara_chen/queue")
+    token = create_doctor_token("dr_clara_chen")
+    response = client.get(
+        "/api/v1/doctors/dr_clara_chen/queue",
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert response.status_code == 200
     body = response.json()
     assert body["data"]["doctor_id"] == "dr_clara_chen"
@@ -92,7 +97,12 @@ def test_approve_encounter_flow(client, db_session, confirmed_patient):
         "doctor_notes": "Reviewed and approved during clinical consult.",
         "doctor_id": "dr_clara_chen",
     }
-    response = client.post(f"/api/v1/encounters/{enc.id}/approvals", json=payload)
+    token = create_doctor_token("dr_clara_chen")
+    response = client.post(
+        f"/api/v1/encounters/{enc.id}/approvals",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert response.status_code == 200
     data = response.json()["data"]
 

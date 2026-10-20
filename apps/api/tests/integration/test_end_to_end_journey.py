@@ -21,6 +21,7 @@ Validates the full patient and clinical workflow journey:
 import base64
 from datetime import date, datetime, timedelta, timezone
 
+from app.auth.security import create_doctor_token
 from app.db.base import generate_uuid
 from app.models.appointment import AppointmentSlot
 from app.models.audit import AuditEvent
@@ -131,7 +132,10 @@ def test_full_system_end_to_end_journey(client: TestClient, db_session: Session)
     # -------------------------------------------------------------------------
     # 3. HISTORICAL PATIENT CONTEXT RETRIEVAL
     # -------------------------------------------------------------------------
-    res_context = client.get(f"/api/v1/patients/{patient.id}/context")
+    res_context = client.get(
+        f"/api/v1/patients/{patient.id}/context",
+        headers={"Authorization": f"Bearer {confirmation_token}"},
+    )
     assert res_context.status_code == 200, res_context.text
     context_data = res_context.json()["data"]
     assert context_data["patient_id"] == patient.id
@@ -280,7 +284,11 @@ def test_full_system_end_to_end_journey(client: TestClient, db_session: Session)
     # -------------------------------------------------------------------------
     # 12. DOCTOR WORKSTATION QUEUE
     # -------------------------------------------------------------------------
-    res_queue = client.get(f"/api/v1/doctors/{cardio_slot.doctor_id}/queue")
+    doctor_token = create_doctor_token(cardio_slot.doctor_id)
+    res_queue = client.get(
+        f"/api/v1/doctors/{cardio_slot.doctor_id}/queue",
+        headers={"Authorization": f"Bearer {doctor_token}"},
+    )
     assert res_queue.status_code == 200, res_queue.text
     queue_data = res_queue.json()["data"]
     assert queue_data["doctor_id"] == cardio_slot.doctor_id
@@ -308,6 +316,7 @@ def test_full_system_end_to_end_journey(client: TestClient, db_session: Session)
     res_approval = client.post(
         f"/api/v1/encounters/{encounter_id}/approvals",
         json=approval_payload,
+        headers={"Authorization": f"Bearer {doctor_token}"},
     )
     assert res_approval.status_code == 200, res_approval.text
     approval_data = res_approval.json()["data"]
@@ -321,9 +330,7 @@ def test_full_system_end_to_end_journey(client: TestClient, db_session: Session)
     assert enc_db.status == "DOCTOR_REVIEWED"
 
     voice_fact_db = (
-        db_session.query(ClinicalFact)
-        .filter(ClinicalFact.id == voice_fact["id"])
-        .first()
+        db_session.query(ClinicalFact).filter(ClinicalFact.id == voice_fact["id"]).first()
     )
     assert voice_fact_db.status == "doctor_confirmed"
     assert voice_fact_db.reviewed_by == cardio_slot.doctor_id
@@ -332,9 +339,7 @@ def test_full_system_end_to_end_journey(client: TestClient, db_session: Session)
     # 15. AUDIT TRAIL VERIFICATION
     # -------------------------------------------------------------------------
     audit_events = (
-        db_session.query(AuditEvent)
-        .filter(AuditEvent.encounter_id == encounter_id)
-        .all()
+        db_session.query(AuditEvent).filter(AuditEvent.encounter_id == encounter_id).all()
     )
     actions = {a.action for a in audit_events}
     assert "ENCOUNTER_CREATED" in actions

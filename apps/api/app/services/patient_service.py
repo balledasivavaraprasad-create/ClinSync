@@ -5,8 +5,8 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.auth.security import create_patient_token
 from app.core.errors import ClinSyncAppException, ErrorCode
-from app.db.base import generate_uuid
 from app.models.audit import AuditEvent
 from app.models.fact import ClinicalFact
 from app.models.patient import Patient
@@ -117,7 +117,7 @@ class PatientService:
 
         # Mark patient confirmed and issue unique verification token
         patient.identity_status = "CONFIRMED"
-        confirmation_token = f"conf_{generate_uuid().replace('-', '')[:31]}"
+        confirmation_token = f"conf_{create_patient_token(patient_id=patient.id)}"
 
         audit_log = AuditEvent(
             patient_id=patient.id,

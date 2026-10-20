@@ -37,6 +37,7 @@ def test_settings(test_db_path: str) -> Settings:
         DATABASE_URL=f"sqlite:///{test_db_path}",
         SQLITE_WAL_MODE=True,
         SQLITE_FOREIGN_KEYS=True,
+        RATE_LIMIT_ENABLED=False,
     )
 
 

@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from app.auth.security import create_patient_token
 from app.db.base import generate_uuid
 from app.models.fact import ClinicalFact
 from app.models.patient import Patient
@@ -206,7 +207,11 @@ def test_patient_context_authorized_patient_returns_historical_facts(
     db_session.add(fact)
     db_session.commit()
 
-    response = client.get(f"/api/v1/patients/{patient.id}/context")
+    token = create_patient_token(patient.id)
+    response = client.get(
+        f"/api/v1/patients/{patient.id}/context",
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert response.status_code == 200
     res_data = response.json()["data"]
     assert res_data["patient_id"] == patient.id
@@ -337,7 +342,11 @@ def test_patient_context_includes_categorized_slices(
     db_session.add_all([f1, f2, f3])
     db_session.commit()
 
-    response = client.get(f"/api/v1/patients/{patient.id}/context")
+    token = create_patient_token(patient.id)
+    response = client.get(
+        f"/api/v1/patients/{patient.id}/context",
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert response.status_code == 200
     data = response.json()["data"]
     assert len(data["historical_facts"]) == 3

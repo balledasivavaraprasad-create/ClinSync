@@ -228,4 +228,3 @@ def test_sql_injection_safe_parameter_binding(client: TestClient, db_session: Se
     # Verify patients table remains fully intact
     count = db_session.query(Patient).count()
     assert count >= 0
-

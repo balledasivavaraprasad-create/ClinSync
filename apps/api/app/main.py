@@ -21,6 +21,7 @@ from app.core.errors import (
     validation_exception_handler,
 )
 from app.core.logging import logger, setup_logging
+from app.core.rate_limit import RateLimitMiddleware
 from app.db.base import Base
 from app.db.session import engine
 
@@ -77,6 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json",
         lifespan=lifespan,
     )
+    app.state.settings = settings
 
     # CORS
     app.add_middleware(
@@ -89,6 +91,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Request ID and logging middleware
     app.add_middleware(RequestContextMiddleware)
+
+    # API Rate Limiter middleware
+    app.add_middleware(RateLimitMiddleware)
 
     # Exception Handlers
     app.add_exception_handler(ClinSyncAppException, clinsync_app_exception_handler)

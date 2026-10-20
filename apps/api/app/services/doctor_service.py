@@ -114,7 +114,7 @@ class DoctorService:
         queue_items: list[DoctorQueueItem] = []
         for e in all_encounters:
             patient_name = e.patient.display_name if e.patient else "Unknown Patient"
-            
+
             # Determine appointment time string
             slot_time = "Flexible"
             if e.appointment and e.appointment.slot:
@@ -235,11 +235,13 @@ class DoctorService:
                             fact.value = corr.value
                             fact.status = "doctor_confirmed"
                             fact.reviewed_by = doctor_id
-                            corrections.append({
-                                "fact_id": fact.id,
-                                "concept": fact.concept,
-                                "new_value": str(corr.value),
-                            })
+                            corrections.append(
+                                {
+                                    "fact_id": fact.id,
+                                    "concept": fact.concept,
+                                    "new_value": str(corr.value),
+                                }
+                            )
 
         # Record append-only audit event with doctor ID, timestamp, and corrections
         audit_event = AuditEvent(
@@ -252,13 +254,15 @@ class DoctorService:
             resource_type="ENCOUNTER",
             resource_id=encounter.id,
             previous_state=json.dumps({"status": prev_status}),
-            new_state=json.dumps({
-                "status": encounter.status,
-                "approved": payload.approved,
-                "decision": payload.decision,
-                "doctor_notes": payload.doctor_notes,
-                "corrections": corrections,
-            }),
+            new_state=json.dumps(
+                {
+                    "status": encounter.status,
+                    "approved": payload.approved,
+                    "decision": payload.decision,
+                    "doctor_notes": payload.doctor_notes,
+                    "corrections": corrections,
+                }
+            ),
             timestamp=now,
         )
         db.add(audit_event)

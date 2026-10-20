@@ -1,7 +1,10 @@
-"""Encounter lifecycle and intake turn persistence routes."""
+from typing import Optional
 
+from app.core.errors import ClinSyncAppException, ErrorCode
+from app.dependencies.auth import get_optional_auth
 from app.dependencies.db import get_db
 from app.dependencies.request_id import get_current_request_id
+from app.models.encounter import Encounter
 from app.schemas.doctor import (
     ApprovalRequest,
     ApprovalResponse,
@@ -105,8 +108,38 @@ def approve_encounter(
     payload: ApprovalRequest,
     db: Session = Depends(get_db),
     request_id: str = Depends(get_current_request_id),
+    auth: Optional[dict] = Depends(get_optional_auth),
 ) -> ApprovalResponse:
     """Record physician clinical approval and update ledger facts."""
+    encounter = db.query(Encounter).filter(Encounter.id == encounter_id).first()
+    if not encounter:
+        raise ClinSyncAppException(
+            status_code=404,
+            code=ErrorCode.NOT_FOUND,
+            message=f"Encounter {encounter_id} was not found.",
+        )
+    if not encounter.patient or encounter.patient.identity_status != "CONFIRMED":
+        raise ClinSyncAppException(
+            status_code=403,
+            code=ErrorCode.IDENTITY_NOT_CONFIRMED,
+            message="Patient identity must be confirmed before recording clinical approval.",
+        )
+
+    if not auth:
+        raise ClinSyncAppException(
+            status_code=401,
+            code=ErrorCode.ACCESS_DENIED,
+            message="Authentication credentials were not provided.",
+        )
+    if auth.get("role") not in ("doctor", "admin"):
+        raise ClinSyncAppException(
+            status_code=403,
+            code=ErrorCode.ACCESS_DENIED,
+            message=(
+                "Insufficient permissions: only authorized physicians may sign off on encounters."
+            ),
+        )
+
     return doctor_service.approve_encounter(
         db=db,
         encounter_id=encounter_id,

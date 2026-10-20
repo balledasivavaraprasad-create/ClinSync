@@ -58,9 +58,7 @@ def test_get_ledger_empty_encounter(client: TestClient, db_session: Session):
     assert data["unresolved_conflicts"] == []
 
 
-def test_get_ledger_with_provenance_and_conflict_detection(
-    client: TestClient, db_session: Session
-):
+def test_get_ledger_with_provenance_and_conflict_detection(client: TestClient, db_session: Session):
     """Ledger preserves provenance and tags unresolved conflicts."""
     patient, encounter = _seed_patient_and_encounter(db_session)
 
@@ -269,14 +267,10 @@ def test_get_ledger_and_diff_unauthorized_patient_fails_403(
     db_session.commit()
 
     # Query Patient A's encounter passing Patient B's patient_id
-    res_ledger = client.get(
-        f"/api/v1/encounters/{enc_a.id}/ledger?patient_id={patient_b.id}"
-    )
+    res_ledger = client.get(f"/api/v1/encounters/{enc_a.id}/ledger?patient_id={patient_b.id}")
     assert res_ledger.status_code == 403
     assert res_ledger.json()["code"] == "ACCESS_DENIED"
 
-    res_diff = client.get(
-        f"/api/v1/encounters/{enc_a.id}/diff?patient_id={patient_b.id}"
-    )
+    res_diff = client.get(f"/api/v1/encounters/{enc_a.id}/diff?patient_id={patient_b.id}")
     assert res_diff.status_code == 403
     assert res_diff.json()["code"] == "ACCESS_DENIED"

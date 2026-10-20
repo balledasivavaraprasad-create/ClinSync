@@ -42,7 +42,5 @@ def get_encounter_diff(
     request_id: str = Depends(get_current_request_id),
 ) -> DiffResponse:
     """Read patient context diff comparing previous records with current encounter facts."""
-    data = LedgerService.get_encounter_diff(
-        db=db, encounter_id=encounter_id, patient_id=patient_id
-    )
+    data = LedgerService.get_encounter_diff(db=db, encounter_id=encounter_id, patient_id=patient_id)
     return DiffResponse(data=data, request_id=request_id)

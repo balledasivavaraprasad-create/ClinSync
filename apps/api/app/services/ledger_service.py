@@ -57,15 +57,12 @@ class LedgerService:
         grouped_by_concept: dict[str, list[ClinicalFactModel]] = {}
         for fact in facts:
             if fact.status != "rejected":
-                grouped_by_concept.setdefault(fact.concept.strip().lower(), []).append(
-                    fact
-                )
+                grouped_by_concept.setdefault(fact.concept.strip().lower(), []).append(fact)
 
         for _norm_concept, concept_facts in grouped_by_concept.items():
             unique_values = {f.value.strip().lower() for f in concept_facts}
             if len(unique_values) > 1 and any(
-                f.status == "conflicting" or not f.supersedes_fact_id
-                for f in concept_facts
+                f.status == "conflicting" or not f.supersedes_fact_id for f in concept_facts
             ):
                 desc = (
                     f"Contradictory values for concept '{concept_facts[0].concept}': "

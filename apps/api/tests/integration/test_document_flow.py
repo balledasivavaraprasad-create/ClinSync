@@ -144,9 +144,7 @@ def test_upload_document_path_traversal_sanitized(client: TestClient, db_session
     assert "\\" not in data["filename"]
 
 
-def test_upload_document_unsupported_mime_type_fails_400(
-    client: TestClient, db_session: Session
-):
+def test_upload_document_unsupported_mime_type_fails_400(client: TestClient, db_session: Session):
     """Unsupported MIME types (e.g. bash scripts, HTML, webp) return 400 VALIDATION_ERROR."""
     _, encounter = _seed_confirmed_encounter(db_session)
 
@@ -238,9 +236,7 @@ def test_upload_document_nonexistent_encounter_returns_404(client: TestClient):
     assert res.json()["code"] == "NOT_FOUND"
 
 
-def test_upload_document_unconfirmed_patient_blocked_403(
-    client: TestClient, db_session: Session
-):
+def test_upload_document_unconfirmed_patient_blocked_403(client: TestClient, db_session: Session):
     """Document upload for unconfirmed patient is blocked with 403 IDENTITY_NOT_CONFIRMED."""
     patient = Patient(
         id=generate_uuid(),
@@ -271,9 +267,7 @@ def test_upload_document_unconfirmed_patient_blocked_403(
     assert res.json()["code"] == "IDENTITY_NOT_CONFIRMED"
 
 
-def test_get_document_status_and_lifecycle_updates(
-    client: TestClient, db_session: Session
-):
+def test_get_document_status_and_lifecycle_updates(client: TestClient, db_session: Session):
     """Document status query tracks states and returns extracted facts."""
     _, encounter = _seed_confirmed_encounter(db_session)
 
@@ -393,9 +387,7 @@ def test_get_document_status_unauthorized_patient_fails_403(
     assert res.json()["code"] == "ACCESS_DENIED"
 
 
-def test_upload_document_storage_write_failure_raises_500(
-    client: TestClient, db_session: Session
-):
+def test_upload_document_storage_write_failure_raises_500(client: TestClient, db_session: Session):
     """Storage write failure cleanly raises 500 INTERNAL_ERROR."""
     _, encounter = _seed_confirmed_encounter(db_session)
 
@@ -413,9 +405,7 @@ def test_upload_document_storage_write_failure_raises_500(
         assert "storage failure" in res.json()["message"].lower()
 
 
-def test_document_processing_failure_records_error_message(
-    client: TestClient, db_session: Session
-):
+def test_document_processing_failure_records_error_message(client: TestClient, db_session: Session):
     """Failed document processing persists error message and returns FAILED status."""
     _, encounter = _seed_confirmed_encounter(db_session)
 
@@ -445,9 +435,7 @@ def test_document_processing_failure_records_error_message(
     assert "corrupted font tables" in data["error_message"]
 
 
-def test_source_file_remains_immutable_after_extraction(
-    client: TestClient, db_session: Session
-):
+def test_source_file_remains_immutable_after_extraction(client: TestClient, db_session: Session):
     """Source file on disk remains unchanged and uncorrupted after extraction."""
     _, encounter = _seed_confirmed_encounter(db_session)
 

@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.auth.security import verify_access_token
 from app.core.errors import ClinSyncAppException, ErrorCode
 from app.db.base import generate_uuid
 from app.models.audit import AuditEvent
@@ -97,6 +98,15 @@ class EncounterService:
                 code=ErrorCode.VALIDATION_ERROR,
                 message="A valid identity_confirmation_id is required to start an encounter.",
             )
+
+        if "." in req.identity_confirmation_id:
+            claims = verify_access_token(req.identity_confirmation_id)
+            if claims.get("sub") != patient.id:
+                raise ClinSyncAppException(
+                    status_code=403,
+                    code=ErrorCode.ACCESS_DENIED,
+                    message="Identity confirmation token does not match requested patient.",
+                )
 
         encounter = Encounter(
             id=generate_uuid(),

@@ -28,6 +28,18 @@ class Settings(BaseSettings):
 
     # Security & Demo Defaults
     DEFAULT_HOSPITAL_ID: str = "HOSP-DEMO-01"
+    JWT_SECRET: str = "clinsync-jwt-secret-key-32chars-minimum-secure"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRES_MINUTES: int = 60
+    PATIENT_SESSION_EXPIRES_MINUTES: int = 120
+
+    # API Rate Limiting (Configurable defaults)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_AI_PER_MINUTE: int = 10
+    RATE_LIMIT_CRUD_PER_MINUTE: int = 60
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+    TRUSTED_PROXIES: list[str] = ["127.0.0.1", "::1", "localhost", "testclient"]
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",

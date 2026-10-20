@@ -6,6 +6,7 @@ Conforms to openapi.json.
 import json
 from pathlib import Path
 
+from app.auth.security import create_doctor_token
 from app.db.base import generate_uuid
 from app.models.encounter import Encounter
 from app.models.fact import ClinicalFact
@@ -64,7 +65,11 @@ def test_doctor_queue_and_approval_contracts(client: TestClient, db_session: Ses
     db_session.commit()
 
     # 2. GET /doctors/{doctor_id}/queue
-    queue_res = client.get("/api/v1/doctors/dr_clara_chen/queue")
+    token = create_doctor_token("dr_clara_chen")
+    queue_res = client.get(
+        "/api/v1/doctors/dr_clara_chen/queue",
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert queue_res.status_code == 200
     queue_json = queue_res.json()
 
@@ -113,6 +118,7 @@ def test_doctor_queue_and_approval_contracts(client: TestClient, db_session: Ses
     approval_res = client.post(
         f"/api/v1/encounters/{encounter.id}/approvals",
         json=approval_payload,
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert approval_res.status_code == 200
     approval_json = approval_res.json()
