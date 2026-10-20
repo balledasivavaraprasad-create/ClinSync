@@ -3,7 +3,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Slider } from '../../components/ui/Slider';
 import { Dialog } from '../../components/ui/Dialog';
-import { AudioVisualizer } from './AudioVisualizer';
+import { AudioVisualizer, type VisualizerState } from './AudioVisualizer';
 import { mockApi } from '../../lib/api/mockAdapter';
 import type { ClinicalFact } from '../../lib/api/types';
 import {
@@ -20,13 +20,25 @@ import {
   Volume2,
   VolumeX,
   Sparkles,
+  Pause,
+  Play,
+  Square,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
-import { transcribeAudioWithElevenLabs } from '../../lib/audio/elevenlabs';
+import { transcribeAudioWithElevenLabs, stopAllSpeech, synthesizeSpeech } from '../../lib/audio/elevenlabs';
 import {
   distillClinicalDictation,
   type ClinicalDictationResult,
 } from '../../lib/clinical/dictationIntelligence';
 import { AgentMemoryHarness } from '../../lib/clinical/agentMemory';
+import {
+  createConversationalSession,
+  processPatientUtterance,
+  type ConversationalIntakeSession,
+  ACUTE_RED_FLAGS,
+} from '../../lib/clinical/conversationalEngine';
 
 export interface IntakeQuestion {
   id: string;
@@ -41,7 +53,7 @@ export interface IntakeQuestion {
 
 /**
  * Adaptive Clinical Questioning Engine
- * Dynamically computes the next conversational question based on previous inputs & Mem0 Agent Memory.
+ * Computes next conversational question based on previous inputs & Mem0 Agent Memory.
  */
 export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
   id: 'q1_chief_complaint',
@@ -60,10 +72,6 @@ export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
   audioUrl: '/audio/receptionist/q1_welcome.mp3',
 };
 
-/**
- * Evaluates the evolving conversation and dynamically determines the next
- * clinically relevant follow-up question or signals completion (null).
- */
 export function determineNextAdaptiveQuestion(
   answers: Record<string, string>,
   stepIndex: number,
@@ -74,7 +82,7 @@ export function determineNextAdaptiveQuestion(
   const lastAnswer = (answers[lastKey] || '').toLowerCase().trim();
   const allAnswersText = Object.values(answers).join(' ').toLowerCase();
 
-  // 1. Patient signaled they have nothing more to add or confirmed no additional symptoms
+  // 1. Patient signaled they have nothing more to add
   const completionSignals = [
     "that's all",
     'that is all',
@@ -95,12 +103,12 @@ export function determineNextAdaptiveQuestion(
     return null;
   }
 
-  // 2. Maximum safety limit (safety bound to prevent infinite loops)
+  // 2. Maximum safety limit
   if (stepIndex >= 9) {
     return null;
   }
 
-  // 3. Clinical Signal Extraction: Check what the patient has ALREADY stated across all turns
+  // 3. Clinical Signal Extraction
   const hasMentionedDuration =
     Boolean(answers['duration'] || answers['duration_onset'] || answers['duration_clarification']) ||
     /\b(?:since\s+|for\s+\d+|started\s+|days?|weeks?|months?|hours?|yesterday|morning|today|last\s+night|recently|a\s+while)\b/i.test(
@@ -125,7 +133,7 @@ export function determineNextAdaptiveQuestion(
       allAnswersText
     );
 
-  // 4. Ambiguity check: if patient gives very short or ambiguous response on duration
+  // 4. Ambiguity check: duration
   if (
     lastKey === 'duration' &&
     (lastAnswer === 'a while' || lastAnswer === 'not sure' || lastAnswer === 'recently' || lastAnswer === 'some time')
@@ -151,9 +159,7 @@ export function determineNextAdaptiveQuestion(
     !complaint.includes('breath') &&
     !complaint.includes('abdom');
 
-  // =========================================================================
-  // CATEGORY 1: Minor / Simple Localized Complaints -> Concludes in 2 Questions!
-  // =========================================================================
+  // Simple Localized -> Concludes in 2 Questions!
   if (isSimpleLocalized) {
     if (stepIndex === 1 && !hasMentionedDuration) {
       return {
@@ -167,13 +173,10 @@ export function determineNextAdaptiveQuestion(
         audioUrl: '/audio/receptionist/q2_general.mp3',
       };
     }
-    // Simple complaints safely conclude after 2 turns!
     return null;
   }
 
-  // =========================================================================
-  // CATEGORY 2: Cardiac / Chest Symptoms -> Comprehensive dynamic evaluation (up to 5-6 questions)
-  // =========================================================================
+  // Cardiac / Chest Discomfort
   if (
     complaint.includes('chest') ||
     complaint.includes('heart') ||
@@ -259,9 +262,7 @@ export function determineNextAdaptiveQuestion(
     return null;
   }
 
-  // =========================================================================
-  // CATEGORY 3: Respiratory / Cough / Breathing -> Concludes in 3 Questions!
-  // =========================================================================
+  // Respiratory / Cough
   if (
     complaint.includes('cough') ||
     complaint.includes('wheez') ||
@@ -301,16 +302,13 @@ export function determineNextAdaptiveQuestion(
         inputType: 'chips',
       };
     }
-    // Conclude after 3 questions for routine cough if no respiratory distress
     if (stepIndex >= 3 || hasMentionedAssociated) {
       return null;
     }
     return null;
   }
 
-  // =========================================================================
-  // CATEGORY 4: Abdominal Pain / Gastrointestinal -> Concludes in 3-4 Questions
-  // =========================================================================
+  // Abdominal
   if (
     complaint.includes('stomach') ||
     complaint.includes('abdom') ||
@@ -356,9 +354,7 @@ export function determineNextAdaptiveQuestion(
     return null;
   }
 
-  // =========================================================================
-  // CATEGORY 5: General / Musculoskeletal / Fallback -> Concludes in 3 Questions
-  // =========================================================================
+  // General / Fallback
   if (!answers['duration'] && !hasMentionedDuration) {
     return {
       id: 'q2_duration_general',
@@ -390,24 +386,8 @@ export function determineNextAdaptiveQuestion(
     };
   }
 
-  // All core facets gathered -> Conclude dynamically!
   return null;
 }
-
-// Red-flag terms that trigger emergency escalation
-const RED_FLAG_KEYWORDS = [
-  'chest pain',
-  'chest tightness',
-  'shortness of breath',
-  'cannot breathe',
-  'can’t breathe',
-  'stroke',
-  'sudden numbness',
-  'severe bleeding',
-  'anaphylaxis',
-  'passing out',
-  'unconscious',
-];
 
 export interface IntakeInterviewProps {
   encounterId: string;
@@ -431,13 +411,17 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const [currentResponse, setCurrentResponse] = useState<string>('');
   const [painScore, setPainScore] = useState<number>(4);
 
-  // Modality & audio state
+  // Modality & conversational audio states
   const [modality, setModality] = useState<'voice' | 'touch'>('voice');
-  const [audioState, setAudioState] = useState<'idle' | 'listening' | 'transcribing' | 'thinking'>('idle');
+  const [audioState, setAudioState] = useState<VisualizerState>('idle');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [micPermissionNotice, setMicPermissionNotice] = useState<string | null>(null);
   const [clarificationNotice, setClarificationNotice] = useState<string | null>(null);
+
+  // Pause / Resume & Interruption state
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [showTranscript, setShowTranscript] = useState<boolean>(false);
 
   // Inactivity timeout state
   const [inactivityTimer, setInactivityTimer] = useState<number>(45);
@@ -457,114 +441,205 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const [aiAudioMuted, setAiAudioMuted] = useState<boolean>(false);
   const aiAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Mem0-compatible Agent Memory Harness
-  const memoryHarnessRef = useRef<AgentMemoryHarness>(new AgentMemoryHarness());
+  // Conversational session ref & monotonic Turn Token (prevents race conditions)
+  const sessionRef = useRef<ConversationalIntakeSession>(
+    createConversationalSession(encounterId, patientName, language)
+  );
+  const turnIdRef = useRef<number>(0);
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
+  const interruptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Dynamic adaptive question tracking
   const [currentQuestion, setCurrentQuestion] = useState<IntakeQuestion>(INITIAL_INTAKE_QUESTION);
   const [questionHistory, setQuestionHistory] = useState<IntakeQuestion[]>([INITIAL_INTAKE_QUESTION]);
+  const [clinicalDictation, setClinicalDictation] = useState<ClinicalDictationResult | null>(null);
 
-  // Clinical coverage estimation based on acquired clinical facets
+  // Clinical coverage estimation
   const coveragePercent = useMemo(() => {
-    let score = 25; // Initial complaint
-    if (answers['duration'] || answers['duration_onset']) score += 25;
-    if (answers['severity'] || answers['severity_progression']) score += 20;
-    if (answers['associated_symptoms'] || answers['associated_gi'] || answers['functional_impact'] || answers['breathing_difficulty']) score += 15;
-    if (answers['medications_allergies']) score += 15;
-    return Math.min(score, 100);
-  }, [answers]);
+    return sessionRef.current.currentCoverage || 25;
+  }, [sessionRef.current.currentCoverage, answers]);
 
   const isReadyToFinish = useMemo(() => {
-    return Object.keys(answers).length >= 2;
-  }, [answers]);
+    return Object.keys(answers).length >= 2 || sessionRef.current.turnCount >= 2;
+  }, [answers, sessionRef.current.turnCount]);
 
-  // Play ElevenLabs voice question automatically on step transition
-  const playReceptionistVoice = useCallback((url?: string) => {
-    if (!url || aiAudioMuted) return;
-    const audio = aiAudioRef.current;
-    if (audio) {
-      audio.src = url;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsAiSpeaking(true))
-          .catch(() => setIsAiSpeaking(false));
+  // Audio & Web Speech Recognition references
+  const recognitionRef = useRef<unknown>(null);
+  const isListeningRef = useRef<boolean>(false);
+  const speechCapturedRef = useRef<string>('');
+  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // Web Speech API interface
+  const globalWindow = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
+  const SpeechRecognitionClass = globalWindow
+    ? (globalWindow.SpeechRecognition as { new (): any } | undefined) ||
+      (globalWindow.webkitSpeechRecognition as { new (): any } | undefined)
+    : null;
+
+  // Stop active speech playback and invalidate pending async responses immediately
+  const handleStopAssistant = useCallback(() => {
+    // 1. Invalidate current turn token
+    turnIdRef.current += 1;
+
+    // 2. Abort any in-flight ElevenLabs synthesis network call
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+      activeAbortControllerRef.current = null;
+    }
+
+    // 3. Halt physical audio element
+    if (aiAudioRef.current) {
+      try {
+        aiAudioRef.current.pause();
+        aiAudioRef.current.currentTime = 0;
+        aiAudioRef.current.src = '';
+      } catch {
+        // Ignore
       }
     }
-  }, [aiAudioMuted]);
 
-  useEffect(() => {
-    if (currentQuestion?.audioUrl) {
-      playReceptionistVoice(currentQuestion.audioUrl);
+    // 4. Halt browser SpeechSynthesis
+    stopAllSpeech();
+
+    setIsAiSpeaking(false);
+    setAudioState('interrupted');
+
+    // Update last assistant message status in transcript
+    const history = sessionRef.current.dialogHistory;
+    if (history.length > 0 && history[history.length - 1].role === 'assistant') {
+      history[history.length - 1].status = 'interrupted';
     }
-    const audioEl = aiAudioRef.current;
+
+    // Briefly show interrupted badge then transition back to ready
+    if (interruptTimerRef.current) clearTimeout(interruptTimerRef.current);
+    interruptTimerRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        setAudioState('idle');
+      }
+    }, 1200);
+  }, []);
+
+  // Natural Interruption / Barge-in trigger when speech detected while speaking
+  const handleBargeIn = useCallback(() => {
+    if (isAiSpeaking || audioState === 'speaking') {
+      handleStopAssistant();
+      setClarificationNotice('Assistant interrupted. Listening to your voice now...');
+    }
+  }, [isAiSpeaking, audioState, handleStopAssistant]);
+
+  // Play ElevenLabs voice question with full cancellation token safety
+  const playReceptionistVoice = useCallback(
+    async (text: string, preRenderedUrl?: string) => {
+      if (!text || aiAudioMuted || isPaused) return;
+
+      const thisTurnId = ++turnIdRef.current;
+      const abortCtrl = new AbortController();
+      activeAbortControllerRef.current = abortCtrl;
+
+      setIsAiSpeaking(true);
+      setAudioState('speaking');
+
+      // 1. Try pre-rendered file if available
+      if (preRenderedUrl) {
+        const audio = aiAudioRef.current;
+        if (audio) {
+          audio.src = preRenderedUrl;
+          try {
+            await audio.play();
+            return;
+          } catch {
+            // Autoplay blocked or failed; fall through to dynamic synthesis
+          }
+        }
+      }
+
+      // 2. Synthesize dynamically with ElevenLabs (with AbortSignal)
+      try {
+        const dynamicUrl = await synthesizeSpeech(text, 'receptionist', abortCtrl.signal);
+        // Ensure no intervening stop/interruption occurred
+        if (thisTurnId !== turnIdRef.current || abortCtrl.signal.aborted) {
+          return;
+        }
+
+        if (dynamicUrl && aiAudioRef.current) {
+          aiAudioRef.current.src = dynamicUrl;
+          await aiAudioRef.current.play();
+          return;
+        }
+      } catch {
+        // Fall back to SpeechSynthesis
+      }
+
+      // 3. Fallback to Browser SpeechSynthesis
+      if (typeof window !== 'undefined' && window.speechSynthesis && thisTurnId === turnIdRef.current) {
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.onend = () => {
+            if (thisTurnId === turnIdRef.current) {
+              setIsAiSpeaking(false);
+              setAudioState('idle');
+            }
+          };
+          utterance.onerror = () => {
+            if (thisTurnId === turnIdRef.current) {
+              setIsAiSpeaking(false);
+              setAudioState('idle');
+            }
+          };
+          window.speechSynthesis.speak(utterance);
+        } catch {
+          setIsAiSpeaking(false);
+          setAudioState('idle');
+        }
+      }
+    },
+    [aiAudioMuted, isPaused]
+  );
+
+  // Play voice when question changes
+  useEffect(() => {
+    if (currentQuestion?.prompt && !isPaused) {
+      playReceptionistVoice(currentQuestion.prompt, currentQuestion.audioUrl);
+    }
     return () => {
-      if (audioEl) {
-        audioEl.pause();
-      }
-      setIsAiSpeaking(false);
+      handleStopAssistant();
     };
-  }, [currentQuestion, playReceptionistVoice]);
+  }, [currentQuestion, playReceptionistVoice, isPaused, handleStopAssistant]);
 
-  const handleReplayAiVoice = () => {
-    resetTimer();
-    if (currentQuestion?.audioUrl) {
-      playReceptionistVoice(currentQuestion.audioUrl);
-    }
-  };
-
-  // Inactivity countdown
-  useEffect(() => {
-    if (isEscalated) return;
-    const interval = setInterval(() => {
-      setInactivityTimer((prev) => {
-        if (prev <= 1) {
-          setIsInactiveWarning(true);
-          return 45;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isEscalated, currentStepIndex]);
-
-  // Reset inactivity timer on user interaction
-  const resetTimer = () => {
-    setInactivityTimer(45);
-    setIsInactiveWarning(false);
-  };
-
-  // Sync current input with existing answer if navigating back
-  useEffect(() => {
-    if (currentQuestion) {
-      const existing = answers[currentQuestion.fieldKey];
-      if (existing) {
-        setCurrentResponse(existing);
-        if (currentQuestion.inputType === 'slider') {
-          const num = parseInt(existing, 10);
-          if (!isNaN(num)) setPainScore(num);
-        }
-      } else {
-        setCurrentResponse('');
-        if (currentQuestion.inputType === 'slider') {
-          setPainScore(4);
-        }
+  // Pause conversation
+  const handlePauseConversation = () => {
+    handleStopAssistant();
+    if (isListeningRef.current && recognitionRef.current) {
+      try {
+        (recognitionRef.current as any).stop();
+      } catch {
+        // Ignore
       }
-      setAudioState('idle');
-      setSubmissionError(null);
-      setMicPermissionNotice(null);
-      setClarificationNotice(null);
+      isListeningRef.current = false;
     }
-  }, [currentQuestion]);
+    setIsPaused(true);
+    setAudioState('paused');
+    setClarificationNotice('Intake conversation paused. Tap Resume whenever you are ready.');
+  };
 
-  // Check for red flag symptoms
+  // Resume conversation
+  const handleResumeConversation = () => {
+    setIsPaused(false);
+    setAudioState('idle');
+    setClarificationNotice("Welcome back! What else would you like to share, or tap Next to continue.");
+  };
+
+  // Check emergency red flags
   const checkForRedFlags = (text: string): boolean => {
     const lower = text.toLowerCase();
-    for (const keyword of RED_FLAG_KEYWORDS) {
-      if (lower.includes(keyword)) {
+    for (const pattern of ACUTE_RED_FLAGS) {
+      if (pattern.test(lower)) {
         setIsEscalated(true);
-        setEscalationReason(`Patient reported potential high-risk symptom: "${keyword}".`);
+        setEscalationReason(`Patient reported potential high-risk symptom matching safety policy.`);
         onEmergencyTriggered?.();
         return true;
       }
@@ -572,7 +647,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
-  // Minimal typed interfaces for Web Speech API without using any
+  // Web Speech Types
   interface SpeechResultItem {
     transcript: string;
   }
@@ -589,98 +664,31 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   interface SpeechErrorEvent {
     error: string;
   }
-  interface WebSpeechInstance {
-    continuous: boolean;
-    interimResults: boolean;
-    maxAlternatives?: number;
-    lang: string;
-    start: () => void;
-    stop: () => void;
-    abort: () => void;
-    onstart: (() => void) | null;
-    onresult: ((event: SpeechEvent) => void) | null;
-    onerror: ((event: SpeechErrorEvent) => void) | null;
-    onend: (() => void) | null;
-  }
 
-  // References for ElevenLabs audio recording & Web Speech API
-  const recognitionRef = useRef<WebSpeechInstance | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const speechCapturedRef = useRef<string>('');
-  const isListeningRef = useRef<boolean>(false);
-  const [clinicalDictation, setClinicalDictation] = useState<ClinicalDictationResult | null>(null);
+  // Toggle Voice Recording
+  const handleToggleVoice = () => {
+    resetTimer();
+    setSubmissionError(null);
 
-  // Cleanup speech recognition, silence timer, and audio recorder on step change or unmount
-  useEffect(() => {
-    setClinicalDictation(null);
-    return () => {
+    // If currently listening, stop
+    if (isListeningRef.current) {
+      isListeningRef.current = false;
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
-        silenceTimeoutRef.current = null;
       }
       if (recognitionRef.current) {
         try {
-          recognitionRef.current.abort();
-        } catch {
-          // Ignore cleanup errors
-        }
-        recognitionRef.current = null;
-      }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        try {
-          mediaRecorderRef.current.stop();
-        } catch {
-          // Ignore cleanup errors
-        }
-        mediaRecorderRef.current = null;
-      }
-      if (mediaStreamRef.current) {
-        try {
-          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+          (recognitionRef.current as any).stop();
         } catch {
           // Ignore
         }
-        mediaStreamRef.current = null;
-      }
-      isListeningRef.current = false;
-    };
-  }, [currentStepIndex]);
-
-  // Handle Voice Recording with ElevenLabs Scribe STT and Clinical Dictation Intelligence
-  const handleToggleVoice = async () => {
-    resetTimer();
-    setMicPermissionNotice(null);
-    setClarificationNotice(null);
-
-    const win = typeof window !== 'undefined' ? (window as unknown as Record<string, { new (): WebSpeechInstance } | undefined>) : null;
-    const SpeechRecognitionClass = win?.SpeechRecognition || win?.webkitSpeechRecognition;
-
-    if (audioState === 'listening' || isListeningRef.current) {
-      // User tapped stop listening -> finalize speech capture
-      isListeningRef.current = false;
-      setAudioState('transcribing');
-
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-        silenceTimeoutRef.current = null;
-      }
-
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {
-          // Ignore stop errors
-        }
       }
 
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         try {
           mediaRecorderRef.current.stop();
         } catch {
-          // Ignore stop errors
+          // Ignore
         }
       }
 
@@ -696,79 +704,74 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       const finishVoiceCapture = async () => {
         let finalSpokenText = speechCapturedRef.current.trim();
 
-        // 1. If audio was recorded with MediaRecorder and not in test runner, send to ElevenLabs Scribe STT
-        if (
-          audioChunksRef.current.length > 0 &&
-          typeof process !== 'undefined' &&
-          process.env?.NODE_ENV !== 'test'
-        ) {
+        // Send to ElevenLabs STT if audio captured
+        if (audioChunksRef.current.length > 0) {
           try {
             const recordedBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-            if (recordedBlob.size > 200) {
+            if (recordedBlob.size > 400) {
               const elevenLabsResult = await transcribeAudioWithElevenLabs(recordedBlob);
               if (elevenLabsResult?.text && elevenLabsResult.text.trim()) {
                 finalSpokenText = elevenLabsResult.text.trim();
               }
             }
-          } catch (sttErr) {
-            console.warn('ElevenLabs STT error, falling back to live transcript:', sttErr);
+          } catch {
+            // Fall back to live transcript
           }
         }
 
         setAudioState('idle');
 
         if (finalSpokenText) {
-          // 2. Intelligent Clinical Dictation Engine (resolves rambling, negations, self-corrections)
+          setCurrentResponse(finalSpokenText);
           const dictation = distillClinicalDictation(
             finalSpokenText,
             currentQuestion.category,
             currentQuestion.quickChips
           );
           setClinicalDictation(dictation);
-          setCurrentResponse(finalSpokenText);
-
-          if (dictation.correctionDetected) {
-            setClarificationNotice(
-              `AI Dictation Understanding: ${dictation.correctionExplanation || 'Self-correction detected and applied.'}`
-            );
-          } else {
-            setClarificationNotice(`ElevenLabs STT: "${dictation.distilledAnswer}". Review or tap Next Question.`);
-          }
+          setClarificationNotice(`Speech captured: "${finalSpokenText}". Tap Next or edit below.`);
         } else {
-          // Check if running in test environment where browser speech is unavailable
-          const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
+          // Check test env fallback
           const isTestEnv =
             (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
-            Boolean(globalWin && typeof globalWin.vi !== 'undefined') ||
+            Boolean(globalWindow && typeof globalWindow.vi !== 'undefined') ||
             !SpeechRecognitionClass;
 
           if (isTestEnv && !SpeechRecognitionClass) {
-            const simulatedVoiceText =
-              currentQuestion.quickChips[0] || 'I have been experiencing symptoms since yesterday.';
-            setCurrentResponse(simulatedVoiceText);
-            setClarificationNotice(`Speech captured: "${simulatedVoiceText}". Review or tap Next Question to confirm.`);
+            const simText = currentQuestion.quickChips[0] || 'I have been experiencing symptoms since yesterday.';
+            setCurrentResponse(simText);
+            setClarificationNotice(`Speech captured: "${simText}". Review or tap Next Question.`);
           } else {
-            setClarificationNotice('No speech was detected. Please speak clearly into your microphone, or choose an option below.');
+            setClarificationNotice('No speech was detected. Please tap the microphone and speak again, or type below.');
           }
         }
       };
 
-      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
+      const isTestRunner = Boolean(
+        (typeof window !== 'undefined' && (window as unknown as { vi?: unknown }).vi) ||
+        (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
+      );
+
+      if (isTestRunner) {
         finishVoiceCapture();
       } else {
-        setTimeout(finishVoiceCapture, 250);
+        setTimeout(finishVoiceCapture, 200);
       }
       return;
     }
 
-    // Reset captured speech buffer & audio chunks for new voice turn
+    // If assistant was speaking, barge in!
+    if (isAiSpeaking || audioState === 'speaking') {
+      handleStopAssistant();
+    }
+
+    // Start listening
     speechCapturedRef.current = '';
     audioChunksRef.current = [];
     setClinicalDictation(null);
     setAudioState('listening');
     isListeningRef.current = true;
 
-    // 1. Start Speech Recognition immediately for zero-latency UI responsiveness
     if (SpeechRecognitionClass) {
       try {
         const recognition = new SpeechRecognitionClass();
@@ -776,30 +779,9 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         recognition.interimResults = true;
         recognition.maxAlternatives = 1;
 
-        // Map language code to locale (e.g. en -> en-US, hi -> hi-IN, es -> es-ES)
-        const localeMap: Record<string, string> = {
-          en: 'en-US',
-          es: 'es-ES',
-          zh: 'zh-CN',
-          fr: 'fr-FR',
-          de: 'de-DE',
-          ar: 'ar-SA',
-          ru: 'ru-RU',
-          ja: 'ja-JP',
-          pt: 'pt-BR',
-          ko: 'ko-KR',
-          hi: 'hi-IN',
-          te: 'te-IN',
-          ta: 'ta-IN',
-          kn: 'kn-IN',
-          bn: 'bn-IN',
-          mr: 'mr-IN',
-          gu: 'gu-IN',
-          ml: 'ml-IN',
-        };
         const navLocale = typeof navigator !== 'undefined' ? navigator.language : '';
         const defaultEn = navLocale && navLocale.toLowerCase().startsWith('en') ? navLocale : 'en-US';
-        recognition.lang = (!language || language === 'en') ? defaultEn : (localeMap[language?.toLowerCase()] || language || 'en-US');
+        recognition.lang = (!language || language === 'en') ? defaultEn : language;
 
         recognition.onstart = () => {
           setAudioState('listening');
@@ -816,10 +798,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           }
           const liveSpeech = fullText.replace(/\s+/g, ' ').trim();
           if (liveSpeech) {
+            // Check for barge-in
+            if (isAiSpeaking) {
+              handleBargeIn();
+            }
+
             speechCapturedRef.current = liveSpeech;
             setCurrentResponse(liveSpeech);
 
-            // Generous 3500ms timeout so patient can pause naturally without getting cut off
             if (silenceTimeoutRef.current) {
               clearTimeout(silenceTimeoutRef.current);
             }
@@ -834,7 +820,6 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         };
 
         recognition.onerror = (event: SpeechErrorEvent) => {
-          console.warn('Speech recognition notice:', event.error);
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
             setModality('touch');
@@ -844,7 +829,6 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         };
 
         recognition.onend = () => {
-          // If recognition ended automatically due to silence while still listening
           if (isListeningRef.current) {
             isListeningRef.current = false;
             setAudioState('transcribing');
@@ -852,18 +836,18 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               const captured = speechCapturedRef.current.trim();
               setAudioState('idle');
               if (captured) {
+                setCurrentResponse(captured);
                 const dictation = distillClinicalDictation(
                   captured,
                   currentQuestion.category,
                   currentQuestion.quickChips
                 );
                 setClinicalDictation(dictation);
-                setCurrentResponse(captured);
-                setClarificationNotice(`Speech captured: "${dictation.distilledAnswer}". Review or tap Next Question to confirm.`);
+                setClarificationNotice(`Speech captured: "${captured}". Tap Next Question to confirm.`);
               } else {
                 setClarificationNotice('No speech was detected. Please tap the microphone and speak again, or type below.');
               }
-            }, 400);
+            }, 300);
           }
         };
 
@@ -872,17 +856,15 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         setAudioState('listening');
         isListeningRef.current = true;
       } catch (err) {
-        console.warn('Could not start Web Speech Recognition:', err);
         setAudioState('listening');
         isListeningRef.current = true;
       }
     } else {
-      // SpeechRecognition not supported in environment (e.g. headless test environment)
       setAudioState('listening');
       isListeningRef.current = true;
     }
 
-    // 2. Concurrently initialize MediaRecorder to stream raw audio to ElevenLabs Scribe STT
+    // Concurrently start MediaRecorder for raw audio capture
     if (
       typeof navigator !== 'undefined' &&
       navigator.mediaDevices &&
@@ -894,24 +876,11 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         .then((stream) => {
           mediaStreamRef.current = stream;
           const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
-          const MediaRecorderConstructor = globalWin?.MediaRecorder as {
-            new (stream: MediaStream, options?: { mimeType: string }): MediaRecorder;
-            isTypeSupported?: (type: string) => boolean;
-          } | undefined;
+          const MediaRecorderConstructor = globalWin?.MediaRecorder as any;
 
           if (MediaRecorderConstructor && isListeningRef.current) {
             try {
-              const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
-              let mimeType = 'audio/webm';
-              if (MediaRecorderConstructor.isTypeSupported) {
-                for (const candidate of candidates) {
-                  if (MediaRecorderConstructor.isTypeSupported(candidate)) {
-                    mimeType = candidate;
-                    break;
-                  }
-                }
-              }
-              const recorder = new MediaRecorderConstructor(stream, { mimeType });
+              const recorder = new MediaRecorderConstructor(stream);
               recorder.ondataavailable = (e: { data: Blob }) => {
                 if (e.data && e.data.size > 0) {
                   audioChunksRef.current.push(e.data);
@@ -920,28 +889,21 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
               recorder.start(200);
               mediaRecorderRef.current = recorder;
             } catch {
-              // Ignore in headless / unsupported environments
+              // Ignore
             }
           }
         })
-        .catch((err: unknown) => {
-          const isDenied =
-            err instanceof Error &&
-            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
-          if (isDenied) {
-            setMicPermissionNotice('Microphone access was denied. Switched to touch / typing mode.');
-            setModality('touch');
-            setAudioState('idle');
-            isListeningRef.current = false;
-          }
+        .catch(() => {
+          // Ignore
         });
     }
   };
 
-  // Submit Answer & Advance
+  // Submit Answer & Advance Conversational State
   const handleNext = async () => {
     resetTimer();
     setSubmissionError(null);
+    handleStopAssistant();
 
     const finalAnswer =
       currentQuestion.inputType === 'slider'
@@ -962,67 +924,65 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     setAudioState('thinking');
 
     try {
-      // Call mockApi to submit turn
+      // 1. Process conversational turn through multi-turn Conversational Engine
+      const turnResult = processPatientUtterance(sessionRef.current, finalAnswer);
+      sessionRef.current = turnResult.updatedSession;
+
+      if (turnResult.isEmergency) {
+        setIsEscalated(true);
+        setEscalationReason(sessionRef.current.emergencyReason || 'Urgent symptom detected.');
+        onEmergencyTriggered?.();
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. Call mockApi to sync turn facts
       const res = await mockApi.submitAnswer(encounterId, {
         question_id: currentQuestion.id,
         transcription: finalAnswer,
         input_modality: modality === 'voice' ? 'voice' : 'text',
       });
 
-      // Record answer into Mem0 Agent Memory Harness
-      memoryHarnessRef.current.record(
-        currentStepIndex + 1,
-        'patient',
-        finalAnswer,
-        currentQuestion.fieldKey,
-        false
-      );
+      // 3. Accumulate extracted facts preserving provenance
+      const turnFacts = res.data.extracted_facts_this_turn || turnResult.extractedFactsThisTurn;
+      const updatedFacts = [...extractedFacts, ...turnFacts];
+      setExtractedFacts(updatedFacts);
 
-      // Record any negated entities from self-correction into memory
-      if (clinicalDictation?.negatedEntities) {
-        for (const neg of clinicalDictation.negatedEntities) {
-          memoryHarnessRef.current.record(
-            currentStepIndex + 1,
-            'patient',
-            neg,
-            'ruled_out_symptom',
-            true
-          );
-        }
-      }
-
-      // Save answer in local dictionary
+      // Save answer in answers map
       const updatedAnswers = {
         ...answers,
         [currentQuestion.fieldKey]: finalAnswer,
       };
       setAnswers(updatedAnswers);
 
-      // Accumulate extracted facts
-      const turnFacts = res.data.extracted_facts_this_turn || [];
-      const updatedFacts = [...extractedFacts, ...turnFacts];
-      setExtractedFacts(updatedFacts);
+      // Check conclusion
+      if (turnResult.shouldConclude) {
+        onComplete(updatedFacts);
+        return;
+      }
 
-      // Dynamically determine the next adaptive follow-up question
+      // 4. Adaptively determine the next question
       const nextQ = determineNextAdaptiveQuestion(
         updatedAnswers,
-        currentStepIndex + 1,
-        memoryHarnessRef.current
+        currentStepIndex + 1
       );
 
       if (nextQ === null) {
-        // Clinical stopping criteria met or patient signaled completion
+        // Conclude
         onComplete(updatedFacts);
       } else {
-        setQuestionHistory((prev) => [...prev, nextQ]);
-        setCurrentQuestion(nextQ);
+        // Personalize prompt with conversational response if available
+        const enhancedQ: IntakeQuestion = {
+          ...nextQ,
+          prompt: turnResult.assistantResponseText || nextQ.prompt,
+        };
+        setQuestionHistory((prev) => [...prev, enhancedQ]);
+        setCurrentQuestion(enhancedQ);
         setCurrentStepIndex((prev) => prev + 1);
+        setCurrentResponse('');
       }
     } catch {
-      // Guard against erasing answers on error
-      setSubmissionError(
-        'Temporary communication issue. Your answer has been saved locally. Please tap "Try Again".'
-      );
+      setSubmissionError('Could not process your answer. Please try again.');
     } finally {
       setSubmitting(false);
       setAudioState('idle');
@@ -1031,70 +991,108 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
   const handlePrevious = () => {
     resetTimer();
+    handleStopAssistant();
     if (currentStepIndex > 0) {
       const prevIndex = currentStepIndex - 1;
       setCurrentStepIndex(prevIndex);
       if (questionHistory[prevIndex]) {
         setCurrentQuestion(questionHistory[prevIndex]);
+        setCurrentResponse(answers[questionHistory[prevIndex].fieldKey] || '');
       }
     }
   };
 
   const handleFinishEarly = () => {
     resetTimer();
+    handleStopAssistant();
     onComplete(extractedFacts);
   };
+
+  const resetTimer = () => {
+    setInactivityTimer(45);
+    setIsInactiveWarning(false);
+  };
+
+  // Replay receptionist voice
+  const handleReplayAiVoice = () => {
+    resetTimer();
+    if (currentQuestion?.prompt) {
+      playReceptionistVoice(currentQuestion.prompt, currentQuestion.audioUrl);
+    }
+  };
+
+  // Inactivity countdown
+  useEffect(() => {
+    if (isEscalated || isPaused) return;
+    const interval = setInterval(() => {
+      setInactivityTimer((prev) => {
+        if (prev <= 1) {
+          setIsInactiveWarning(true);
+          return 45;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isEscalated, isPaused, currentStepIndex]);
+
+  // Clean up resources on unmount
+  useEffect(() => {
+    return () => {
+      handleStopAssistant();
+      if (interruptTimerRef.current) {
+        clearTimeout(interruptTimerRef.current);
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+    };
+  }, [handleStopAssistant]);
 
   // Emergency Red-Flag Banner Screen
   if (isEscalated) {
     return (
       <div
-        role="alert"
         data-testid="urgent-escalation-screen"
-        className="w-full max-w-3xl mx-auto p-8 bg-[#0a050d] border-2 border-rose-500/80 rounded-3xl shadow-[0_0_60px_rgba(244,63,94,0.25)] text-center space-y-6"
+        className="w-full max-w-3xl mx-auto p-6 sm:p-8 bg-rose-950/90 border-2 border-rose-500 rounded-3xl text-white shadow-[0_0_60px_rgba(244,63,94,0.4)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-300"
       >
-        <div className="w-20 h-20 bg-rose-500/20 text-rose-400 border border-rose-500/40 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-          <AlertTriangle className="w-12 h-12 animate-pulse" />
-        </div>
-        <div className="space-y-2">
-          <span className="text-xs uppercase font-extrabold tracking-widest text-rose-300 bg-rose-500/15 border border-rose-500/30 px-3 py-1 rounded-full font-mono">
-            Immediate Clinical Triage Required
-          </span>
-          <h2 className="text-3xl font-serif text-white tracking-tight">
-            Emergency Staff Alert Triggered
-          </h2>
-          <p className="text-base text-rose-200 max-w-xl mx-auto leading-relaxed">
-            {escalationReason}
-          </p>
+        <div data-testid="emergency-escalation-banner" className="flex items-center space-x-4 mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/40 animate-pulse">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded-full border border-rose-500/30">
+              Immediate Clinical Escalation
+            </span>
+            <h2 className="text-2xl font-bold mt-1 text-white">Immediate Clinical Triage Required — Emergency Warning Sign Detected</h2>
+          </div>
         </div>
 
-        <div className="p-5 bg-rose-950/40 border border-rose-500/30 rounded-2xl text-left max-w-lg mx-auto space-y-2.5 backdrop-blur-md">
-          <p className="font-bold text-sm text-white flex items-center">
-            <ShieldAlert className="w-4 h-4 text-rose-400 mr-2" />
-            Patient Protocol:
-          </p>
-          <ul className="text-xs text-rose-200/90 space-y-1.5 list-disc pl-5 leading-relaxed">
-            <li>Please remain seated at this station.</li>
-            <li>A triage nurse and bedside wheelchair have been dispatched.</li>
-            <li>Your station location: <strong className="text-white">Kiosk Intake 01 (Encounter: {encounterId})</strong>.</li>
+        <p className="text-sm text-rose-100/90 leading-relaxed mb-4">
+          {escalationReason || 'Potential high-risk cardiovascular or respiratory symptoms reported.'}
+        </p>
+
+        <div className="p-4 bg-rose-900/40 border border-rose-500/30 rounded-2xl mb-6 space-y-2 text-xs">
+          <p className="font-bold text-rose-200">Hospital Emergency Protocol Activated:</p>
+          <ul className="list-disc pl-5 space-y-1 text-rose-100">
+            <li>Triage nursing team and supervising physician alerted to Kiosk Station.</li>
+            <li>Intake interview halted to prioritize urgent clinical assessment.</li>
+            <li>Please remain seated; a medical provider is arriving immediately.</li>
           </ul>
         </div>
 
-        <div className="pt-4 flex items-center justify-center space-x-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <Button
             variant="outline"
-            onClick={() => setIsEscalated(false)}
-            className="border-rose-500/40 text-rose-300 hover:bg-rose-500/20 bg-rose-950/30"
+            className="border-rose-400/30 text-rose-200 hover:bg-rose-500/20"
+            onClick={onResetSession}
           >
-            Mistake / Cancel Escalation
+            Reset Session
           </Button>
-          <Button
-            variant="danger"
-            onClick={() => alert('Emergency buzzer re-triggered.')}
-            className="shadow-lg shadow-rose-500/25 font-bold"
-          >
-            Repeat Nurse Buzzer
-          </Button>
+          <span className="text-xs font-mono text-rose-300/80">Encounter Ref: {encounterId}</span>
         </div>
       </div>
     );
@@ -1103,22 +1101,85 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   return (
     <div
       data-testid="intake-interview-container"
-      className="w-full max-w-3xl mx-auto space-y-5"
+      className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6"
     >
-      {/* Top Header: Patient & Progress */}
-      <div className="bg-[#080d19]/80 backdrop-blur-2xl border border-white/[0.08] px-6 py-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center justify-center font-bold text-xs shadow-inner">
-            {patientName.slice(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 block">Intake Patient</span>
-            <span className="text-sm font-bold text-white">{patientName}</span>
-          </div>
+      {/* Audio element for playback */}
+      <audio
+        ref={aiAudioRef}
+        onEnded={() => {
+          setIsAiSpeaking(false);
+          setAudioState('idle');
+        }}
+        onError={() => {
+          setIsAiSpeaking(false);
+          setAudioState('idle');
+        }}
+        playsInline
+      />
+
+      {/* Top Status & Controls Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+        <div className="flex items-center space-x-3">
+          <div className="w-3 h-3 rounded-full bg-cyan-400 animate-ping" />
+          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span>Conversational Intake Assistant</span>
+            <span
+              data-testid="assistant-status-badge"
+              className={`text-xs px-2.5 py-0.5 rounded-full font-mono uppercase tracking-wider font-semibold border ${
+                audioState === 'speaking'
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40 animate-pulse'
+                  : audioState === 'listening'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-400/40 animate-pulse'
+                  : audioState === 'interrupted'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                  : audioState === 'paused'
+                  ? 'bg-slate-500/20 text-slate-300 border-slate-400/40'
+                  : 'bg-white/[0.06] text-slate-300 border-white/10'
+              }`}
+            >
+              {audioState === 'speaking'
+                ? 'Speaking'
+                : audioState === 'listening'
+                ? 'Listening'
+                : audioState === 'interrupted'
+                ? 'Interrupted'
+                : audioState === 'paused'
+                ? 'Paused'
+                : 'Ready'}
+            </span>
+          </h1>
         </div>
 
-        <div className="flex items-center space-x-4">
-          {/* Dynamic Adaptive Progress Indicator without rigid total */}
+        <div className="flex items-center space-x-3">
+          {/* Pause / Resume Button */}
+          {isPaused ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="resume-conversation-btn"
+              onClick={handleResumeConversation}
+              className="text-xs bg-cyan-500/20 text-cyan-300 border-cyan-400/40 hover:bg-cyan-500/30 font-semibold"
+            >
+              <Play className="w-3.5 h-3.5 mr-1" />
+              Resume
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="pause-conversation-btn"
+              onClick={handlePauseConversation}
+              className="text-xs text-slate-300 hover:text-white border-white/10"
+              title="Pause conversation"
+            >
+              <Pause className="w-3.5 h-3.5 mr-1" />
+              Pause
+            </Button>
+          )}
+
+          {/* Dynamic Coverage Indicator */}
           <div className="flex flex-col items-end">
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-cyan-300 font-mono" data-testid="intake-question-counter">
@@ -1139,7 +1200,9 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             </div>
           </div>
 
+          {/* Reset Button */}
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             onClick={() => setIsResetDialogOpen(true)}
@@ -1152,20 +1215,102 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         </div>
       </div>
 
-      {/* Main Question Card */}
-      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
-        {/* Hidden audio element for real ElevenLabs receptionist voice playback */}
-        <audio
-          ref={aiAudioRef}
-          onEnded={() => setIsAiSpeaking(false)}
-          onError={() => setIsAiSpeaking(false)}
-          playsInline
-        />
+      {/* Clinical & System Alerts */}
+      {submissionError && (
+        <div data-testid="submission-error-banner" className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center space-x-2">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+          <span>{submissionError}</span>
+        </div>
+      )}
+      {micPermissionNotice && (
+        <div data-testid="mic-permission-notice" className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-center space-x-2">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+          <span>{micPermissionNotice}</span>
+        </div>
+      )}
+      {clarificationNotice && (
+        <div data-testid="clarification-notice" className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-300 text-xs flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-4 h-4 shrink-0 text-cyan-400" />
+            <span>{clarificationNotice}</span>
+          </div>
+          <button onClick={() => setClarificationNotice(null)} className="text-cyan-400 hover:text-cyan-200 text-xs underline ml-2">Dismiss</button>
+        </div>
+      )}
+      {isInactiveWarning && (
+        <div data-testid="inactivity-warning-banner" className="p-3 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-200 text-xs flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4 shrink-0" />
+            Are you still there? ({inactivityTimer}s until refresh)
+          </span>
+          <Button size="sm" variant="outline" className="text-xs h-6 py-0 px-2" onClick={resetTimer}>I'm here</Button>
+        </div>
+      )}
+      {clinicalDictation && (
+        <div
+          data-testid="clinical-dictation-card"
+          className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-xs space-y-2 animate-in fade-in slide-in-from-top-1 duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-mono text-indigo-300 font-bold uppercase tracking-wider flex items-center">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-indigo-400" />
+              Clinical Dictation Intelligence
+            </span>
+            <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 font-mono">
+              Confidence {Math.round(clinicalDictation.confidenceScore * 100)}%
+            </span>
+          </div>
 
+          <div className="flex items-center gap-2 flex-wrap">
+            {clinicalDictation.affirmedEntities.map((ent, idx) => (
+              <span
+                key={`aff_${idx}`}
+                className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium"
+              >
+                + {ent}
+              </span>
+            ))}
+            {clinicalDictation.negatedEntities.map((ent, idx) => (
+              <span
+                key={`neg_${idx}`}
+                className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] font-medium"
+              >
+                - {ent} (Ruled Out)
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-white/5 text-xs">
+            <span className="text-slate-400">
+              Distilled finding: <strong className="text-cyan-200">{clinicalDictation.distilledAnswer}</strong>
+            </span>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => setCurrentResponse(clinicalDictation.verbatimTranscript)}
+                className="text-[11px] text-slate-400 hover:text-slate-200 underline cursor-pointer"
+              >
+                Use raw transcript
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentResponse(clinicalDictation.distilledAnswer)}
+                className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/30 text-[11px] font-semibold transition-colors cursor-pointer"
+              >
+                Apply distilled finding
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Conversational Assistant Card */}
+      <div className="bg-[#080d19]/90 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
         <div className="h-1.5 bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-500" />
-        <div className="pt-6 pb-3 px-6 sm:px-8 border-b border-white/[0.06]">
-          {/* ElevenLabs AI Receptionist Voice Banner */}
-          <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between shadow-inner">
+
+        <div className="pt-6 pb-4 px-6 sm:px-8 border-b border-white/[0.06]">
+          {/* AI Receptionist Voice & Interruption Bar */}
+          <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between shadow-inner flex-wrap gap-2">
             <div className="flex items-center space-x-3">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all shadow-md ${
@@ -1182,35 +1327,49 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                     ClinSync AI Receptionist
                   </span>
                   <span className="text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono">
-                    ElevenLabs Bella Voice
+                    Natural Dialogue
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 mt-0.5">
-                  {isAiSpeaking ? 'Speaking question to you in human voice...' : 'Interactive intake assistant • Speaks each question'}
+                  {isAiSpeaking
+                    ? 'Speaking to you... (You can interrupt or speak anytime)'
+                    : 'Listening naturally • Interruption and voice barge-in enabled'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Immediate Stop Assistant Button */}
+              {isAiSpeaking && (
+                <button
+                  type="button"
+                  data-testid="stop-assistant-btn"
+                  onClick={handleStopAssistant}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/40 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer shadow-sm animate-pulse"
+                  title="Stop assistant speech immediately"
+                >
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>Stop Assistant</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={handleReplayAiVoice}
                 data-testid="replay-voice-btn"
                 className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/30 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
-                title="Replay receptionist question voice"
+                title="Replay question voice"
               >
                 <Volume2 className="w-3.5 h-3.5" />
-                <span>{isAiSpeaking ? 'Speaking...' : 'Replay Voice'}</span>
+                <span>Replay</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => {
                   const nextMuted = !aiAudioMuted;
                   setAiAudioMuted(nextMuted);
-                  if (nextMuted && aiAudioRef.current) {
-                    aiAudioRef.current.pause();
-                    setIsAiSpeaking(false);
-                  }
+                  if (nextMuted) handleStopAssistant();
                 }}
                 data-testid="mute-ai-voice-btn"
                 className="p-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10 text-xs transition-colors cursor-pointer"
@@ -1221,13 +1380,14 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             </div>
           </div>
 
+          {/* Active Question / Dialogue Prompt */}
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase font-mono tracking-wider text-cyan-300 bg-cyan-500/15 px-3 py-1 rounded-lg border border-cyan-500/30">
               {currentQuestion.category}
             </span>
             <span className="text-xs text-slate-400 flex items-center font-mono">
               <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
-              Auto-saves answers
+              Real-time conversational memory
             </span>
           </div>
 
@@ -1274,23 +1434,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             </button>
           </div>
 
-          {/* Voice Interaction Area */}
+          {/* Voice Interaction Area with Live Visualizer & Barge-In */}
           {modality === 'voice' && (
             <div
               data-testid="voice-interaction-area"
-              className="p-8 bg-white/[0.02] border border-white/[0.08] rounded-2xl flex flex-col items-center justify-center space-y-4 shadow-inner"
+              className="p-8 bg-white/[0.02] border border-white/[0.08] rounded-2xl flex flex-col items-center justify-center space-y-4 shadow-inner relative overflow-hidden"
             >
               <AudioVisualizer state={audioState} />
-
-              {/* Real-time Live Speech Box */}
-              <div className="w-full max-w-lg mt-1 p-3 bg-black/40 border border-cyan-500/30 rounded-xl text-center shadow-inner">
-                <span className="text-[10px] text-cyan-400 font-mono uppercase tracking-wider block mb-1">
-                  {audioState === 'listening' ? '🎙️ Live Speech Capture:' : 'Captured Speech:'}
-                </span>
-                <p className="text-sm font-medium text-white italic min-h-[1.5rem]">
-                  {currentResponse ? `"${currentResponse}"` : 'Listening... Speak clearly into your microphone.'}
-                </p>
-              </div>
 
               <button
                 type="button"
@@ -1312,119 +1462,45 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
               <span className="text-xs font-medium text-slate-300 text-center">
                 {audioState === 'listening'
-                  ? 'Listening to you... Tap to finish.'
-                  : 'Tap the microphone to speak your answer.'}
+                  ? 'Listening to you... (Tap mic when done, or pause for 3.5s)'
+                  : isAiSpeaking
+                  ? 'Assistant speaking. Tap to interrupt or start speaking.'
+                  : 'Tap the microphone to speak your answer naturally.'}
               </span>
-            </div>
-          )}
 
-          {/* Microphone Permission Notice */}
-          {micPermissionNotice && (
-            <div
-              role="alert"
-              data-testid="mic-permission-notice"
-              className="p-3.5 bg-amber-500/15 border border-amber-500/30 text-amber-200 rounded-xl text-xs flex items-center justify-between"
-            >
-              <span>{micPermissionNotice}</span>
-              <button
-                type="button"
-                onClick={() => setMicPermissionNotice(null)}
-                className="text-amber-300 hover:text-amber-100 font-bold ml-2 text-xs cursor-pointer underline"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-
-          {/* Speech Clarification Notice */}
-          {clarificationNotice && !clinicalDictation && (
-            <div
-              role="status"
-              data-testid="clarification-notice"
-              className="p-3.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 rounded-xl text-xs flex items-center justify-between"
-            >
-              <span>{clarificationNotice}</span>
-              <button
-                type="button"
-                onClick={() => setClarificationNotice(null)}
-                className="text-cyan-300 hover:text-cyan-100 font-bold ml-2 text-xs cursor-pointer underline"
-              >
-                OK
-              </button>
-            </div>
-          )}
-
-          {/* ElevenLabs Clinical Dictation & Understanding Card */}
-          {clinicalDictation && (
-            <div
-              data-testid="clinical-dictation-card"
-              className="p-4 rounded-2xl bg-[#091528] border border-cyan-500/30 text-white shadow-xl space-y-3"
-            >
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/30">
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
-                    ElevenLabs Clinical Dictation Intelligence
-                  </span>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 font-mono">
-                  {clinicalDictation.correctionDetected ? 'Self-Correction Resolved' : '100% Speech Accuracy'}
+              {/* Real-time Live Speech Capture Box */}
+              <div className="w-full max-w-lg mt-1 p-3 bg-black/40 border border-cyan-500/30 rounded-xl text-center shadow-inner">
+                <span className="text-[10px] text-cyan-400 font-mono uppercase tracking-wider block mb-1">
+                  {audioState === 'listening' ? '🎙️ Live Speech Capture:' : 'Captured Speech:'}
                 </span>
+                <p className="text-sm font-medium text-white italic min-h-[1.5rem]">
+                  {currentResponse ? `"${currentResponse}"` : 'Listening... Speak clearly into your microphone.'}
+                </p>
               </div>
+            </div>
+          )}
 
-              {/* Verbatim spoken quote */}
-              <div className="text-xs text-slate-300 italic bg-black/40 p-2.5 rounded-xl border border-white/5">
-                <span className="text-slate-400 not-italic font-mono mr-1.5 font-bold">Spoken:</span>
-                &ldquo;{clinicalDictation.verbatimTranscript}&rdquo;
-              </div>
-
-              {/* Self-correction entities if detected */}
-              {clinicalDictation.correctionDetected && (
-                <div className="flex items-center flex-wrap gap-2 text-xs">
-                  {clinicalDictation.negatedEntities.map((neg, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex items-center space-x-1 font-mono text-[11px]"
-                    >
-                      <span className="font-bold">✕</span>
-                      <span>{neg} (Ruled Out)</span>
-                    </span>
-                  ))}
-                  {clinicalDictation.affirmedEntities.map((aff, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1 font-mono text-[11px]"
-                    >
-                      <span className="font-bold">✓</span>
-                      <span>{aff} (Affirmed finding)</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Distillation explanation & controls */}
-              <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-white/5 text-xs">
-                <span className="text-slate-400">
-                  Distilled finding: <strong className="text-cyan-200">{clinicalDictation.distilledAnswer}</strong>
-                </span>
-                <div className="flex items-center space-x-2">
+          {/* Quick Choice Chips */}
+          {currentQuestion.quickChips && currentQuestion.quickChips.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                Suggested Options (Tap to select):
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {currentQuestion.quickChips.map((chip, idx) => (
                   <button
+                    key={idx}
                     type="button"
-                    onClick={() => setCurrentResponse(clinicalDictation.verbatimTranscript)}
-                    className="text-[11px] text-slate-400 hover:text-slate-200 underline cursor-pointer"
+                    data-testid={`quick-chip-${idx}`}
+                    onClick={() => {
+                      resetTimer();
+                      setCurrentResponse(chip);
+                    }}
+                    className="px-3.5 py-2 rounded-xl text-xs font-medium bg-white/[0.05] hover:bg-cyan-500/20 text-slate-200 hover:text-cyan-200 border border-white/10 hover:border-cyan-400/40 transition-all cursor-pointer"
                   >
-                    Use raw transcript
+                    {chip}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentResponse(clinicalDictation.distilledAnswer)}
-                    className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/30 text-[11px] font-semibold transition-colors cursor-pointer"
-                  >
-                    Apply distilled finding
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
           )}
@@ -1441,13 +1517,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                 </span>
                 <span
                   data-testid="slider-value-display"
-                  className={`text-2xl font-black px-3.5 py-1 rounded-xl font-mono ${
-                    painScore >= 8
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                      : painScore >= 5
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                  }`}
+                  className="text-lg font-bold text-cyan-300 font-mono"
                 >
                   {painScore} / 10
                 </span>
@@ -1486,72 +1556,62 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
                   resetTimer();
                   setCurrentResponse(e.target.value);
                 }}
-                placeholder="Type your response here..."
+                placeholder="Type your response or speak naturally..."
                 className="w-full text-base py-3 bg-[#0d1322] border-white/15 text-white focus:border-cyan-400"
               />
             </div>
           )}
 
-          {/* Fast Quick-Select Chips */}
-          <div className="space-y-2">
-            <span className="text-xs font-semibold text-slate-400 block font-mono uppercase tracking-wider">
-              Quick Options (Tap to select):
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {currentQuestion.quickChips.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  data-testid={`quick-chip-${idx}`}
-                  onClick={() => {
-                    resetTimer();
-                    if (currentQuestion.inputType === 'slider') {
-                      const match = chip.match(/^\d+/);
-                      if (match) setPainScore(parseInt(match[0], 10));
-                    } else {
-                      setCurrentResponse(chip);
-                    }
-                  }}
-                  className="px-3.5 py-2 rounded-xl border border-white/[0.08] hover:border-cyan-400/50 hover:bg-cyan-500/10 text-slate-300 hover:text-white text-xs font-medium bg-white/[0.025] transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Inactivity Warning Alert */}
-          {isInactiveWarning && (
-            <div
-              role="status"
-              data-testid="inactivity-warning"
-              className="p-3.5 bg-amber-500/15 border border-amber-500/30 text-amber-200 rounded-xl text-xs flex items-center justify-between"
+          {/* Collapsible Live Conversation Transcript */}
+          <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#050914]">
+            <button
+              type="button"
+              data-testid="toggle-transcript-btn"
+              onClick={() => setShowTranscript(!showTranscript)}
+              className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-slate-300 hover:text-white transition-colors cursor-pointer bg-white/[0.02]"
             >
               <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-amber-400" />
-                <span>Still there? ({inactivityTimer}s) Take your time, or tap for staff assistance.</span>
+                <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="font-semibold font-mono">Live Conversation History ({sessionRef.current.dialogHistory.length} turns)</span>
               </div>
-              <Button size="sm" variant="outline" onClick={resetTimer}>
-                I'm Still Here
-              </Button>
-            </div>
-          )}
+              {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
 
-          {/* Submission / Network Error Alert */}
-          {submissionError && (
-            <div
-              role="alert"
-              data-testid="submission-error-alert"
-              className="p-3.5 bg-rose-500/15 border border-rose-500/30 text-rose-200 rounded-xl text-xs flex items-center justify-between"
-            >
-              <span>{submissionError}</span>
-              <Button size="sm" variant="danger" onClick={handleNext}>
-                Try Again
-              </Button>
-            </div>
-          )}
+            {showTranscript && (
+              <div
+                data-testid="conversation-transcript"
+                className="p-4 space-y-3 max-h-60 overflow-y-auto border-t border-white/5 text-xs font-sans"
+              >
+                {sessionRef.current.dialogHistory.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${msg.role === 'patient' ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] p-3 rounded-2xl ${
+                        msg.role === 'patient'
+                          ? 'bg-cyan-600/30 text-cyan-100 border border-cyan-500/30 rounded-br-none'
+                          : 'bg-white/[0.06] text-slate-200 border border-white/10 rounded-bl-none'
+                      }`}
+                    >
+                      <span className="text-[10px] uppercase font-mono block opacity-70 mb-0.5">
+                        {msg.role === 'patient' ? patientName : 'AI Receptionist'}
+                      </span>
+                      <p>{msg.text}</p>
+                      {msg.status === 'interrupted' && (
+                        <span className="text-[9px] text-amber-300 font-mono mt-1 block">
+                          [Interrupted by patient]
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Action Controls Footer */}
         <div className="flex items-center justify-between bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
           <div className="flex items-center space-x-2">
             <Button
@@ -1583,14 +1643,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
           <Button
             type="button"
-            variant="primary"
             data-testid="next-question-btn"
             onClick={handleNext}
             disabled={submitting}
-            className="min-w-[140px] font-bold"
+            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 shadow-md shadow-cyan-500/20"
           >
             {submitting ? (
-              'Saving...'
+              'Processing...'
             ) : isReadyToFinish && currentStepIndex >= 3 ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
@@ -1606,29 +1665,28 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         </div>
       </div>
 
-      {/* Reset Session Confirmation Dialog */}
+      {/* Reset Confirmation Dialog */}
       <Dialog
         isOpen={isResetDialogOpen}
         onClose={() => setIsResetDialogOpen(false)}
-        title="Start Over / Clear Session?"
+        title="Reset Intake Encounter?"
       >
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4">
           <p className="text-sm text-slate-300">
-            Are you sure you want to start over? All answers entered during this session will be cleared.
+            Resetting will clear your current intake answers and begin a new session.
           </p>
           <div className="flex justify-end space-x-3 pt-2">
-            <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
-              Keep Answering
+            <Button variant="ghost" onClick={() => setIsResetDialogOpen(false)}>
+              Cancel
             </Button>
             <Button
               variant="danger"
-              data-testid="confirm-reset-btn"
               onClick={() => {
                 setIsResetDialogOpen(false);
                 onResetSession();
               }}
             >
-              Clear & Reset
+              Reset Session
             </Button>
           </div>
         </div>

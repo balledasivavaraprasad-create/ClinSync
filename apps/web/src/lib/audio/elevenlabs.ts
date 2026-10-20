@@ -21,9 +21,10 @@ const audioBlobCache = new Map<string, string>();
  */
 export async function synthesizeSpeech(
   text: string,
-  voiceType: 'receptionist' | 'clinician' = 'receptionist'
+  voiceType: 'receptionist' | 'clinician' = 'receptionist',
+  signal?: AbortSignal
 ): Promise<string | null> {
-  if (!ELEVENLABS_CONFIG.apiKey) {
+  if (!ELEVENLABS_CONFIG.apiKey || signal?.aborted) {
     return null;
   }
 
@@ -37,6 +38,7 @@ export async function synthesizeSpeech(
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
+      signal,
       headers: {
         'xi-api-key': ELEVENLABS_CONFIG.apiKey,
         'Content-Type': 'application/json',
@@ -58,12 +60,29 @@ export async function synthesizeSpeech(
     }
 
     const blob = await response.blob();
+    if (signal?.aborted) return null;
     const objectUrl = URL.createObjectURL(blob);
     audioBlobCache.set(cacheKey, objectUrl);
     return objectUrl;
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      return null;
+    }
     console.warn('Failed to call ElevenLabs TTS service:', err);
     return null;
+  }
+}
+
+/**
+ * Globally halts all active Web SpeechSynthesis and audio synthesis.
+ */
+export function stopAllSpeech(): void {
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // Ignore
+    }
   }
 }
 
