@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LandingPage } from '../features/landing/LandingPage';
 import { App } from '../app/App';
 
@@ -41,12 +41,12 @@ describe('ClinSync Landing Page & Prototype Integration Suite', () => {
     expect(container.querySelector('#scrolly')).toBeInTheDocument();
   });
 
-  it('calls onLaunchApp when clicking hero "Launch Web App" button', () => {
+  it('calls onLaunchApp when clicking hero "Sign in to get started" button', () => {
     const handleLaunch = vi.fn();
     render(<LandingPage onLaunchApp={handleLaunch} />);
 
     // Hero launch button
-    const heroLaunchBtns = screen.getAllByRole('button', { name: /Launch Web App/i });
+    const heroLaunchBtns = screen.getAllByRole('button', { name: /Sign in to get started/i });
     expect(heroLaunchBtns.length).toBeGreaterThanOrEqual(1);
 
     fireEvent.click(heroLaunchBtns[0]);
@@ -62,7 +62,7 @@ describe('ClinSync Landing Page & Prototype Integration Suite', () => {
     expect(handleLaunch).toHaveBeenCalledWith('doctor');
   });
 
-  it('navigates seamlessly between Landing Page and Prototype in App root', () => {
+  it('navigates seamlessly between Landing Page, Login, and Prototype in App root', async () => {
     // Reset window hash
     window.location.hash = '';
 
@@ -72,22 +72,33 @@ describe('ClinSync Landing Page & Prototype Integration Suite', () => {
     expect(screen.getByText(/Pre-consultation intelligence/i)).toBeInTheDocument();
     expect(screen.queryByTestId('btn-back-to-landing')).not.toBeInTheDocument();
 
-    // Click launch button to enter prototype
-    const heroLaunchBtn = screen.getAllByRole('button', { name: /Launch Web App/i })[0];
+    // Click "Sign in to get started" button to require login before dashboard
+    const heroLaunchBtn = screen.getAllByRole('button', { name: /Sign in to get started/i })[0];
     fireEvent.click(heroLaunchBtn);
 
+    // Verify login page is shown before accessing dashboard
+    expect(screen.getByTestId('btn-login-submit')).toBeInTheDocument();
+
+    // Complete login to access dashboard
+    fireEvent.click(screen.getByTestId('btn-login-submit'));
+
     // Now inside the prototype
-    expect(screen.getByTestId('btn-back-to-landing')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('btn-back-to-landing')).toBeInTheDocument();
+    });
     expect(screen.getByText(/Phase 1–6 Prototype/i)).toBeInTheDocument();
 
     // Click back to landing page
     fireEvent.click(screen.getByTestId('btn-back-to-landing'));
 
     // Returns to landing page
-    expect(screen.getByText(/Pre-consultation intelligence/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Pre-consultation intelligence/i)).toBeInTheDocument();
+    });
   });
 
   it('toggles between dark and light modes on the landing page', () => {
+    window.location.hash = '';
     render(
       <App />
     );

@@ -5,7 +5,7 @@ import { useTheme } from '../../lib/theme';
 
 export interface LandingPageProps {
   onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'staff' | 'dashboard') => void;
-  onOpenLogin?: () => void;
+  onOpenLogin?: (role?: 'doctor' | 'kiosk' | 'auditor' | 'staff') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLogin }) => {
@@ -152,13 +152,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
               Platform
             </a>
             <button
-              onClick={() => onLaunchApp('kiosk')}
+              onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
               className="btn btn--solid"
               data-cursor="start"
               data-action="launch-app"
               data-tab="kiosk"
             >
-              Launch Prototype
+              Sign in to get started
             </button>
             <button className="nav__burger" id="burger" aria-label="Open menu">
               <span></span>
@@ -170,12 +170,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
 
       <div className="mobile-menu" id="mobileMenu">
         <button
-          onClick={() => onLaunchApp('kiosk')}
+          onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
           style={{ color: 'var(--accent, #ea580c)', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
           data-action="launch-app"
           data-tab="kiosk"
         >
-          Launch Web App (Kiosk) →
+          Sign in to get started →
         </button>
         <button
           onClick={() => onLaunchApp('doctor')}
@@ -224,13 +224,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
           </button>
         </div>
         <button
-          onClick={() => onLaunchApp('kiosk')}
+          onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
           className="mobile-menu__cta"
           data-action="launch-app"
           data-tab="kiosk"
           style={{ width: '100%', marginTop: '16px' }}
         >
-          Launch Prototype
+          Sign in to get started
         </button>
       </div>
 
@@ -295,13 +295,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
 
             <div className="hero__cta reveal">
               <button
-                onClick={() => onLaunchApp('kiosk')}
+                onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
                 className="btn btn--solid btn--lg"
                 data-cursor="open"
                 data-action="launch-app"
                 data-tab="kiosk"
               >
-                <span>Launch Web App</span>
+                <span>Sign in to get started</span>
                 <svg viewBox="0 0 24 24" fill="none" width="18" height="18" style={{ marginLeft: 8 }}>
                   <path
                     d="M5 12h14M13 6l6 6-6 6"
@@ -1545,13 +1545,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
             <p className="cta__sub reveal">ClinSync prepares the clinical picture. Your team focuses on care.</p>
             <div className="cta__actions reveal">
               <button
-                onClick={() => onLaunchApp('kiosk')}
+                onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
                 className="btn btn--solid btn--lg"
                 data-cursor="launch"
                 data-action="launch-app"
                 data-tab="kiosk"
               >
-                <span>Launch Web App</span>
+                <span>Sign in to get started</span>
                 <svg viewBox="0 0 24 24" fill="none" width="18" height="18" style={{ marginLeft: 8 }}>
                   <path
                     d="M5 12h14M13 6l6 6-6 6"

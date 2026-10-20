@@ -94,6 +94,7 @@ export const App: React.FC = () => {
   const [route, setRoute] = useState<'landing' | 'login' | 'app'>(() => parseRoute().view);
   const [activeTab, setActiveTab] = useState<TabType>(() => parseRoute().tab);
   const [currentUser, setCurrentUser] = useState<LoginSuccessPayload | null>(null);
+  const [loginTargetRole, setLoginTargetRole] = useState<'doctor' | 'kiosk' | 'auditor' | 'staff'>('doctor');
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -114,7 +115,10 @@ export const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleOpenLogin = () => {
+  const handleOpenLogin = (role?: 'doctor' | 'kiosk' | 'auditor' | 'staff') => {
+    if (role) {
+      setLoginTargetRole(role);
+    }
     setRoute('login');
     window.location.hash = '#/login';
     window.scrollTo(0, 0);
@@ -140,6 +144,7 @@ export const App: React.FC = () => {
   };
 
   const handleBackToLanding = () => {
+    setCurrentUser(null);
     setRoute('landing');
     window.location.hash = '#/';
     window.scrollTo(0, 0);
@@ -153,6 +158,7 @@ export const App: React.FC = () => {
             <LandingPage onLaunchApp={handleLaunchApp} onOpenLogin={handleOpenLogin} />
           ) : route === 'login' ? (
             <LoginPage
+              initialRole={loginTargetRole}
               onLoginSuccess={handleLoginSuccess}
               onBackToLanding={handleBackToLanding}
             />
