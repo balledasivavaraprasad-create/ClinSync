@@ -3,6 +3,7 @@
 import re
 import uuid
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, IntakeState
@@ -40,6 +41,7 @@ COMPLETION_PHRASES = [
 
 class ExtractedTurnSchema(BaseModel):
     """Schema validated by ModelGateway for structured fact extraction from a patient utterance."""
+
     chief_complaint: str | None = None
     duration_onset: str | None = None
     severity_progression: str | None = None
@@ -52,6 +54,7 @@ class ExtractedTurnSchema(BaseModel):
 
 class NextQuestionSchema(BaseModel):
     """Schema for single targeted next question."""
+
     question: str
     target_field: str
     clinical_intent: str
@@ -60,13 +63,24 @@ class NextQuestionSchema(BaseModel):
 def _deterministic_extract(text: str, state: IntakeState) -> ExtractedTurnSchema:
     """Deterministic extractor fallback when model gateway is offline or unavailable."""
     text_lower = text.lower()
-    
+
     # Identify chief complaint
     chief = None
     common_complaints = [
-        "sore throat", "cough", "fever", "headache", "dizzy", "dizziness",
-        "sprained ankle", "abdominal pain", "back pain", "knee pain",
-        "fatigue", "rash", "earache", "nausea"
+        "sore throat",
+        "cough",
+        "fever",
+        "headache",
+        "dizzy",
+        "dizziness",
+        "sprained ankle",
+        "abdominal pain",
+        "back pain",
+        "knee pain",
+        "fatigue",
+        "rash",
+        "earache",
+        "nausea",
     ]
     for c in common_complaints:
         if c in text_lower:
@@ -77,7 +91,9 @@ def _deterministic_extract(text: str, state: IntakeState) -> ExtractedTurnSchema
 
     # Identify duration/onset
     duration = None
-    dur_match = re.search(r"(\d+\s+(?:days?|weeks?|months?|hours?)|yesterday(?:\s+morning)?)", text_lower)
+    dur_match = re.search(
+        r"(\d+\s+(?:days?|weeks?|months?|hours?)|yesterday(?:\s+morning)?)", text_lower
+    )
     if dur_match:
         duration = dur_match.group(1)
 
@@ -124,7 +140,11 @@ def safety_triage_node(state: IntakeState) -> dict[str, Any]:
     # 1. Deterministic acute red flags check
     for pattern in ACUTE_RED_FLAGS:
         if re.search(pattern, input_text):
-            modality_src = "PATIENT_FORM" if getattr(state, "input_modality", "VOICE") == "TOUCH_TEXT" else "PATIENT_VOICE"
+            modality_src = (
+                "PATIENT_FORM"
+                if getattr(state, "input_modality", "VOICE") == "TOUCH_TEXT"
+                else "PATIENT_VOICE"
+            )
             emergency_fact = ClinicalFactModel(
                 id=f"FACT-EMERG-{uuid.uuid4().hex[:8].upper()}",
                 patient_id=state.patient_id,
@@ -155,7 +175,8 @@ def safety_triage_node(state: IntakeState) -> dict[str, Any]:
             "status": state.status,
             "emergency_rationale": None,
             "next_question": "Please describe your physical health symptoms or reason for your doctor visit.",
-            "notes": state.notes + [f"Adversarial prompt injection pattern blocked: {safety.reason}"],
+            "notes": state.notes
+            + [f"Adversarial prompt injection pattern blocked: {safety.reason}"],
         }
 
     return {
@@ -217,7 +238,11 @@ def extract_facts_node(state: IntakeState, gateway: ModelGateway | None = None) 
     ):
         extracted = _deterministic_extract(input_text, state)
 
-    modality_source = "PATIENT_FORM" if getattr(state, "input_modality", "VOICE") == "TOUCH_TEXT" else "PATIENT_VOICE"
+    modality_source = (
+        "PATIENT_FORM"
+        if getattr(state, "input_modality", "VOICE") == "TOUCH_TEXT"
+        else "PATIENT_VOICE"
+    )
     updated_conflicts = list(state.conflicting_fields)
     updated_facts = [f.model_copy() for f in state.extracted_facts]
     new_facts: list[ClinicalFactModel] = []
@@ -367,9 +392,13 @@ def extract_facts_node(state: IntakeState, gateway: ModelGateway | None = None) 
     if extracted.associated_symptoms:
         updated_known["associated_symptoms"] = extracted.associated_symptoms
     if extracted.medications_mentioned:
-        updated_known["medications"] = list(set(updated_known.get("medications", []) + extracted.medications_mentioned))
+        updated_known["medications"] = list(
+            set(updated_known.get("medications", []) + extracted.medications_mentioned)
+        )
     if extracted.allergies_mentioned:
-        updated_known["allergies"] = list(set(updated_known.get("allergies", []) + extracted.allergies_mentioned))
+        updated_known["allergies"] = list(
+            set(updated_known.get("allergies", []) + extracted.allergies_mentioned)
+        )
 
     updated_missing = [f for f in state.missing_fields if f not in updated_known]
     updated_uncertain = list(set(state.uncertain_fields + extracted.uncertainties))
@@ -401,19 +430,26 @@ def check_stopping_node(state: IntakeState) -> dict[str, Any]:
         return {
             "status": "COMPLETED",
             "next_question": None,
-            "notes": state.notes + [f"Intake reached maximum bounded turn count ({state.max_turns})."],
+            "notes": state.notes
+            + [f"Intake reached maximum bounded turn count ({state.max_turns})."],
         }
 
     # Condition C: All core required intake fields collected
     required_core = {"chief_complaint", "duration_onset"}
-    if required_core.issubset(set(state.known_fields.keys())) and len(state.uncertain_fields) == 0 and len(state.conflicting_fields) == 0:
+    if (
+        required_core.issubset(set(state.known_fields.keys()))
+        and len(state.uncertain_fields) == 0
+        and len(state.conflicting_fields) == 0
+    ):
         if state.turn_count >= 2:
             return {"status": "COMPLETED", "next_question": None}
 
     return {"status": "IN_PROGRESS"}
 
 
-def generate_question_node(state: IntakeState, gateway: ModelGateway | None = None) -> dict[str, Any]:
+def generate_question_node(
+    state: IntakeState, gateway: ModelGateway | None = None
+) -> dict[str, Any]:
     """Node 4: Generates the single next relevant question prioritizing conflicting and missing fields."""
     if state.status != "IN_PROGRESS":
         return {"next_question": None}
@@ -449,7 +485,9 @@ def generate_question_node(state: IntakeState, gateway: ModelGateway | None = No
     if state.conflicting_fields:
         target_field = state.conflicting_fields[0]
         if target_field not in fallback_questions:
-            fallback_questions[target_field] = f"Could you please clarify the details regarding your {target_field.replace('_', ' ')} for the medical record?"
+            fallback_questions[target_field] = (
+                f"Could you please clarify the details regarding your {target_field.replace('_', ' ')} for the medical record?"
+            )
     elif state.uncertain_fields:
         target_field = state.uncertain_fields[0]
     elif "chief_complaint" in state.missing_fields:
@@ -487,7 +525,7 @@ def generate_question_node(state: IntakeState, gateway: ModelGateway | None = No
         # Deterministic template fallback
         question_text = fallback_questions.get(
             target_field,
-            f"Is there anything else regarding your {cc or 'symptoms'} or health you would like the doctor to know?"
+            f"Is there anything else regarding your {cc or 'symptoms'} or health you would like the doctor to know?",
         )
 
     # Record question into Mem0 memory harness

@@ -1,6 +1,7 @@
 """Constrained specialty recommender with ModelGateway adapter and deterministic fallback."""
 
 import re
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel
@@ -14,6 +15,7 @@ from clinsync_ai.routing.specialty_catalog import (
 
 class SpecialtyCandidateSchema(BaseModel):
     """Structured candidate output schema validated by ModelGateway."""
+
     candidate_department_id: str
     confidence: float = 0.8
     clinical_rationale: str
@@ -23,6 +25,7 @@ class SpecialtyCandidateSchema(BaseModel):
 
 class SpecialtyRecommendation(BaseModel):
     """Validated specialty recommendation strictly constrained to allowlisted departments."""
+
     department_id: str | None = None
     department_name: str | None = None
     confidence: float = 0.0
@@ -35,21 +38,104 @@ class SpecialtyRecommendation(BaseModel):
 # Deterministic mapping heuristics for common clinical concepts
 KEYWORD_DEPARTMENT_MAPPINGS: list[tuple[list[str], str]] = [
     # Cardiology
-    (["palpitation", "fluttering", "irregular heartbeat", "arrhythmia", "elevated blood pressure", "hypertension", "murmur", "tachycardia"], "dept_cardiology"),
+    (
+        [
+            "palpitation",
+            "fluttering",
+            "irregular heartbeat",
+            "arrhythmia",
+            "elevated blood pressure",
+            "hypertension",
+            "murmur",
+            "tachycardia",
+        ],
+        "dept_cardiology",
+    ),
     # Pulmonology
     (["cough", "wheezing", "asthma", "bronchitis", "phlegm", "sputum"], "dept_pulmonology"),
     # Neurology
-    (["migraine", "chronic headache", "tremor", "tingling", "neuropathy", "carpal tunnel", "vertigo", "dizziness"], "dept_neurology"),
+    (
+        [
+            "migraine",
+            "chronic headache",
+            "tremor",
+            "tingling",
+            "neuropathy",
+            "carpal tunnel",
+            "vertigo",
+            "dizziness",
+        ],
+        "dept_neurology",
+    ),
     # Orthopedics
-    (["sprained", "ankle", "knee pain", "back pain", "shoulder pain", "joint pain", "fracture", "stiffness", "arthritis", "hip pain", "swollen joint"], "dept_orthopedics"),
+    (
+        [
+            "sprained",
+            "ankle",
+            "knee pain",
+            "back pain",
+            "shoulder pain",
+            "joint pain",
+            "fracture",
+            "stiffness",
+            "arthritis",
+            "hip pain",
+            "swollen joint",
+        ],
+        "dept_orthopedics",
+    ),
     # ENT
-    (["sore throat", "earache", "ear pain", "sinus", "congestion", "hoarseness", "hearing loss", "tinnitus", "runny nose", "post-nasal drip"], "dept_ent"),
+    (
+        [
+            "sore throat",
+            "earache",
+            "ear pain",
+            "sinus",
+            "congestion",
+            "hoarseness",
+            "hearing loss",
+            "tinnitus",
+            "runny nose",
+            "post-nasal drip",
+        ],
+        "dept_ent",
+    ),
     # Dermatology
-    (["rash", "itching", "pruritus", "eczema", "hives", "lesion", "dry patch", "dermatitis", "mole", "acne"], "dept_dermatology"),
+    (
+        [
+            "rash",
+            "itching",
+            "pruritus",
+            "eczema",
+            "hives",
+            "lesion",
+            "dry patch",
+            "dermatitis",
+            "mole",
+            "acne",
+        ],
+        "dept_dermatology",
+    ),
     # General Internal Medicine
-    (["fatigue", "unexplained weight loss", "fever", "chills", "diabetes", "multisystem", "general illness", "malaise", "swollen glands"], "dept_internal_med"),
+    (
+        [
+            "fatigue",
+            "unexplained weight loss",
+            "fever",
+            "chills",
+            "diabetes",
+            "multisystem",
+            "general illness",
+            "malaise",
+            "swollen glands",
+        ],
+        "dept_internal_med",
+    ),
     # General Practice
-    (["checkup", "annual exam", "physical", "routine check", "vaccine", "vaccination", "refill"], "dept_general_practice"),
+    (
+        ["checkup", "annual exam", "physical", "routine check", "vaccine", "vaccination", "refill"],
+        "dept_general_practice",
+    ),
 ]
 
 
@@ -78,7 +164,9 @@ class SpecialtyRecommender:
                 if f.fact_type in ("symptom", "condition", "chief_complaint"):
                     all_symptom_tokens.append(f"{f.concept} {f.value}")
 
-        combined_text = " ".join(all_symptom_tokens + ([context_notes] if context_notes else [])).strip()
+        combined_text = " ".join(
+            all_symptom_tokens + ([context_notes] if context_notes else [])
+        ).strip()
 
         # Check for empty / uninformative input
         if not combined_text:
@@ -147,7 +235,10 @@ class SpecialtyRecommender:
 
         if not dept_scores:
             # Fallback to general practice or internal medicine if generic mild illness
-            if any(term in text_lower for term in ["sick", "unwell", "feeling bad", "checkup", "doctor"]):
+            if any(
+                term in text_lower
+                for term in ["sick", "unwell", "feeling bad", "checkup", "doctor"]
+            ):
                 gp = get_department("dept_general_practice")
                 return SpecialtyRecommendation(
                     department_id="dept_general_practice",

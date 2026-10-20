@@ -115,7 +115,12 @@ def test_generate_question_targets_missing_fields_without_repetition(offline_gat
     result = generate_question_node(state, gateway=offline_gateway)
     question = result["next_question"]
     assert question is not None
-    assert "long" in question.lower() or "start" in question.lower() or "duration" in question.lower() or "health" in question.lower()
+    assert (
+        "long" in question.lower()
+        or "start" in question.lower()
+        or "duration" in question.lower()
+        or "health" in question.lower()
+    )
 
 
 def test_langgraph_workflow_compilation(offline_gateway):
@@ -190,7 +195,9 @@ def test_adaptive_intake_service_turn_orchestration(offline_gateway):
     assert res2.turn_count == 2
     session = service.get_session("ENC-SVC-01")
     assert session is not None
-    assert "duration_onset" in session.known_fields or "severity_progression" in session.known_fields
+    assert (
+        "duration_onset" in session.known_fields or "severity_progression" in session.known_fields
+    )
 
     # Turn 3 - Conclude
     req3 = IntakeTurnRequest(

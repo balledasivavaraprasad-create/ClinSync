@@ -7,29 +7,42 @@ demo rules and a human escalation path before routine slot matching."
 
 import re
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.guardrails.prompt_guard import PromptGuard
 
-
 # Comprehensive deterministic acute red flags requiring immediate human escalation
 ACUTE_RED_FLAGS: list[tuple[str, str]] = [
     # Cardiovascular / Acute Coronary Syndrome
-    (r"\b(?:crushing|severe|radiating|acute)\s+chest\s+pain\b", "ACUTE_CORONARY_SYNDROME_SUSPECTED"),
-    (r"\bchest\s+pain\s+(?:radiat\w*|spread\w*)\s+(?:to\s+)?(?:left\s+)?(?:arm|jaw|shoulder|neck|back)\b", "ACUTE_CORONARY_SYNDROME_SUSPECTED"),
-    (r"\b(?:pressure|tightness|squeezing)\s+in\s+(?:my\s+|the\s+)?chest\b", "ACUTE_CORONARY_SYNDROME_SUSPECTED"),
+    (
+        r"\b(?:crushing|severe|radiating|acute)\s+chest\s+pain\b",
+        "ACUTE_CORONARY_SYNDROME_SUSPECTED",
+    ),
+    (
+        r"\bchest\s+pain\s+(?:radiat\w*|spread\w*)\s+(?:to\s+)?(?:left\s+)?(?:arm|jaw|shoulder|neck|back)\b",
+        "ACUTE_CORONARY_SYNDROME_SUSPECTED",
+    ),
+    (
+        r"\b(?:pressure|tightness|squeezing)\s+in\s+(?:my\s+|the\s+)?chest\b",
+        "ACUTE_CORONARY_SYNDROME_SUSPECTED",
+    ),
     (r"\b(?:severe\s+)?chest\s+pain\b", "CHEST_PAIN_EMERGENCY"),
-    
     # Respiratory Distress / Hypoxia
     (r"\b(?:can(?:'t|not)|unable\s+to)\s+breathe\b", "ACUTE_RESPIRATORY_DISTRESS"),
     (r"\bsevere\s+shortness\s+of\s+breath\b", "ACUTE_RESPIRATORY_DISTRESS"),
-    (r"\b(?:struggling|difficulty|trouble|fighting)\s+(?:to\s+breathe|breathing)\b", "ACUTE_RESPIRATORY_DISTRESS"),
+    (
+        r"\b(?:struggling|difficulty|trouble|fighting)\s+(?:to\s+breathe|breathing)\b",
+        "ACUTE_RESPIRATORY_DISTRESS",
+    ),
     (r"\bgasping(?:\s+for\s+(?:air|breath))?\b", "ACUTE_RESPIRATORY_DISTRESS"),
     (r"\bstridor\b", "UPPER_AIRWAY_OBSTRUCTION"),
     (r"\bcyanosis|blue\s+lips|turning\s+blue\b", "SEVERE_HYPOXIA"),
-
     # Neurological / Acute Stroke (FAST criteria)
-    (r"\b(?:sudden|acute)\s+(?:numbness|paralysis|weakness)\s+(?:on\s+)?(?:one\s+side|unilateral)\b", "ACUTE_STROKE_PRESENTATION"),
+    (
+        r"\b(?:sudden|acute)\s+(?:numbness|paralysis|weakness)\s+(?:on\s+)?(?:one\s+side|unilateral)\b",
+        "ACUTE_STROKE_PRESENTATION",
+    ),
     (r"\bfacial\s+droop(?:ing)?\b", "ACUTE_STROKE_PRESENTATION"),
     (r"\bslurred\s+speech|trouble\s+speaking|cannot\s+speak\b", "ACUTE_STROKE_PRESENTATION"),
     (r"\bworst\s+headache\s+of\s+(?:my\s+)?life\b", "SUBARACHNOID_HEMORRHAGE_SUSPECTED"),
@@ -37,17 +50,17 @@ ACUTE_RED_FLAGS: list[tuple[str, str]] = [
     (r"\bloss\s+of\s+consciousness\b", "SYNCOPE_OR_LOSS_OF_CONSCIOUSNESS"),
     (r"\b(?:passed\s+out|fainted|blacked\s+out|collapsed)\b", "SYNCOPE_OR_LOSS_OF_CONSCIOUSNESS"),
     (r"\bseizure|convulsing|convulsions\b", "ACTIVE_SEIZURE"),
-
     # Anaphylaxis / Airway Compromise
     (r"\bthroat\s+(?:is\s+)?(?:closing|swelling|tightening)\b", "ANAPHYLAXIS_AIRWAY_COMPROMISE"),
-    (r"\bswelling\s+of\s+(?:the\s+|my\s+)?(?:lips|tongue|throat|uvula)\b", "ANAPHYLAXIS_AIRWAY_COMPROMISE"),
+    (
+        r"\bswelling\s+of\s+(?:the\s+|my\s+)?(?:lips|tongue|throat|uvula)\b",
+        "ANAPHYLAXIS_AIRWAY_COMPROMISE",
+    ),
     (r"\banaphylaxis\b", "ANAPHYLAXIS_AIRWAY_COMPROMISE"),
-
     # Severe Hemorrhage
     (r"\bcoughing\s+(?:up\s+)?(?:large\s+amounts\s+of\s+)?blood\b", "MASSIVE_HEMOPTYSIS"),
     (r"\bvomiting\s+(?:up\s+)?blood\b", "UPPER_GI_BLEED_HEMATEMESIS"),
     (r"\buncontrolled\s+bleeding|profuse\s+bleeding\b", "SEVERE_HEMORRHAGE"),
-
     # Psychiatric Acute Crisis
     (r"\b(?:kill|harm|end)\s+(?:myself|my\s+life)\b", "ACUTE_PSYCHIATRIC_CRISIS"),
     (r"\bsuicid(?:e|al)(?:\s+(?:thoughts?|ideation|plan))?\b", "ACUTE_PSYCHIATRIC_CRISIS"),
@@ -56,7 +69,10 @@ ACUTE_RED_FLAGS: list[tuple[str, str]] = [
 
 class TriageEvaluation(BaseModel):
     """Result of deterministic triage policy evaluation."""
-    decision: Literal["ROUTINE_SCHEDULING", "HUMAN_REVIEW", "URGENT_ESCALATION", "UNABLE_TO_DETERMINE"]
+
+    decision: Literal[
+        "ROUTINE_SCHEDULING", "HUMAN_REVIEW", "URGENT_ESCALATION", "UNABLE_TO_DETERMINE"
+    ]
     is_emergency: bool
     reason_codes: list[str] = Field(default_factory=list)
     flagged_patterns: list[str] = Field(default_factory=list)
@@ -103,8 +119,11 @@ class TriagePolicyGuard:
             is_valid_department_id,
             normalize_department_candidate,
         )
+
         # 1. Deterministic Red Flag Safety Check (TOP PRIORITY)
-        is_emergency, red_flag_codes, red_flag_patterns = self.evaluate_text_for_emergency(patient_input)
+        is_emergency, red_flag_codes, red_flag_patterns = self.evaluate_text_for_emergency(
+            patient_input
+        )
         if is_emergency:
             # Mandatory rule: Emergency symptoms ALWAYS escalate to urgent evaluation regardless of model output
             override_occurred = candidate_decision != "URGENT_ESCALATION"
@@ -194,7 +213,10 @@ class TriagePolicyGuard:
                 return TriageEvaluation(
                     decision="HUMAN_REVIEW",
                     is_emergency=False,
-                    reason_codes=["UNAUTHORIZED_DEPARTMENT_REJECTED", "AMBIGUOUS_CLINICAL_PRESENTATION"],
+                    reason_codes=[
+                        "UNAUTHORIZED_DEPARTMENT_REJECTED",
+                        "AMBIGUOUS_CLINICAL_PRESENTATION",
+                    ],
                     flagged_patterns=[f"invalid_dept:{candidate_department_id}"],
                     clinical_rationale=(
                         f"Proposed department '{candidate_department_id}' is not in the hospital's "

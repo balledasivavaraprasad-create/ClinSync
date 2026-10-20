@@ -2,6 +2,7 @@
 
 import re
 import uuid
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.brief.audio import AudioBriefService
@@ -16,12 +17,23 @@ from clinsync_ai.routing.gateway import ModelGateway
 
 class LLMBriefOutput(BaseModel):
     """Raw structured output schema requested from the generative model."""
+
     summary_text: str = Field(description="Comprehensive clinician-facing summary text")
-    chief_complaint_summary: str = Field(description="Summary of presenting complaint and acute symptoms")
-    pertinent_findings: list[str] = Field(description="Clinical observations and findings with citations")
-    historical_summary: str = Field(description="Summary of prior recorded health status and baseline")
-    conflicts_and_risks: list[str] = Field(description="Explicit contradictions or safety flags identified")
-    cited_fact_ids: list[str] = Field(default_factory=list, description="List of exact fact IDs referenced")
+    chief_complaint_summary: str = Field(
+        description="Summary of presenting complaint and acute symptoms"
+    )
+    pertinent_findings: list[str] = Field(
+        description="Clinical observations and findings with citations"
+    )
+    historical_summary: str = Field(
+        description="Summary of prior recorded health status and baseline"
+    )
+    conflicts_and_risks: list[str] = Field(
+        description="Explicit contradictions or safety flags identified"
+    )
+    cited_fact_ids: list[str] = Field(
+        default_factory=list, description="List of exact fact IDs referenced"
+    )
 
 
 class DoctorBriefGenerator:
@@ -70,11 +82,15 @@ class DoctorBriefGenerator:
             elif "extracted" in f.status or st_upper in ("UPLOADED_DOCUMENT", "DOCUMENT", "UPLOAD"):
                 extracted_facts.append(fact_label)
             elif f.status == "conflicting":
-                conflict_note = f"Conflicting claim [{f.id}]: {f.concept} = {f.value} (Source: {f.source_type})"
+                conflict_note = (
+                    f"Conflicting claim [{f.id}]: {f.concept} = {f.value} (Source: {f.source_type})"
+                )
                 if conflict_note not in conflicts:
                     conflicts.append(conflict_note)
             elif f.status == "uncertain":
-                uncertain_note = f"Uncertain clinical statement [{f.id}]: {f.concept} = {f.value} (Unverified)"
+                uncertain_note = (
+                    f"Uncertain clinical statement [{f.id}]: {f.concept} = {f.value} (Unverified)"
+                )
                 if uncertain_note not in missing:
                     missing.append(uncertain_note)
 
@@ -90,10 +106,15 @@ class DoctorBriefGenerator:
                         conflicts.append(conflict_str)
 
         # 3. Assemble prompt for Gemini primary generation
-        facts_manifest = "\n".join([
-            f"- [{f.id}] ({f.source_type}/{f.status}) {f.concept}: {f.value} (source_id: {f.source_id})"
-            for f in all_facts
-        ]) or "No facts recorded."
+        facts_manifest = (
+            "\n".join(
+                [
+                    f"- [{f.id}] ({f.source_type}/{f.status}) {f.concept}: {f.value} (source_id: {f.source_id})"
+                    for f in all_facts
+                ]
+            )
+            or "No facts recorded."
+        )
 
         conflicts_manifest = "\n".join([f"- {c}" for c in conflicts]) or "None identified."
         missing_manifest = "\n".join([f"- {m}" for m in missing]) or "None noted."
@@ -117,7 +138,11 @@ class DoctorBriefGenerator:
         # 4. Invoke ModelGateway
         parsed_output: LLMBriefOutput | None = None
         generation_provider = getattr(self.gateway.primary, "provider_name", "gemini")
-        generation_model = getattr(self.gateway.primary, "model_name", getattr(self.gateway.primary, "_default_model", "gemini-3.8-flash"))
+        generation_model = getattr(
+            self.gateway.primary,
+            "model_name",
+            getattr(self.gateway.primary, "_default_model", "gemini-3.8-flash"),
+        )
 
         try:
             parsed, resp = self.gateway.generate_structured(
@@ -157,30 +182,36 @@ class DoctorBriefGenerator:
         # 5. Extract citations and enforce zero-hallucination guardrail
         valid_citations: list[Citation] = []
         seen_fact_ids: set[str] = set()
-        valid_source_index: dict[str, ClinicalFactModel] = {f.source_id: f for f in all_facts if f.source_id}
+        valid_source_index: dict[str, ClinicalFactModel] = {
+            f.source_id: f for f in all_facts if f.source_id
+        }
 
         def _try_add_citation(ident: str) -> None:
             clean = ident.strip()
             if clean in valid_fact_index and clean not in seen_fact_ids:
                 f_obj = valid_fact_index[clean]
-                valid_citations.append(Citation(
-                    fact_id=f_obj.id,
-                    source_id=f_obj.source_id,
-                    source_type=f_obj.source_type,
-                    concept=f_obj.concept,
-                    excerpt=f"{f_obj.concept}: {f_obj.value}",
-                ))
-                seen_fact_ids.add(clean)
-            elif clean in valid_source_index:
-                f_obj = valid_source_index[clean]
-                if f_obj.id not in seen_fact_ids:
-                    valid_citations.append(Citation(
+                valid_citations.append(
+                    Citation(
                         fact_id=f_obj.id,
                         source_id=f_obj.source_id,
                         source_type=f_obj.source_type,
                         concept=f_obj.concept,
                         excerpt=f"{f_obj.concept}: {f_obj.value}",
-                    ))
+                    )
+                )
+                seen_fact_ids.add(clean)
+            elif clean in valid_source_index:
+                f_obj = valid_source_index[clean]
+                if f_obj.id not in seen_fact_ids:
+                    valid_citations.append(
+                        Citation(
+                            fact_id=f_obj.id,
+                            source_id=f_obj.source_id,
+                            source_type=f_obj.source_type,
+                            concept=f_obj.concept,
+                            excerpt=f"{f_obj.concept}: {f_obj.value}",
+                        )
+                    )
                     seen_fact_ids.add(f_obj.id)
 
         # Check citations explicitly cited in output
@@ -195,13 +226,15 @@ class DoctorBriefGenerator:
         # If model cited zero citations, attach citations from all validated facts
         if not valid_citations and all_facts:
             for f_obj in all_facts[:6]:
-                valid_citations.append(Citation(
-                    fact_id=f_obj.id,
-                    source_id=f_obj.source_id,
-                    source_type=f_obj.source_type,
-                    concept=f_obj.concept,
-                    excerpt=f"{f_obj.concept}: {f_obj.value}",
-                ))
+                valid_citations.append(
+                    Citation(
+                        fact_id=f_obj.id,
+                        source_id=f_obj.source_id,
+                        source_type=f_obj.source_type,
+                        concept=f_obj.concept,
+                        excerpt=f"{f_obj.concept}: {f_obj.value}",
+                    )
+                )
 
         # 6. Compose structured sections
         sections = [
@@ -212,7 +245,8 @@ class DoctorBriefGenerator:
             ),
             BriefSection(
                 title="Pertinent Clinical Findings & Documents",
-                content="\n".join(f"- {p}" for p in parsed_output.pertinent_findings) or "No pertinent document findings.",
+                content="\n".join(f"- {p}" for p in parsed_output.pertinent_findings)
+                or "No pertinent document findings.",
                 fact_ids=[f.id for f in current_facts if f.source_type in ("document", "upload")],
             ),
             BriefSection(
@@ -222,7 +256,10 @@ class DoctorBriefGenerator:
             ),
             BriefSection(
                 title="Conflicts, Uncertainties & Risk Flags",
-                content="\n".join(f"- {c}" for c in (parsed_output.conflicts_and_risks or conflicts)) or "No clinical contradictions noted.",
+                content="\n".join(
+                    f"- {c}" for c in (parsed_output.conflicts_and_risks or conflicts)
+                )
+                or "No clinical contradictions noted.",
                 fact_ids=[f.id for f in all_facts if f.status == "conflicting"],
             ),
         ]
@@ -279,19 +316,26 @@ class DoctorBriefGenerator:
         ]
 
         if patient_reported:
-            summary_paragraphs.append(f"Patient-reported symptoms include: {'; '.join(patient_reported)}.")
+            summary_paragraphs.append(
+                f"Patient-reported symptoms include: {'; '.join(patient_reported)}."
+            )
         if extracted_facts:
-            summary_paragraphs.append(f"Extracted document findings confirm: {'; '.join(extracted_facts)}.")
+            summary_paragraphs.append(
+                f"Extracted document findings confirm: {'; '.join(extracted_facts)}."
+            )
         if historical_records:
             summary_paragraphs.append(f"Baseline history shows: {'; '.join(historical_records)}.")
         if conflicts:
-            summary_paragraphs.append(f"ATTENTION: {len(conflicts)} unresolved contradiction(s) flagged: {'; '.join(conflicts)}.")
+            summary_paragraphs.append(
+                f"ATTENTION: {len(conflicts)} unresolved contradiction(s) flagged: {'; '.join(conflicts)}."
+            )
 
         return LLMBriefOutput(
             summary_text="\n\n".join(summary_paragraphs),
             chief_complaint_summary=f"Patient presents with {cc}. Acute reported intake: {'; '.join(patient_reported) or 'None'}.",
             pertinent_findings=extracted_facts or ["No prior clinical documents provided."],
             historical_summary=f"Recorded medical baseline: {'; '.join(historical_records) or 'No historical record on file.'}",
-            conflicts_and_risks=conflicts or ["No active safety or clinical contradictions identified."],
+            conflicts_and_risks=conflicts
+            or ["No active safety or clinical contradictions identified."],
             cited_fact_ids=[f.id for f in all_facts[:6]],
         )

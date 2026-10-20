@@ -2,13 +2,13 @@
 
 import os
 import time
-import pytest
-from dotenv import load_dotenv
-from pydantic import BaseModel
 
+import pytest
 from clinsync_ai.providers.errors import ProviderRateLimitError, ProviderUnavailableError
 from clinsync_ai.providers.gemini import GeminiProvider
 from clinsync_ai.providers.groq import GroqProvider
+from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 RUN_LIVE = os.getenv("RUN_LIVE_TESTS", "false").lower() == "true"

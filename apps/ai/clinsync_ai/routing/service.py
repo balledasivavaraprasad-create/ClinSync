@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel
@@ -13,7 +14,10 @@ from clinsync_ai.routing.recommender import SpecialtyRecommender
 
 class DecisionResult(BaseModel):
     """Routing decision details matching OpenAPI 3.1.0 DecisionResultResponse data property."""
-    decision: Literal["ROUTINE_SCHEDULING", "HUMAN_REVIEW", "URGENT_ESCALATION", "UNABLE_TO_DETERMINE"]
+
+    decision: Literal[
+        "ROUTINE_SCHEDULING", "HUMAN_REVIEW", "URGENT_ESCALATION", "UNABLE_TO_DETERMINE"
+    ]
     reason_codes: list[str] = Field(default_factory=list)
     recommended_department_id: str | None = None
     policy_version: str = "clinsync-policy-v1.0"
@@ -22,6 +26,7 @@ class DecisionResult(BaseModel):
 
 class DecisionResultResponse(BaseModel):
     """Top-level response envelope matching OpenAPI /encounters/{id}/routing-review."""
+
     data: DecisionResult
     request_id: str = Field(default_factory=lambda: f"req_routing_{uuid.uuid4().hex[:12]}")
 
@@ -51,7 +56,7 @@ class RoutingReviewService:
     ) -> DecisionResultResponse:
         """Run deterministic triage policy and constrained specialty routing."""
         req_id = request_id or f"req_routing_{uuid.uuid4().hex[:12]}"
-        
+
         # 1. First Pass: Deterministic Emergency Red Flag Check
         combined_text = " ".join(filter(None, [patient_input, chief_complaint] + (symptoms or [])))
         is_emerg, red_codes, red_pats = self.guard.evaluate_text_for_emergency(combined_text)

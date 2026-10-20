@@ -1,6 +1,7 @@
 """Audio summary generation and graceful text fallback service."""
 
 from typing import Any
+
 from clinsync_ai.brief.models import AudioStatus
 
 

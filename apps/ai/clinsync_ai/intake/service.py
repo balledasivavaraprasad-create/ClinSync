@@ -1,6 +1,7 @@
 """Adaptive intake service orchestrating LangGraph workflow turns."""
 
 import uuid
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, IntakeState
@@ -10,6 +11,7 @@ from clinsync_ai.routing.gateway import ModelGateway
 
 class IntakeTurnRequest(BaseModel):
     """Input payload matching IntakeAnswerRequest contract."""
+
     field_key: str = "patient_response"
     raw_response: str
     input_modality: str = "VOICE"
@@ -17,6 +19,7 @@ class IntakeTurnRequest(BaseModel):
 
 class IntakeTurnResponseData(BaseModel):
     """Inner data container for IntakeStateResponse contract."""
+
     encounter_id: str
     turn_count: int
     status: str
@@ -26,6 +29,7 @@ class IntakeTurnResponseData(BaseModel):
 
 class IntakeTurnResponse(BaseModel):
     """Outer contract envelope matching IntakeStateResponse."""
+
     data: IntakeTurnResponseData
     request_id: str
 

@@ -3,6 +3,7 @@
 import base64
 import hashlib
 import re
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.guardrails.prompt_guard import PromptGuard
@@ -10,6 +11,7 @@ from clinsync_ai.guardrails.prompt_guard import PromptGuard
 
 class DocumentPage(BaseModel):
     """Single page within a parsed document with page coordinate and text."""
+
     page_number: int
     text: str
     checksum: str | None = None
@@ -17,6 +19,7 @@ class DocumentPage(BaseModel):
 
 class ParsedDocument(BaseModel):
     """Parsed document container retaining metadata, page boundaries, and safety status."""
+
     document_id: str
     filename: str
     mime_type: str

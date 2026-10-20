@@ -2,6 +2,7 @@
 
 import json
 from typing import Any, Type, TypeVar
+
 from pydantic import BaseModel
 
 from clinsync_ai.providers.base import ModelProvider, ModelResponse, TokenUsage
@@ -51,13 +52,21 @@ class FakeModelProvider(ModelProvider):
             return
         err = self.simulate_error.lower()
         if "rate_limit" in err or "429" in err:
-            raise ProviderRateLimitError("Simulated 429 rate limit exceeded", provider=self.provider_name)
+            raise ProviderRateLimitError(
+                "Simulated 429 rate limit exceeded", provider=self.provider_name
+            )
         elif "timeout" in err or "408" in err:
-            raise ProviderTimeoutError("Simulated inference timeout", provider=self.provider_name, timeout_seconds=5.0)
+            raise ProviderTimeoutError(
+                "Simulated inference timeout", provider=self.provider_name, timeout_seconds=5.0
+            )
         elif "auth" in err or "401" in err:
-            raise ProviderAuthenticationError("Simulated invalid credentials", provider=self.provider_name)
+            raise ProviderAuthenticationError(
+                "Simulated invalid credentials", provider=self.provider_name
+            )
         elif "unavailable" in err or "503" in err:
-            raise ProviderUnavailableError("Simulated service outage", provider=self.provider_name, status_code=503)
+            raise ProviderUnavailableError(
+                "Simulated service outage", provider=self.provider_name, status_code=503
+            )
 
     def generate_text(
         self,
@@ -68,12 +77,14 @@ class FakeModelProvider(ModelProvider):
         max_tokens: int = 1024,
         timeout: float = 30.0,
     ) -> ModelResponse:
-        self.call_history.append({
-            "type": "text",
-            "prompt": prompt,
-            "system_instruction": system_instruction,
-            "model": model or self._default_model,
-        })
+        self.call_history.append(
+            {
+                "type": "text",
+                "prompt": prompt,
+                "system_instruction": system_instruction,
+                "model": model or self._default_model,
+            }
+        )
         self._check_simulated_error()
 
         usage = TokenUsage(
@@ -99,13 +110,15 @@ class FakeModelProvider(ModelProvider):
         temperature: float = 0.0,
         timeout: float = 30.0,
     ) -> tuple[T, ModelResponse]:
-        self.call_history.append({
-            "type": "structured",
-            "prompt": prompt,
-            "response_schema": response_schema.__name__,
-            "system_instruction": system_instruction,
-            "model": model or self._default_model,
-        })
+        self.call_history.append(
+            {
+                "type": "structured",
+                "prompt": prompt,
+                "response_schema": response_schema.__name__,
+                "system_instruction": system_instruction,
+                "model": model or self._default_model,
+            }
+        )
         self._check_simulated_error()
 
         raw_str = ""

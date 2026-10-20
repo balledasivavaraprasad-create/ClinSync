@@ -78,3 +78,54 @@ def test_verify_trace_redaction_audit():
     passed, violations = verify_trace_redaction(records)
     assert passed is True
     assert len(violations) == 0
+
+
+def test_langfuse_client_dispatch_receives_only_redacted_payloads():
+    """Verify that Langfuse client receives 100% redacted inputs, outputs, and metadata."""
+    from unittest.mock import MagicMock
+
+    tm = TraceManager(enabled=True)
+    mock_langfuse = MagicMock()
+    tm._langfuse_client = mock_langfuse
+
+    tm.record_step(
+        trace_id="trace-langfuse-audit",
+        step_name="patient_intake_speech",
+        provider="gemini",
+        model="gemini-2.5-flash",
+        latency_ms=250.0,
+        prompt=(
+            "Patient SSN is 987-65-4321 and email is secret@patient.org with "
+            "key AIzaSyDdummyKey1234567890123456789012"
+        ),
+        output="Patient confirmed allergy to penicillin and phone 555-987-6543",
+        error="Bearer eyJhbGciOiJIUzI1NiJ9.secret failed",
+        metadata={
+            "patient_contact": "secret@patient.org",
+            "nested_info": {"ssn": "987-65-4321"},
+            "phone_list": ["555-987-6543"],
+        },
+    )
+
+    mock_langfuse.start_observation.assert_called_once()
+    _, kwargs = mock_langfuse.start_observation.call_args
+
+    # Check input/output
+    assert "987-65-4321" not in kwargs["input"]
+    assert "[REDACTED_SSN]" in kwargs["input"]
+    assert "secret@patient.org" not in kwargs["input"]
+    assert "[REDACTED_EMAIL]" in kwargs["input"]
+    assert "AIza" not in kwargs["input"]
+    assert "[REDACTED_KEY]" in kwargs["input"]
+
+    assert "555-987-6543" not in kwargs["output"]
+    assert "[REDACTED_PHONE]" in kwargs["output"]
+
+    assert "Bearer eyJhbGciOiJIUzI1NiJ9.secret" not in kwargs["status_message"]
+    assert "[REDACTED_TOKEN]" in kwargs["status_message"]
+
+    # Check metadata
+    meta = kwargs["metadata"]
+    assert meta["patient_contact"] == "[REDACTED_EMAIL]"
+    assert meta["nested_info"]["ssn"] == "[REDACTED_SSN]"
+    assert meta["phone_list"] == ["[REDACTED_PHONE]"]

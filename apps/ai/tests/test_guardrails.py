@@ -1,10 +1,10 @@
 """Tests for PromptGuard and OutputSchemaGuard."""
 
 import pytest
-from conftest import SampleStructuredOutput
 from clinsync_ai.guardrails.prompt_guard import PromptGuard
 from clinsync_ai.guardrails.schema_guard import OutputSchemaGuard
 from clinsync_ai.providers.errors import ModelProviderError, StructuredOutputValidationError
+from conftest import SampleStructuredOutput
 
 
 def test_prompt_guard_detects_injection():

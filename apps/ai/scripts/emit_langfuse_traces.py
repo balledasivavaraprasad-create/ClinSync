@@ -13,6 +13,7 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 from dotenv import load_dotenv
+
 load_dotenv(repo_root / ".env")
 
 from clinsync_ai.brief.service import DoctorBriefService
@@ -46,19 +47,23 @@ def run_live_telemetry_demo():
 
     # Turn 1
     t1_text = "I have had a worsening dry cough and mild chest tightness for the past 4 days."
-    print(f"    Patient Statement 1: \"{t1_text}\"")
-    turn1 = intake.advance(encounter_id=encounter_id, patient_statement=t1_text, patient_id=patient_id)
+    print(f'    Patient Statement 1: "{t1_text}"')
+    turn1 = intake.advance(
+        encounter_id=encounter_id, patient_statement=t1_text, patient_id=patient_id
+    )
     print(f"    -> Status: {turn1.status}")
     print(f"    -> Extracted Facts: {[f.concept + ': ' + f.value for f in turn1.extracted_facts]}")
-    print(f"    -> ClinSync Next Question: \"{turn1.next_question}\"")
+    print(f'    -> ClinSync Next Question: "{turn1.next_question}"')
 
     # Turn 2
     t2_text = "No allergies. I take Lisinopril 10mg daily for mild hypertension."
-    print(f"\n    Patient Statement 2: \"{t2_text}\"")
-    turn2 = intake.advance(encounter_id=encounter_id, patient_statement=t2_text, patient_id=patient_id)
+    print(f'\n    Patient Statement 2: "{t2_text}"')
+    turn2 = intake.advance(
+        encounter_id=encounter_id, patient_statement=t2_text, patient_id=patient_id
+    )
     print(f"    -> Status: {turn2.status}")
     print(f"    -> Extracted Facts: {[f.concept + ': ' + f.value for f in turn2.extracted_facts]}")
-    print(f"    -> ClinSync Next Question: \"{turn2.next_question}\"")
+    print(f'    -> ClinSync Next Question: "{turn2.next_question}"')
 
     # 3. Document Extraction & Provenance
     print("\n[3] Parsing & Extracting Clinical Document...")
@@ -87,7 +92,9 @@ def run_live_telemetry_demo():
         patient_id=patient_id,
         encounter_id=encounter_id,
     )
-    print(f"    -> Successfully extracted {len(doc_facts)} provenance-linked facts from {parsed_doc.total_pages} pages.")
+    print(
+        f"    -> Successfully extracted {len(doc_facts)} provenance-linked facts from {parsed_doc.total_pages} pages."
+    )
 
     # 4. Specialty Recommendation & Triage Guardrails
     print("\n[4] Evaluating Specialty Recommendation & Triage Guardrail...")
@@ -115,7 +122,7 @@ def run_live_telemetry_demo():
         unresolved_conflicts=[],
         missing_information=["Immunization history not recorded in EHR"],
     )
-    print(f"    -> Summary: \"{brief_resp.data.summary_text[:110]}...\"")
+    print(f'    -> Summary: "{brief_resp.data.summary_text[:110]}..."')
     print(f"    -> Evidence Citations Count: {len(brief_resp.data.citations)}")
     print(f"    -> Audio Status: {brief_resp.data.audio_status}")
     print(f"    -> Spoken Script Duration: ~{brief_resp.data.estimated_speech_seconds}s")
@@ -132,6 +139,7 @@ def run_live_telemetry_demo():
     client = tm._langfuse_client
     if client:
         from clinsync_ai.observability.trace import _format_trace_id
+
         recent = tm.get_recent_records(limit=10)
         seen_urls = set()
         for r in recent:
@@ -139,10 +147,14 @@ def run_live_telemetry_demo():
             trace_url = client.get_trace_url(trace_id=valid_tid)
             if trace_url not in seen_urls:
                 seen_urls.add(trace_url)
-                print(f"- Step: {r.step_name:30} | {r.provider}:{r.model:18} | {r.latency_ms:5.0f}ms")
+                print(
+                    f"- Step: {r.step_name:30} | {r.provider}:{r.model:18} | {r.latency_ms:5.0f}ms"
+                )
                 print(f"  URL: {trace_url}")
     print("=" * 65)
-    print("\nOpen your Langfuse dashboard to view the traces with full inputs, outputs, tokens, and latency breakdown!\n")
+    print(
+        "\nOpen your Langfuse dashboard to view the traces with full inputs, outputs, tokens, and latency breakdown!\n"
+    )
 
 
 if __name__ == "__main__":

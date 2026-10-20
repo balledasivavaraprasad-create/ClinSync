@@ -1,6 +1,7 @@
 """Assertion helper: Citation integrity and source grounding."""
 
 import re
+
 from pydantic import BaseModel
 
 
@@ -23,7 +24,6 @@ def assert_no_fabricated_citations(
         cited_ids = citations_or_text
     else:
         cited_ids = re.findall(r"\[([A-Z0-9_-]+)(?::[^\]]+)?\]", citations_or_text or "")
-
 
     fabricated = []
     valid = []

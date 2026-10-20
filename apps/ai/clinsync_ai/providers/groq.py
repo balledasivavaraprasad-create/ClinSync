@@ -4,6 +4,7 @@ import json
 import os
 import time
 from typing import Type, TypeVar
+
 from pydantic import BaseModel, ValidationError
 
 from clinsync_ai.providers.base import ModelProvider, ModelResponse, TokenUsage
@@ -48,6 +49,7 @@ class GroqProvider(ModelProvider):
         if self._client is None:
             try:
                 from groq import Groq
+
                 self._client = Groq(api_key=self._api_key)
             except Exception as exc:
                 raise ModelProviderError(
@@ -58,14 +60,27 @@ class GroqProvider(ModelProvider):
 
     def _map_error(self, exc: Exception) -> ModelProviderError:
         err_msg = str(exc).lower()
-        if "api_key" in err_msg or "unauthorized" in err_msg or "401" in err_msg or "403" in err_msg:
-            return ProviderAuthenticationError(f"Groq authentication failed: {exc}", provider=self.provider_name)
+        if (
+            "api_key" in err_msg
+            or "unauthorized" in err_msg
+            or "401" in err_msg
+            or "403" in err_msg
+        ):
+            return ProviderAuthenticationError(
+                f"Groq authentication failed: {exc}", provider=self.provider_name
+            )
         elif "rate limit" in err_msg or "429" in err_msg:
-            return ProviderRateLimitError(f"Groq rate limit exceeded: {exc}", provider=self.provider_name)
+            return ProviderRateLimitError(
+                f"Groq rate limit exceeded: {exc}", provider=self.provider_name
+            )
         elif "timeout" in err_msg or "deadline" in err_msg or "timed out" in err_msg:
-            return ProviderTimeoutError(f"Groq request timed out: {exc}", provider=self.provider_name)
+            return ProviderTimeoutError(
+                f"Groq request timed out: {exc}", provider=self.provider_name
+            )
         elif "unavailable" in err_msg or "503" in err_msg or "500" in err_msg:
-            return ProviderUnavailableError(f"Groq service unavailable: {exc}", provider=self.provider_name)
+            return ProviderUnavailableError(
+                f"Groq service unavailable: {exc}", provider=self.provider_name
+            )
         return ModelProviderError(f"Groq call failed: {exc}", provider=self.provider_name)
 
     def generate_text(
@@ -100,7 +115,9 @@ class GroqProvider(ModelProvider):
             usage = TokenUsage()
             if hasattr(chat_completion, "usage") and chat_completion.usage:
                 usage.prompt_tokens = getattr(chat_completion.usage, "prompt_tokens", 0) or 0
-                usage.completion_tokens = getattr(chat_completion.usage, "completion_tokens", 0) or 0
+                usage.completion_tokens = (
+                    getattr(chat_completion.usage, "completion_tokens", 0) or 0
+                )
                 usage.total_tokens = getattr(chat_completion.usage, "total_tokens", 0) or 0
 
             return ModelResponse(
@@ -163,7 +180,9 @@ class GroqProvider(ModelProvider):
             usage = TokenUsage()
             if hasattr(chat_completion, "usage") and chat_completion.usage:
                 usage.prompt_tokens = getattr(chat_completion.usage, "prompt_tokens", 0) or 0
-                usage.completion_tokens = getattr(chat_completion.usage, "completion_tokens", 0) or 0
+                usage.completion_tokens = (
+                    getattr(chat_completion.usage, "completion_tokens", 0) or 0
+                )
                 usage.total_tokens = getattr(chat_completion.usage, "total_tokens", 0) or 0
 
             resp = ModelResponse(

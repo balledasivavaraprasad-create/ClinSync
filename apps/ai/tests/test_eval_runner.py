@@ -41,9 +41,10 @@ def test_eval_runner_on_golden_cases():
     assert first_result.assertions_passed == first_result.assertions_run
 
 
-
 def test_groundedness_assertion_catches_forbidden_claims():
-    bad_output = "Patient was diagnosed with acute myocardial infarction and routed to emergency room."
+    bad_output = (
+        "Patient was diagnosed with acute myocardial infarction and routed to emergency room."
+    )
     res = assert_groundedness(
         generated_text=bad_output,
         forbidden_claims=["acute myocardial infarction", "emergency room"],

@@ -87,9 +87,7 @@ def test_document_parser_detects_prompt_injection():
     assert parsed.is_safe is False
     assert len(parsed.detected_threats) >= 1
     assert any("Page 1" in threat for threat in parsed.detected_threats)
-    assert any(
-        "untrusted instructions" in note.lower() for note in parsed.notes
-    )
+    assert any("untrusted instructions" in note.lower() for note in parsed.notes)
 
 
 def test_document_fact_extractor_page_provenance(offline_gateway):

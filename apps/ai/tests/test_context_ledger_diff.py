@@ -166,7 +166,9 @@ def test_patient_context_diff_engine_identifies_new_and_changed():
 
     # Verify new facts
     assert len(res.data.new_facts) >= 2
-    assert any(f.concept == "symptom" and "shortness of breath" in f.value for f in res.data.new_facts)
+    assert any(
+        f.concept == "symptom" and "shortness of breath" in f.value for f in res.data.new_facts
+    )
 
     # Verify changed facts
     assert len(res.data.changed_facts) == 1

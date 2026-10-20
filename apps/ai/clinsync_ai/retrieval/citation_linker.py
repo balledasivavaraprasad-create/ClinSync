@@ -1,6 +1,7 @@
 """Citation linking engine verifying evidence provenance and detecting fabricated citations."""
 
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex, DocumentSearchResult
@@ -8,6 +9,7 @@ from clinsync_ai.retrieval.indexer import ClinicalDocumentIndex, DocumentSearchR
 
 class CitationLink(BaseModel):
     """Grounded citation linking a clinical claim or fact to an authoritative source document chunk."""
+
     claim: str
     source_id: str
     source_location: str  # e.g. "Page 1"
@@ -19,6 +21,7 @@ class CitationLink(BaseModel):
 
 class CitationVerificationReport(BaseModel):
     """Report detailing verified citations, ungrounded claims, and fabricated citation IDs."""
+
     total_claims: int
     grounded_citations: list[CitationLink] = Field(default_factory=list)
     ungrounded_claims: list[str] = Field(default_factory=list)
@@ -109,7 +112,7 @@ class CitationLinker:
             else:
                 ungrounded_claims.append(claim_text)
 
-        all_valid = (len(ungrounded_claims) == 0 and len(fabricated_ids) == 0)
+        all_valid = len(ungrounded_claims) == 0 and len(fabricated_ids) == 0
 
         return CitationVerificationReport(
             total_claims=len(claims),

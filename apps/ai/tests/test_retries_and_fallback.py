@@ -1,10 +1,10 @@
 """Tests for retry policies, timeout handling, and automatic fallback switching."""
 
 import pytest
-from conftest import SampleStructuredOutput
 from clinsync_ai.providers.errors import ModelProviderError
 from clinsync_ai.providers.fake import FakeModelProvider
 from clinsync_ai.routing.gateway import ModelGateway
+from conftest import SampleStructuredOutput
 
 
 def test_automatic_fallback_on_primary_rate_limit(fake_structured_data, isolated_trace_manager):

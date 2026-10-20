@@ -3,13 +3,16 @@
 import math
 import re
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 try:
     from llama_index.core import Document
 except ImportError:
+
     class Document:  # type: ignore
         """Fallback Document representation when llama-index-core is not installed."""
+
         def __init__(
             self,
             text: str = "",
@@ -21,11 +24,13 @@ except ImportError:
             self.metadata = metadata or {}
             self.id_ = id_
 
+
 from clinsync_ai.documents.parser import ParsedDocument
 
 
 class DocumentSearchResult(BaseModel):
     """Result of a scoped clinical document search with precise provenance."""
+
     document_id: str
     patient_id: str
     encounter_id: str | None = None
@@ -54,7 +59,9 @@ class ClinicalDocumentIndex:
     ) -> int:
         """Convert ParsedDocument pages into LlamaIndex Document nodes and index under patient_id."""
         if not patient_id:
-            raise ValueError("patient_id is required for document indexing to preserve patient isolation.")
+            raise ValueError(
+                "patient_id is required for document indexing to preserve patient isolation."
+            )
 
         indexed_chunks = 0
         for page in document.pages:
@@ -91,7 +98,9 @@ class ClinicalDocumentIndex:
     ) -> list[DocumentSearchResult]:
         """Query documents for a specific patient. Enforces strict patient isolation."""
         if not patient_id:
-            raise ValueError("patient_id is required for search to prevent cross-patient data leaks.")
+            raise ValueError(
+                "patient_id is required for search to prevent cross-patient data leaks."
+            )
 
         patient_docs = self._patient_documents.get(patient_id, [])
         if not patient_docs or not query or not query.strip():
@@ -120,7 +129,9 @@ class ClinicalDocumentIndex:
             if hits == 0:
                 continue
 
-            score = min(1.0, hits / math.sqrt(len(query_tokens) * max(1, math.log(len(text_tokens) + 1))))
+            score = min(
+                1.0, hits / math.sqrt(len(query_tokens) * max(1, math.log(len(text_tokens) + 1)))
+            )
 
             if score < min_score:
                 continue

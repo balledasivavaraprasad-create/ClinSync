@@ -1,6 +1,7 @@
 """Output validation and clinical fact sanity guardrails."""
 
 from typing import Any, Type, TypeVar
+
 from pydantic import BaseModel, ValidationError
 
 from clinsync_ai.providers.errors import StructuredOutputValidationError
@@ -10,6 +11,7 @@ T = TypeVar("T", bound=BaseModel)
 
 class SchemaGuardResult(BaseModel):
     """Validation report from SchemaGuard."""
+
     is_valid: bool
     data: Any = None
     errors: list[str] = []
@@ -27,9 +29,10 @@ class OutputSchemaGuard:
         return self.validate(raw_json, self.schema)
 
     @classmethod
-    def validate(cls, raw_json: str | dict[str, Any], schema: Type[T]) -> tuple[T, SchemaGuardResult]:
+    def validate(
+        cls, raw_json: str | dict[str, Any], schema: Type[T]
+    ) -> tuple[T, SchemaGuardResult]:
         """Validate raw json string or dictionary against target schema."""
-
 
         errors: list[str] = []
         try:

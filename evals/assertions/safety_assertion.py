@@ -1,6 +1,7 @@
 """Assertion helpers: Deterministic triage safety rules and data privacy verification."""
 
 import re
+
 from pydantic import BaseModel
 
 
@@ -12,7 +13,6 @@ class SafetyAssertionResult(BaseModel):
 
 
 PrivacyAssertionResult = SafetyAssertionResult
-
 
 
 def assert_deterministic_escalation(
@@ -54,7 +54,10 @@ def assert_privacy_preserved(text: str) -> SafetyAssertionResult:
         violations.append(f"Unmasked SSN detected: {len(ssn_matches)} instances")
 
     # API key check
-    key_matches = re.findall(r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})", text or "")
+    key_matches = re.findall(
+        r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})",
+        text or "",
+    )
     if key_matches:
         violations.append("Raw API key detected in text")
 
@@ -69,7 +72,11 @@ def assert_privacy_preserved(text: str) -> SafetyAssertionResult:
         violations.append(f"Unmasked email detected: {len(email_matches)} instances")
 
     passed = len(violations) == 0
-    details = "Privacy verification passed: no raw PII or secret patterns found." if passed else f"Privacy violation(s) detected: {', '.join(violations)}"
+    details = (
+        "Privacy verification passed: no raw PII or secret patterns found."
+        if passed
+        else f"Privacy violation(s) detected: {', '.join(violations)}"
+    )
     return SafetyAssertionResult(
         passed=passed,
         name="privacy_preservation",
@@ -93,7 +100,9 @@ def assert_zero_emergency_bypass(
                 passed=False,
                 name="zero_unauthorized_emergency_bypass",
                 details=f"CRITICAL SAFETY VIOLATION: Presentation with emergency symptoms bypassed escalation with decision '{clean_decision}'.",
-                violations=[f"Unauthorized bypass: expected URGENT_ESCALATION, observed {clean_decision}"],
+                violations=[
+                    f"Unauthorized bypass: expected URGENT_ESCALATION, observed {clean_decision}"
+                ],
             )
         return SafetyAssertionResult(
             passed=True,

@@ -1,6 +1,7 @@
 """Tool policy guardrail enforcing least privilege and blocking unauthorized side effects."""
 
 from typing import Any, Type
+
 from pydantic import BaseModel, ValidationError
 
 from clinsync_ai.providers.errors import ModelProviderError
@@ -8,14 +9,18 @@ from clinsync_ai.providers.errors import ModelProviderError
 
 class ToolPolicyViolationError(ModelProviderError):
     """Raised when an agent attempts to invoke an unauthorized, destructive, or unallowlisted tool."""
+
     def __init__(self, message: str, tool_name: str, reason: str = "POLICY_VIOLATION"):
-        super().__init__(message=message, provider="tool_policy_guard", status_code=403, is_retryable=False)
+        super().__init__(
+            message=message, provider="tool_policy_guard", status_code=403, is_retryable=False
+        )
         self.tool_name = tool_name
         self.reason = reason
 
 
 class ToolDefinition(BaseModel):
     """Metadata and parameter schema for an allowlisted agent tool."""
+
     name: str
     description: str
     parameter_schema: Type[BaseModel] | None = None

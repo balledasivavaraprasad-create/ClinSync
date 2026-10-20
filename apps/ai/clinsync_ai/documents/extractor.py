@@ -2,6 +2,7 @@
 
 import re
 import uuid
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.documents.parser import DocumentPage, ParsedDocument
@@ -11,6 +12,7 @@ from clinsync_ai.routing.gateway import ModelGateway
 
 class CandidateDocumentFact(BaseModel):
     """Pydantic schema for extracted clinical fact candidates from document pages."""
+
     concept: str
     value: str
     fact_type: FactType = "symptom"
@@ -21,6 +23,7 @@ class CandidateDocumentFact(BaseModel):
 
 class DocumentPageExtractionSchema(BaseModel):
     """Structured extraction output returned by model gateway."""
+
     facts: list[CandidateDocumentFact] = Field(default_factory=list)
     summary_of_findings: str | None = None
 
@@ -83,7 +86,9 @@ def _deterministic_page_extract(text: str) -> list[CandidateDocumentFact]:
         )
 
     # 5. Diagnoses / Conditions
-    cond_match = re.search(r"\b(?:diagnosis|diagnoses|assessment|impression)\s*:\s*([^.\n]+)", text, re.IGNORECASE)
+    cond_match = re.search(
+        r"\b(?:diagnosis|diagnoses|assessment|impression)\s*:\s*([^.\n]+)", text, re.IGNORECASE
+    )
     if cond_match:
         for cond in cond_match.group(1).split(","):
             cond_clean = cond.strip()
@@ -105,7 +110,9 @@ def _deterministic_page_extract(text: str) -> list[CandidateDocumentFact]:
                 fact_type="symptom",
             )
         )
-    if "cough" in text_lower and not any(c.concept == "symptom" and "cough" in c.value for c in candidates):
+    if "cough" in text_lower and not any(
+        c.concept == "symptom" and "cough" in c.value for c in candidates
+    ):
         candidates.append(
             CandidateDocumentFact(
                 concept="symptom",
@@ -179,7 +186,13 @@ class DocumentFactExtractor:
             fact_id = f"FACT-DOC-{uuid.uuid4().hex[:8].upper()}"
             status: FactStatus = "extracted_unverified"
             val_lower = cand.value.lower()
-            if cand.confidence < 0.75 or "?" in cand.value or "~" in cand.value or "unclear" in val_lower or "[?]" in cand.value:
+            if (
+                cand.confidence < 0.75
+                or "?" in cand.value
+                or "~" in cand.value
+                or "unclear" in val_lower
+                or "[?]" in cand.value
+            ):
                 status = "uncertain"
 
             result_models.append(

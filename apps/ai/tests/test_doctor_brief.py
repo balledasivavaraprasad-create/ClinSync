@@ -186,7 +186,9 @@ def test_conflict_preservation(fake_gateway, sample_facts):
     # Check that conflicts are highlighted in the sections
     conflict_section = next((s for s in data.sections if "Conflict" in s.title), None)
     assert conflict_section is not None
-    assert "Contraindication" in conflict_section.content or "Amoxicillin" in conflict_section.content
+    assert (
+        "Contraindication" in conflict_section.content or "Amoxicillin" in conflict_section.content
+    )
 
 
 def test_audio_summary_spoken_script_and_graceful_degradation():
@@ -199,7 +201,9 @@ def test_audio_summary_spoken_script_and_graceful_degradation():
         patient_reported=["chief_complaint: dry cough", "symptom: chest tightness"],
         extracted_facts=["blood_pressure: 142/88 mmHg"],
         historical_records=["allergy: Penicillin"],
-        unresolved_conflicts=["Contraindication: Amoxicillin prescribed despite Penicillin allergy"],
+        unresolved_conflicts=[
+            "Contraindication: Amoxicillin prescribed despite Penicillin allergy"
+        ],
     )
 
     assert "Eleanor Johnson" in script
@@ -217,6 +221,7 @@ def test_audio_summary_spoken_script_and_graceful_degradation():
 
 def test_audio_summary_with_mock_tts_adapter():
     """Verify that when a TTS adapter is available, status is READY and audio_url is provided."""
+
     class MockTTS:
         def synthesize(self, text: str, encounter_id: str) -> str:
             return f"https://cdn.clinsync.internal/audio/{encounter_id}_brief.mp3"
@@ -241,7 +246,10 @@ def test_missing_information_tracking(fake_gateway, sample_facts):
         current_facts=current,
         historical_facts=historical,
         unresolved_conflicts=[],
-        missing_information=["No recorded surgical history", "No baseline pulmonary function tests"],
+        missing_information=[
+            "No recorded surgical history",
+            "No baseline pulmonary function tests",
+        ],
     )
 
     data = response.data

@@ -1,6 +1,7 @@
 """Clinical Context Ledger engine preserving fact status and conflict visibility."""
 
 import uuid
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType
@@ -8,6 +9,7 @@ from clinsync_ai.graph.state import ClinicalFactModel, FactStatus, FactType
 
 class LedgerResponseData(BaseModel):
     """Data container for LedgerResponse."""
+
     encounter_id: str
     facts: list[ClinicalFactModel] = Field(default_factory=list)
     unresolved_conflicts: list[str] = Field(default_factory=list)
@@ -15,6 +17,7 @@ class LedgerResponseData(BaseModel):
 
 class LedgerResponse(BaseModel):
     """Encounter clinical fact ledger matching OpenAPI LedgerResponse contract."""
+
     data: LedgerResponseData
     request_id: str
 
@@ -58,7 +61,9 @@ class ClinicalContextLedger:
             for existing in self._facts.values():
                 if existing.fact_type == "allergy":
                     alg_val = existing.value.lower().strip()
-                    if alg_val in new_val_lower or ("penicillin" in alg_val and "amox" in new_val_lower):
+                    if alg_val in new_val_lower or (
+                        "penicillin" in alg_val and "amox" in new_val_lower
+                    ):
                         conflict_msg = (
                             f"Contraindication conflict: Candidate medication '{new_fact.value}' "
                             f"(Source: {new_fact.source_type}) conflicts with known allergy '{existing.value}' "
@@ -73,7 +78,9 @@ class ClinicalContextLedger:
             for existing in self._facts.values():
                 if existing.fact_type == "medication":
                     med_val = existing.value.lower().strip()
-                    if new_val_lower in med_val or ("penicillin" in new_val_lower and "amox" in med_val):
+                    if new_val_lower in med_val or (
+                        "penicillin" in new_val_lower and "amox" in med_val
+                    ):
                         conflict_msg = (
                             f"Contraindication conflict: Newly reported allergy '{new_fact.value}' "
                             f"conflicts with active medication '{existing.value}'."

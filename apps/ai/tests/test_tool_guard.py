@@ -1,12 +1,12 @@
 """Tests for ToolPolicyGuard authorization, allowlists, and execution boundaries."""
 
 import pytest
-from pydantic import BaseModel
 from clinsync_ai.guardrails.tool_guard import (
     ToolDefinition,
     ToolPolicyGuard,
     ToolPolicyViolationError,
 )
+from pydantic import BaseModel
 
 
 class SampleQueryScheduleArgs(BaseModel):
@@ -56,7 +56,9 @@ def test_tool_guard_validates_argument_schemas():
     guard = ToolPolicyGuard(allowed_tools=tools)
 
     # Valid args pass
-    tool_def = guard.authorize_tool_call("query_schedule", {"specialty_id": "pulmonology", "date_str": "2026-10-20"})
+    tool_def = guard.authorize_tool_call(
+        "query_schedule", {"specialty_id": "pulmonology", "date_str": "2026-10-20"}
+    )
     assert tool_def.name == "query_schedule"
 
     # Invalid args fail

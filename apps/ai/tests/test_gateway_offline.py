@@ -1,9 +1,9 @@
 import pytest
-from conftest import SampleStructuredOutput
 from clinsync_ai.providers.errors import ProviderAuthenticationError
 from clinsync_ai.providers.gemini import GeminiProvider
 from clinsync_ai.providers.groq import GroqProvider
 from clinsync_ai.routing.gateway import ModelGateway
+from conftest import SampleStructuredOutput
 
 
 def test_offline_text_generation(offline_gateway):
@@ -81,6 +81,18 @@ def test_gateway_offline_safety_defaults(monkeypatch):
 def test_no_direct_openai_dependency():
     """Verify that ClinSync baseline has zero hard dependencies on OpenAI SDK or keys."""
     import sys
+
     assert "openai" not in sys.modules or True  # Confirm no mandated OpenAI import
     import os
+
     assert not os.getenv("REQUIRE_OPENAI", "")
+
+
+def test_gateway_selectable_open_weight_groq_provider(monkeypatch):
+    """Verify that LLM_PROVIDER=groq selects GroqProvider as primary open-weight model."""
+    monkeypatch.setenv("LLM_PROVIDER", "groq")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test_key_12345678901234567890")
+
+    gw = ModelGateway()
+    assert gw.primary.provider_name == "groq"
+    assert gw.primary.is_available() is True

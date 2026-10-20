@@ -11,7 +11,9 @@ def test_citation_assertion_detects_fabrications():
     valid_catalog = {"DOC-LAB-001", "DOC-DISCHARGE-002", "FACT-101"}
 
     # Grounded text passes
-    grounded = "Patient had high cholesterol [DOC-LAB-001] and reported penicillin allergy [FACT-101]."
+    grounded = (
+        "Patient had high cholesterol [DOC-LAB-001] and reported penicillin allergy [FACT-101]."
+    )
     res_pass = assert_no_fabricated_citations(grounded, valid_catalog)
     assert res_pass.passed is True
     assert len(res_pass.valid_citations_found) == 2

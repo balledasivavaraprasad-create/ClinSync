@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import Any, Type, TypeVar
+
 from pydantic import BaseModel, Field
 
 T = TypeVar("T", bound=BaseModel)
@@ -9,6 +10,7 @@ T = TypeVar("T", bound=BaseModel)
 
 class TokenUsage(BaseModel):
     """Normalized token accounting for cost and telemetry tracking."""
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -17,9 +19,9 @@ class TokenUsage(BaseModel):
 ProviderUsage = TokenUsage
 
 
-
 class ModelResponse(BaseModel):
     """Standardized response container across all LLM providers."""
+
     text: str
     provider: str
     model: str

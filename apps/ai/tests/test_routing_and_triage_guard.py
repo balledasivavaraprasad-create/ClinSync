@@ -49,7 +49,9 @@ def test_routine_specialty_recommendation_deterministic():
     recommender = SpecialtyRecommender()
 
     # Orthopedics
-    rec_ortho = recommender.recommend(chief_complaint="Severe sprained ankle and swollen knee joint")
+    rec_ortho = recommender.recommend(
+        chief_complaint="Severe sprained ankle and swollen knee joint"
+    )
     assert rec_ortho.department_id == "dept_orthopedics"
     assert rec_ortho.is_ambiguous is False
     assert "dept_orthopedics" in ALLOWLISTED_DEPARTMENTS
@@ -60,12 +62,16 @@ def test_routine_specialty_recommendation_deterministic():
     assert rec_ent.is_ambiguous is False
 
     # Dermatology
-    rec_derm = recommender.recommend(chief_complaint="Intensely itchy red rash and eczema patches on both arms")
+    rec_derm = recommender.recommend(
+        chief_complaint="Intensely itchy red rash and eczema patches on both arms"
+    )
     assert rec_derm.department_id == "dept_dermatology"
     assert rec_derm.is_ambiguous is False
 
     # Pulmonology
-    rec_pulm = recommender.recommend(chief_complaint="Dry subacute cough and mild wheezing for 3 weeks")
+    rec_pulm = recommender.recommend(
+        chief_complaint="Dry subacute cough and mild wheezing for 3 weeks"
+    )
     assert rec_pulm.department_id == "dept_pulmonology"
     assert rec_pulm.is_ambiguous is False
 
@@ -73,7 +79,7 @@ def test_routine_specialty_recommendation_deterministic():
 def test_ambiguous_symptoms_routes_to_human_review():
     """Assert that diffuse symptoms matching multiple specialties trigger ambiguity flag."""
     recommender = SpecialtyRecommender()
-    
+
     # 1 keyword for orthopedics (knee pain), 1 keyword for dermatology (itching)
     rec_ambig = recommender.recommend(chief_complaint="Knee pain with persistent itching")
     assert rec_ambig.is_ambiguous is True

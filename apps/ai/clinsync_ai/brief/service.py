@@ -1,6 +1,7 @@
 """High-level Doctor Brief Service coordinating generation, audio, and OpenAPI response."""
 
 import uuid
+
 from clinsync_ai.brief.audio import AudioBriefService
 from clinsync_ai.brief.generator import DoctorBriefGenerator
 from clinsync_ai.brief.models import DoctorBriefResponse

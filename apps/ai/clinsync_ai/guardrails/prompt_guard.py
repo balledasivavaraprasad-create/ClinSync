@@ -1,11 +1,13 @@
 """Input safety and adversarial prompt injection filters."""
 
 import re
+
 from pydantic import BaseModel
 
 
 class PromptSafetyResult(BaseModel):
     """Result of prompt safety analysis."""
+
     is_safe: bool
     risk_score: float = 0.0
     detected_patterns: list[str] = []
@@ -13,13 +15,28 @@ class PromptSafetyResult(BaseModel):
 
 
 INJECTION_PATTERNS = [
-    (r"ignore\s+(?:all\s+)?(?:previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)", "INSTRUCTION_OVERRIDE"),
-    (r"disregard\s+(?:the\s+)?(?:above|system|previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)", "INSTRUCTION_OVERRIDE"),
+    (
+        r"ignore\s+(?:all\s+)?(?:previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)",
+        "INSTRUCTION_OVERRIDE",
+    ),
+    (
+        r"disregard\s+(?:the\s+)?(?:above|system|previous|prior)\s+(?:[\w-]+\s+)*(?:instructions?|prompts?|rules?|directives?)",
+        "INSTRUCTION_OVERRIDE",
+    ),
     (r"system\s+(?:directive|instruction|override|prompt):", "SYSTEM_DIRECTIVE_INJECTION"),
-    (r"(reveal|print|show|dump)\s+(the\s+)?(system\s+prompt|developer\s+message)", "SYSTEM_PROMPT_LEAK"),
+    (
+        r"(reveal|print|show|dump)\s+(the\s+)?(system\s+prompt|developer\s+message)",
+        "SYSTEM_PROMPT_LEAK",
+    ),
     (r"you\s+are\s+now\s+(in\s+developer\s+mode|dan|unrestricted)", "JAILBREAK_ROLEPLAY"),
-    (r"bypass\s+(?:(?:triage|safety|escalation|clinical)\s+)+(?:policy|gate|protocol|rules?)", "SAFETY_BYPASS"),
-    (r"(?:grant|gain)\s+(?:unrestricted|admin|root)?\s*(?:access|privileges)", "PRIVILEGE_ESCALATION"),
+    (
+        r"bypass\s+(?:(?:triage|safety|escalation|clinical)\s+)+(?:policy|gate|protocol|rules?)",
+        "SAFETY_BYPASS",
+    ),
+    (
+        r"(?:grant|gain)\s+(?:unrestricted|admin|root)?\s*(?:access|privileges)",
+        "PRIVILEGE_ESCALATION",
+    ),
     (r"act\s+as\s+(an?\s+)?admin(istrator)?", "PRIVILEGE_ESCALATION"),
     (r"drop\s+table|delete\s+from|select\s+.*\s+from\s+users", "SQL_INJECTION"),
 ]
@@ -30,7 +47,9 @@ class PromptGuard:
 
     def __init__(self, strict_mode: bool = False):
         self.strict_mode = strict_mode
-        self._compiled_patterns = [(re.compile(pat, re.IGNORECASE), name) for pat, name in INJECTION_PATTERNS]
+        self._compiled_patterns = [
+            (re.compile(pat, re.IGNORECASE), name) for pat, name in INJECTION_PATTERNS
+        ]
 
     def evaluate(self, text: str) -> PromptSafetyResult:
         if not text or not text.strip():

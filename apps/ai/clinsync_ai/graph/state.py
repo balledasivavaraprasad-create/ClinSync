@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 FactType = Literal[
@@ -43,6 +44,7 @@ WorkflowStatus = Literal[
 
 class ClinicalFactModel(BaseModel):
     """Pydantic representation of the canonical ClinicalFact schema in OpenAPI."""
+
     id: str
     patient_id: str
     encounter_id: str | None = None
@@ -64,6 +66,7 @@ class ClinicalFactModel(BaseModel):
 
 class IntakeState(BaseModel):
     """Explicit LangGraph state container for conversational adaptive intake."""
+
     encounter_id: str
     patient_id: str
     status: WorkflowStatus = "IN_PROGRESS"
@@ -75,7 +78,12 @@ class IntakeState(BaseModel):
     chief_complaint: str | None = None
     known_fields: dict[str, Any] = Field(default_factory=dict)
     missing_fields: list[str] = Field(
-        default_factory=lambda: ["chief_complaint", "duration_onset", "severity_progression", "associated_symptoms"]
+        default_factory=lambda: [
+            "chief_complaint",
+            "duration_onset",
+            "severity_progression",
+            "associated_symptoms",
+        ]
     )
     uncertain_fields: list[str] = Field(default_factory=list)
     conflicting_fields: list[str] = Field(default_factory=list)
@@ -89,5 +97,7 @@ class IntakeState(BaseModel):
     # Safety & emergency escalation
     emergency_detected: bool = False
     emergency_rationale: str | None = None
-    trace_id: str = Field(default_factory=lambda: f"trace-intake-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}")
+    trace_id: str = Field(
+        default_factory=lambda: f"trace-intake-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    )
     notes: list[str] = Field(default_factory=list)

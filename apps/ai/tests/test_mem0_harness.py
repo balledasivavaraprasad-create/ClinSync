@@ -1,10 +1,10 @@
 """Unit tests for Mem0 Memory Harness and memory-informed question generation."""
 
-from clinsync_ai.graph.state import IntakeState
 from clinsync_ai.graph.nodes.intake_nodes import (
     extract_facts_node,
     generate_question_node,
 )
+from clinsync_ai.graph.state import IntakeState
 from clinsync_ai.memory.harness import Mem0MemoryHarness, default_memory_harness
 
 

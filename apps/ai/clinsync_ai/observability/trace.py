@@ -5,6 +5,7 @@ import os
 import re
 import time
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("clinsync.ai.observability")
@@ -15,19 +16,45 @@ def redact_sensitive_text(text: str) -> str:
     if not text:
         return ""
     # Mask API keys and Bearer tokens
-    masked = re.sub(r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})", "[REDACTED_KEY]", text)
+    masked = re.sub(
+        r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})",
+        "[REDACTED_KEY]",
+        text,
+    )
     masked = re.sub(r"\bBearer\s+[A-Za-z0-9\-_.]+\b", "Bearer [REDACTED_TOKEN]", masked)
     # Mask SSN
     masked = re.sub(r"\b\d{3}-\d{2}-\d{4}\b", "[REDACTED_SSN]", masked)
     # Mask phone
-    masked = re.sub(r"\b(?:\+?1[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}\b", "[REDACTED_PHONE]", masked)
+    masked = re.sub(
+        r"\b(?:\+?1[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}\b", "[REDACTED_PHONE]", masked
+    )
     # Mask Email
-    masked = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[REDACTED_EMAIL]", masked)
+    masked = re.sub(
+        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[REDACTED_EMAIL]", masked
+    )
     # Mask MRN
-    masked = re.sub(r"\bMRN[-:\s]+[A-Za-z0-9-]+\b", "MRN:[REDACTED_MRN]", masked, flags=re.IGNORECASE)
+    masked = re.sub(
+        r"\bMRN[-:\s]+[A-Za-z0-9-]+\b", "MRN:[REDACTED_MRN]", masked, flags=re.IGNORECASE
+    )
     # Mask DOB
-    masked = re.sub(r"\b(?:DOB|Date of Birth|Birthdate)[:\s]+(?:\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})\b", "DOB:[REDACTED_DOB]", masked, flags=re.IGNORECASE)
+    masked = re.sub(
+        r"\b(?:DOB|Date of Birth|Birthdate)[:\s]+(?:\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})\b",
+        "DOB:[REDACTED_DOB]",
+        masked,
+        flags=re.IGNORECASE,
+    )
     return masked
+
+
+def redact_sensitive_value(val: Any) -> Any:
+    """Recursively mask sensitive identifiers in strings, dicts, and lists."""
+    if isinstance(val, str):
+        return redact_sensitive_text(val)
+    if isinstance(val, dict):
+        return {k: redact_sensitive_value(v) for k, v in val.items()}
+    if isinstance(val, list):
+        return [redact_sensitive_value(v) for v in val]
+    return val
 
 
 def verify_trace_redaction(records: list["TraceRecord"]) -> tuple[bool, list[str]]:
@@ -35,7 +62,9 @@ def verify_trace_redaction(records: list["TraceRecord"]) -> tuple[bool, list[str
     violations = []
     # Sensitive regex detectors
     ssn_re = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
-    key_re = re.compile(r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})")
+    key_re = re.compile(
+        r"(AIza[0-9A-Za-z-_]{20,}|AQ\.[0-9A-Za-z-_]{20,}|gsk_[0-9A-Za-z]{20,}|sk-lf-[0-9a-f-]{20,})"
+    )
     email_re = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 
     for i, rec in enumerate(records):
@@ -50,11 +79,17 @@ def verify_trace_redaction(records: list["TraceRecord"]) -> tuple[bool, list[str
 
         for field_name, val in fields_to_check:
             if ssn_re.search(val):
-                violations.append(f"Record {i} ({rec.step_name}) has unredacted SSN in {field_name}")
+                violations.append(
+                    f"Record {i} ({rec.step_name}) has unredacted SSN in {field_name}"
+                )
             if key_re.search(val):
-                violations.append(f"Record {i} ({rec.step_name}) has unredacted API key in {field_name}")
+                violations.append(
+                    f"Record {i} ({rec.step_name}) has unredacted API key in {field_name}"
+                )
             if email_re.search(val):
-                violations.append(f"Record {i} ({rec.step_name}) has unredacted email in {field_name}")
+                violations.append(
+                    f"Record {i} ({rec.step_name}) has unredacted email in {field_name}"
+                )
 
     return len(violations) == 0, violations
 
@@ -62,6 +97,7 @@ def verify_trace_redaction(records: list["TraceRecord"]) -> tuple[bool, list[str
 def _format_trace_id(tid: str) -> str:
     """Format trace ID into a valid 32-character lowercase hex string required by Langfuse."""
     import hashlib
+
     clean = re.sub(r"[^0-9a-fA-F]", "", tid).lower()
     if len(clean) == 32:
         return clean
@@ -70,6 +106,7 @@ def _format_trace_id(tid: str) -> str:
 
 class TraceRecord(BaseModel):
     """Structured record of an individual AI invocation or workflow step."""
+
     trace_id: str
     step_name: str
     provider: str
@@ -99,22 +136,33 @@ class TraceManager:
     ):
         env_enabled = os.getenv("TRACE_ENABLED", "false").lower() in ("true", "1", "yes")
         self.enabled = enabled if enabled is not None else env_enabled
-        self.public_key = public_key or os.getenv("LANGFUSE_PUBLIC_KEY") or os.getenv("TRACE_PUBLIC_KEY")
-        self.secret_key = secret_key or os.getenv("LANGFUSE_SECRET_KEY") or os.getenv("TRACE_SECRET_KEY")
-        self.host = host or os.getenv("LANGFUSE_BASE_URL") or os.getenv("TRACE_HOST", "https://us.cloud.langfuse.com")
+        self.public_key = (
+            public_key or os.getenv("LANGFUSE_PUBLIC_KEY") or os.getenv("TRACE_PUBLIC_KEY")
+        )
+        self.secret_key = (
+            secret_key or os.getenv("LANGFUSE_SECRET_KEY") or os.getenv("TRACE_SECRET_KEY")
+        )
+        self.host = (
+            host
+            or os.getenv("LANGFUSE_BASE_URL")
+            or os.getenv("TRACE_HOST", "https://us.cloud.langfuse.com")
+        )
         self._langfuse_client = None
         self._in_memory_records: list[TraceRecord] = []
 
         if self.enabled and self.public_key and self.secret_key:
             try:
                 from langfuse import Langfuse
+
                 self._langfuse_client = Langfuse(
                     public_key=self.public_key,
                     secret_key=self.secret_key,
                     host=self.host,
                 )
             except Exception as exc:
-                logger.warning(f"Could not initialize Langfuse client: {exc}. Operating in local mode.")
+                logger.warning(
+                    f"Could not initialize Langfuse client: {exc}. Operating in local mode."
+                )
 
     @property
     def is_cloud_enabled(self) -> bool:
@@ -136,14 +184,8 @@ class TraceManager:
         fallback_used: bool = False,
         metadata: dict[str, Any] | None = None,
     ) -> TraceRecord:
-        # Sanitize metadata string fields
-        clean_metadata = {}
-        if metadata:
-            for k, v in metadata.items():
-                if isinstance(v, str):
-                    clean_metadata[k] = redact_sensitive_text(v)
-                else:
-                    clean_metadata[k] = v
+        # Sanitize metadata string and nested fields recursively
+        clean_metadata = {k: redact_sensitive_value(v) for k, v in (metadata or {}).items()}
 
         record = TraceRecord(
             trace_id=trace_id,
@@ -178,6 +220,12 @@ class TraceManager:
         if self._langfuse_client:
             try:
                 valid_trace_id = _format_trace_id(trace_id)
+                telemetry_metadata = {
+                    "provider": provider,
+                    "model": model,
+                    "fallback": fallback_used,
+                    **clean_metadata,
+                }
                 if hasattr(self._langfuse_client, "start_observation"):
                     obs = self._langfuse_client.start_observation(
                         trace_context={"trace_id": valid_trace_id},
@@ -186,7 +234,7 @@ class TraceManager:
                         model=model,
                         input=redact_sensitive_text(prompt),
                         output=redact_sensitive_text(output),
-                        metadata={"provider": provider, "model": model, "fallback": fallback_used, **(metadata or {})},
+                        metadata=telemetry_metadata,
                         usage_details={
                             "input": prompt_tokens,
                             "output": completion_tokens,
@@ -201,7 +249,7 @@ class TraceManager:
                     self._langfuse_client.trace(
                         id=trace_id,
                         name=step_name,
-                        metadata={"provider": provider, "model": model, "fallback": fallback_used, **(metadata or {})},
+                        metadata=telemetry_metadata,
                     ).generation(
                         name=step_name,
                         model=model,

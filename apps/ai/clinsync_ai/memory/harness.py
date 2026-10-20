@@ -1,14 +1,15 @@
 """Mem0 Memory Harness for clinical intake and agentic memory management."""
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
-import uuid
 
 
 @dataclass
 class MemoryItem:
     """Represents a single episodic or semantic memory item."""
+
     id: str
     user_id: str
     encounter_id: str
@@ -23,7 +24,7 @@ class MemoryItem:
 
 class Mem0MemoryHarness:
     """Intelligent memory harness for agentic patient intake.
-    
+
     Provides episodic recall across conversational turns, tracks patient statements,
     retains self-corrections (negated vs affirmed facts), and synthesizes contextual
     memory prompts for follow-up question generation.
@@ -31,7 +32,7 @@ class Mem0MemoryHarness:
 
     def __init__(self, client: Any | None = None):
         """Initialize the memory harness.
-        
+
         Args:
             client: Optional mem0.Memory client. If not provided or unavailable,
                     falls back to the built-in structured semantic memory store.
@@ -103,7 +104,9 @@ class Mem0MemoryHarness:
         def score(item: MemoryItem) -> int:
             content_lower = item.content.lower()
             concept_lower = item.concept.lower()
-            matches = sum(1 for term in query_terms if term in content_lower or term in concept_lower)
+            matches = sum(
+                1 for term in query_terms if term in content_lower or term in concept_lower
+            )
             return matches
 
         scored = [(score(i), i) for i in items]
@@ -131,7 +134,7 @@ class Mem0MemoryHarness:
         lines = ["Previous Patient Statements & Clinical Memory (chronological):"]
         for i in items:
             prefix = "✕ Ruled Out / Negated" if i.negated else "✓ Affirmed"
-            lines.append(f"- [Turn {i.turn_index}] {prefix} ({i.concept}): \"{i.content}\"")
+            lines.append(f'- [Turn {i.turn_index}] {prefix} ({i.concept}): "{i.content}"')
 
         return "\n".join(lines)
 

@@ -1,6 +1,7 @@
 """Patient Context Diff Engine: compares historical patient records against current encounter facts."""
 
 import uuid
+
 from pydantic import BaseModel, Field
 
 from clinsync_ai.graph.state import ClinicalFactModel
@@ -8,12 +9,14 @@ from clinsync_ai.graph.state import ClinicalFactModel
 
 class ChangedFact(BaseModel):
     """Pair of previous historical fact and current encounter fact representing an evolution or change."""
+
     previous: ClinicalFactModel
     current: ClinicalFactModel
 
 
 class DiffResponseData(BaseModel):
     """Data container for DiffResponse matching OpenAPI contract."""
+
     encounter_id: str
     new_facts: list[ClinicalFactModel] = Field(default_factory=list)
     changed_facts: list[ChangedFact] = Field(default_factory=list)
@@ -22,6 +25,7 @@ class DiffResponseData(BaseModel):
 
 class DiffResponse(BaseModel):
     """Encounter context diff response matching OpenAPI contract."""
+
     data: DiffResponseData
     request_id: str
 
@@ -77,14 +81,9 @@ class PatientContextDiffEngine:
 
         # 2. Conflict & Contraindication detection
         hist_allergies = [
-            h.value.lower().strip()
-            for h in historical_facts
-            if h.fact_type == "allergy"
+            h.value.lower().strip() for h in historical_facts if h.fact_type == "allergy"
         ]
-        curr_medications = [
-            c for c in current_facts
-            if c.fact_type == "medication"
-        ]
+        curr_medications = [c for c in current_facts if c.fact_type == "medication"]
 
         # Check for medication-allergy contraindication
         for med in curr_medications:
