@@ -473,10 +473,40 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
 
   // Web Speech API interface
+  interface SpeechResultItem {
+    transcript: string;
+  }
+  interface SpeechResultList {
+    readonly length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: SpeechResultItem;
+    };
+  }
+  interface SpeechEvent {
+    results: SpeechResultList;
+  }
+  interface SpeechErrorEvent {
+    error: string;
+  }
+
+  interface SpeechRecognitionInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives?: number;
+    lang: string;
+    onstart?: (() => void) | null;
+    onresult: ((event: SpeechEvent) => void) | null;
+    onerror: ((event: SpeechErrorEvent) => void) | null;
+    onend: (() => void) | null;
+    start: () => void;
+    stop: () => void;
+  }
+
   const globalWindow = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
   const SpeechRecognitionClass = globalWindow
-    ? (globalWindow.SpeechRecognition as { new (): any } | undefined) ||
-      (globalWindow.webkitSpeechRecognition as { new (): any } | undefined)
+    ? (globalWindow.SpeechRecognition as { new (): SpeechRecognitionInstance } | undefined) ||
+      (globalWindow.webkitSpeechRecognition as { new (): SpeechRecognitionInstance } | undefined)
     : null;
 
   // Stop active speech playback and invalidate pending async responses immediately
@@ -615,7 +645,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     handleStopAssistant();
     if (isListeningRef.current && recognitionRef.current) {
       try {
-        (recognitionRef.current as any).stop();
+        (recognitionRef.current as { stop?: () => void }).stop?.();
       } catch {
         // Ignore
       }
@@ -647,23 +677,6 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     return false;
   };
 
-  // Web Speech Types
-  interface SpeechResultItem {
-    transcript: string;
-  }
-  interface SpeechResultList {
-    readonly length: number;
-    [index: number]: {
-      isFinal: boolean;
-      [index: number]: SpeechResultItem;
-    };
-  }
-  interface SpeechEvent {
-    results: SpeechResultList;
-  }
-  interface SpeechErrorEvent {
-    error: string;
-  }
 
   // Toggle Voice Recording
   const handleToggleVoice = () => {
@@ -678,7 +691,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       }
       if (recognitionRef.current) {
         try {
-          (recognitionRef.current as any).stop();
+          (recognitionRef.current as { stop?: () => void }).stop?.();
         } catch {
           // Ignore
         }
@@ -855,7 +868,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         recognitionRef.current = recognition;
         setAudioState('listening');
         isListeningRef.current = true;
-      } catch (err) {
+      } catch {
         setAudioState('listening');
         isListeningRef.current = true;
       }
@@ -876,7 +889,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         .then((stream) => {
           mediaStreamRef.current = stream;
           const globalWin = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
-          const MediaRecorderConstructor = globalWin?.MediaRecorder as any;
+          const MediaRecorderConstructor = globalWin?.MediaRecorder as (new (stream: MediaStream) => MediaRecorder) | undefined;
 
           if (MediaRecorderConstructor && isListeningRef.current) {
             try {

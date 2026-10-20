@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, HelpCircle, Globe, RotateCcw, ArrowLeft, Sparkles, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PatientAITransparencyLedger } from '../features/patient-intake/PatientAITransparencyLedger';
+import { ThemeToggle } from '../lib/theme';
 
 export interface KioskLayoutProps {
   title?: string;
@@ -73,6 +74,8 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
               </span>
             </div>
           )}
+
+          <ThemeToggle />
 
           <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.04] px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10">
             <Globe className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
