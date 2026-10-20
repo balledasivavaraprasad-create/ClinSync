@@ -267,7 +267,7 @@ class EncounterService:
             # Symptom-specific adaptive branches
             if any(k in primary_complaint for k in ["chest", "heart", "tightness", "pressure"]):
                 if "duration" not in known_concepts and "onset" not in known_concepts:
-                    next_question = "How long have you experienced this chest tightness, and does it spread to your neck, shoulder, or arm?"
+                    next_question = "I understand you are experiencing chest tightness. How long have you felt this tightness, and does it spread to your neck, jaw, shoulder, or left arm?"
                 elif "severity" not in known_concepts and "pain" not in known_concepts:
                     next_question = "On a scale from 0 to 10, how severe is your discomfort right now, and does it worsen with physical activity?"
                 elif "associated" not in known_concepts and "symptoms" not in known_concepts:

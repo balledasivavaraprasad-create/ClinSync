@@ -20,6 +20,9 @@ export interface ConversationMessage {
   status?: 'complete' | 'interrupted' | 'speaking';
   category?: string;
   extractedFacts?: ClinicalFact[];
+  turnId?: number;
+  questionId?: string;
+  questionText?: string;
 }
 
 export interface ConversationalIntakeSession {
@@ -121,7 +124,8 @@ export function createConversationalSession(
  */
 export function extractClinicalDimensions(
   text: string,
-  existingFields: Record<string, string>
+  existingFields: Record<string, string>,
+  activeQuestion?: { id: string; prompt: string; fieldKey: string; turnId?: number }
 ): {
   chiefComplaint?: string;
   duration?: string;
@@ -173,10 +177,12 @@ export function extractClinicalDimensions(
   // 4. Extract Duration / Onset
   let duration: string | undefined;
   const durationMatch = lower.match(
-    /\b(?:for\s+\d+\s*(?:days?|weeks?|months?|hours?)|since\s+(?:yesterday|this\s+morning|last\s+night|a\s+week|\d+\s+days?)|started\s+(?:today|yesterday|this\s+morning|\d+\s+days?\s+ago)|just\s+started|past\s+\d+\s*days?)\b/i
+    /\b(?:for\s+\d+\s*(?:days?|weeks?|months?|hours?)|since\s+(?:yesterday|this\s+morning|last\s+night|a\s+week|\d+\s+(?:days?|hours?))|started\s+(?:today|yesterday|this\s+morning|\d+\s+(?:hours?|days?|weeks?)\s*(?:ago)?)|\d+\s+(?:hours?|days?|weeks?)\s+ago|just\s+started|past\s+\d+\s*(?:days?|hours?))\b/i
   );
   if (durationMatch) {
     duration = durationMatch[0].trim();
+  } else if (activeQuestion?.fieldKey === 'duration') {
+    duration = text.trim();
   }
 
   // 5. Extract Severity
@@ -294,7 +300,8 @@ export function calculateCoverage(fields: Record<string, string>): number {
  */
 export function processPatientUtterance(
   session: ConversationalIntakeSession,
-  utterance: string
+  utterance: string,
+  activeQuestion?: { id: string; prompt: string; fieldKey: string; turnId?: number }
 ): ConversationalTurnResult {
   const cleanInput = utterance.trim();
 
@@ -313,7 +320,7 @@ export function processPatientUtterance(
       fact_type: 'symptom',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 1.0,
@@ -357,7 +364,7 @@ export function processPatientUtterance(
   }
 
   // Step 2: Extract clinical signals from patient speech
-  const signals = extractClinicalDimensions(cleanInput, session.knownFields);
+  const signals = extractClinicalDimensions(cleanInput, session.knownFields, activeQuestion);
   const updatedKnownFields = { ...session.knownFields };
   const newFacts: ClinicalFact[] = [];
 
@@ -375,7 +382,7 @@ export function processPatientUtterance(
       fact_type: 'symptom',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 0.95,
@@ -398,7 +405,7 @@ export function processPatientUtterance(
       fact_type: 'symptom',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 0.94,
@@ -421,7 +428,7 @@ export function processPatientUtterance(
       fact_type: 'symptom',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 0.92,
@@ -444,7 +451,7 @@ export function processPatientUtterance(
       fact_type: 'symptom',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 0.93,
@@ -467,7 +474,7 @@ export function processPatientUtterance(
       fact_type: 'medication',
       status: 'reported',
       source_type: 'PATIENT_VOICE',
-      source_id: `turn_${session.turnCount + 1}`,
+      source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
       source_location: null,
       extraction_method: 'automated_llm',
       confidence: 0.91,
@@ -492,7 +499,7 @@ export function processPatientUtterance(
         fact_type: 'symptom',
         status: 'reported',
         source_type: 'PATIENT_VOICE',
-        source_id: `turn_${session.turnCount + 1}`,
+        source_id: activeQuestion?.id || `turn_${session.turnCount + 1}`,
         source_location: null,
         extraction_method: 'automated_llm',
         confidence: 0.98,
@@ -647,6 +654,9 @@ export function processPatientUtterance(
     text: cleanInput,
     timestamp: Date.now(),
     extractedFacts: newFacts,
+    turnId: activeQuestion?.turnId || session.turnCount + 1,
+    questionId: activeQuestion?.id,
+    questionText: activeQuestion?.prompt,
   };
 
   const assistantMsg: ConversationMessage = {
@@ -656,6 +666,8 @@ export function processPatientUtterance(
     timestamp: Date.now() + 1,
     status: 'complete',
     category: actionType === 'summarize_confirm' ? 'Clinical Summary' : 'Intake Dialogue',
+    turnId: (activeQuestion?.turnId || session.turnCount) + 1,
+    questionText: responseText,
   };
 
   const updatedSession: ConversationalIntakeSession = {

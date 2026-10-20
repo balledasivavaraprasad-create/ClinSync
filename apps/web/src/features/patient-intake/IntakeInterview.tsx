@@ -42,6 +42,7 @@ import {
 
 export interface IntakeQuestion {
   id: string;
+  turnId?: number;
   fieldKey: string;
   category: string;
   prompt: string;
@@ -57,6 +58,7 @@ export interface IntakeQuestion {
  */
 export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
   id: 'q1_chief_complaint',
+  turnId: 1,
   fieldKey: 'chief_complaint',
   category: 'Chief Complaint',
   prompt: 'What primary health symptom or discomfort brings you in today?',
@@ -69,7 +71,6 @@ export const INITIAL_INTAKE_QUESTION: IntakeQuestion = {
     'Joint & muscle aches',
   ],
   inputType: 'text',
-  audioUrl: '/audio/receptionist/q1_welcome.mp3',
 };
 
 export function determineNextAdaptiveQuestion(
@@ -146,7 +147,6 @@ export function determineNextAdaptiveQuestion(
       subtitle: 'An approximate timeline helps the clinical team prioritize your assessment.',
       quickChips: ['Just started today', 'Past 2 to 3 days', 'About 1 week', 'More than 2 weeks'],
       inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_general.mp3',
     };
   }
 
@@ -170,7 +170,6 @@ export function determineNextAdaptiveQuestion(
         subtitle: 'Onset timeline helps evaluate whether this is acute or chronic.',
         quickChips: ['Started yesterday, mild itch', 'Just noticed it today', 'About 3 days, not spreading', 'Itches when touched'],
         inputType: 'chips',
-        audioUrl: '/audio/receptionist/q2_general.mp3',
       };
     }
     return null;
@@ -186,9 +185,10 @@ export function determineNextAdaptiveQuestion(
     if (!answers['duration'] && !hasMentionedDuration) {
       return {
         id: 'q2_duration_chest',
+        turnId: stepIndex + 1,
         fieldKey: 'duration',
         category: 'Symptom Timeline & Radiation',
-        prompt: 'How long have you felt this chest tightness, and does it spread to your neck, jaw, shoulder, or left arm?',
+        prompt: 'I understand you are experiencing chest tightness. How long have you felt this tightness, and does it spread to your neck, jaw, shoulder, or left arm?',
         subtitle: 'Knowing onset timeline and radiation helps our cardiology team evaluate urgency.',
         quickChips: [
           'Started this morning',
@@ -197,7 +197,6 @@ export function determineNextAdaptiveQuestion(
           'Constant heaviness for a week',
         ],
         inputType: 'chips',
-        audioUrl: '/audio/receptionist/q2_chest.mp3',
       };
     }
     if (!answers['severity'] && !hasMentionedSeverity) {
@@ -209,7 +208,6 @@ export function determineNextAdaptiveQuestion(
         subtitle: '0 is completely pain-free; 10 is the most severe pain imaginable.',
         quickChips: ['3 - Mild', '5 - Moderate', '8 - Severe', 'Worse when walking'],
         inputType: 'slider',
-        audioUrl: '/audio/receptionist/q3_severity.mp3',
       };
     }
     if (!answers['associated_symptoms'] && !hasMentionedAssociated) {
@@ -227,7 +225,6 @@ export function determineNextAdaptiveQuestion(
           'No other symptoms',
         ],
         inputType: 'chips',
-        audioUrl: '/audio/receptionist/q4_associated.mp3',
       };
     }
     if (!answers['medications_allergies'] && !hasMentionedMeds) {
@@ -245,7 +242,6 @@ export function determineNextAdaptiveQuestion(
           'No regular medications or allergies',
         ],
         inputType: 'text',
-        audioUrl: '/audio/receptionist/q5_medications.mp3',
       };
     }
     if (!answers['final_review'] && stepIndex < 6) {
@@ -283,7 +279,6 @@ export function determineNextAdaptiveQuestion(
           'Worse at night and early morning',
         ],
         inputType: 'chips',
-        audioUrl: '/audio/receptionist/q2_cough.mp3',
       };
     }
     if (!answers['breathing_difficulty'] && !hasMentionedAssociated) {
@@ -329,7 +324,6 @@ export function determineNextAdaptiveQuestion(
           'Burning sensation in upper stomach',
         ],
         inputType: 'chips',
-        audioUrl: '/audio/receptionist/q2_general.mp3',
       };
     }
     if (!answers['associated_gi'] && !hasMentionedAssociated) {
@@ -369,7 +363,6 @@ export function determineNextAdaptiveQuestion(
         'Intermittent over the past month',
       ],
       inputType: 'chips',
-      audioUrl: '/audio/receptionist/q2_general.mp3',
     };
   }
 
@@ -382,7 +375,6 @@ export function determineNextAdaptiveQuestion(
       subtitle: 'Quantifies symptom severity to inform clinical decision-making.',
       quickChips: ['2 - Mild annoyance', '4 - Moderate discomfort', '7 - Severe, disrupts sleep', 'Interferes with daily work'],
       inputType: 'slider',
-      audioUrl: '/audio/receptionist/q3_severity.mp3',
     };
   }
 
@@ -448,6 +440,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
   const turnIdRef = useRef<number>(0);
   const activeAbortControllerRef = useRef<AbortController | null>(null);
   const interruptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSpokenTurnIdRef = useRef<number | null>(null);
 
   // Dynamic adaptive question tracking
   const [currentQuestion, setCurrentQuestion] = useState<IntakeQuestion>(INITIAL_INTAKE_QUESTION);
@@ -479,8 +472,8 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
       (globalWindow.webkitSpeechRecognition as { new (): any } | undefined)
     : null;
 
-  // Stop active speech playback and invalidate pending async responses immediately
-  const handleStopAssistant = useCallback(() => {
+  // Halt physical audio and browser speech synthesis immediately without altering UI state
+  const silenceAudio = useCallback(() => {
     // 1. Invalidate current turn token
     turnIdRef.current += 1;
 
@@ -505,6 +498,11 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     stopAllSpeech();
 
     setIsAiSpeaking(false);
+  }, []);
+
+  // Stop active speech playback and mark as interrupted
+  const handleStopAssistant = useCallback(() => {
+    silenceAudio();
     setAudioState('interrupted');
 
     // Update last assistant message status in transcript
@@ -520,7 +518,7 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         setAudioState('idle');
       }
     }, 1200);
-  }, []);
+  }, [silenceAudio]);
 
   // Natural Interruption / Barge-in trigger when speech detected while speaking
   const handleBargeIn = useCallback(() => {
@@ -530,33 +528,21 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     }
   }, [isAiSpeaking, audioState, handleStopAssistant]);
 
-  // Play ElevenLabs voice question with full cancellation token safety
+  // Play canonical voice question with strict turn token synchronization & race elimination
   const playReceptionistVoice = useCallback(
-    async (text: string, preRenderedUrl?: string) => {
+    async (text: string, turnId?: number) => {
       if (!text || aiAudioMuted || isPaused) return;
 
-      const thisTurnId = ++turnIdRef.current;
+      const thisTurnId = turnId ?? ++turnIdRef.current;
+      turnIdRef.current = thisTurnId;
+
       const abortCtrl = new AbortController();
       activeAbortControllerRef.current = abortCtrl;
 
       setIsAiSpeaking(true);
       setAudioState('speaking');
 
-      // 1. Try pre-rendered file if available
-      if (preRenderedUrl) {
-        const audio = aiAudioRef.current;
-        if (audio) {
-          audio.src = preRenderedUrl;
-          try {
-            await audio.play();
-            return;
-          } catch {
-            // Autoplay blocked or failed; fall through to dynamic synthesis
-          }
-        }
-      }
-
-      // 2. Synthesize dynamically with ElevenLabs (with AbortSignal)
+      // 1. Synthesize dynamically with ElevenLabs (with AbortSignal) if API key available
       try {
         const dynamicUrl = await synthesizeSpeech(text, 'receptionist', abortCtrl.signal);
         // Ensure no intervening stop/interruption occurred
@@ -566,18 +552,36 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
 
         if (dynamicUrl && aiAudioRef.current) {
           aiAudioRef.current.src = dynamicUrl;
+          aiAudioRef.current.onended = () => {
+            if (thisTurnId === turnIdRef.current) {
+              setIsAiSpeaking(false);
+              setAudioState('idle');
+            }
+          };
+          aiAudioRef.current.onerror = () => {
+            if (thisTurnId === turnIdRef.current) {
+              setIsAiSpeaking(false);
+              setAudioState('idle');
+            }
+          };
           await aiAudioRef.current.play();
           return;
         }
       } catch {
-        // Fall back to SpeechSynthesis
+        // Fall back to Browser Web Speech Synthesis
       }
 
-      // 3. Fallback to Browser SpeechSynthesis
-      if (typeof window !== 'undefined' && window.speechSynthesis && thisTurnId === turnIdRef.current) {
+      // 2. Fallback to Browser SpeechSynthesis (Web Speech API) using the exact canonical text
+      if (typeof window !== 'undefined' && window.speechSynthesis && thisTurnId === turnIdRef.current && !abortCtrl.signal.aborted) {
         try {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
+          utterance.onstart = () => {
+            if (thisTurnId === turnIdRef.current) {
+              setIsAiSpeaking(true);
+              setAudioState('speaking');
+            }
+          };
           utterance.onend = () => {
             if (thisTurnId === turnIdRef.current) {
               setIsAiSpeaking(false);
@@ -595,24 +599,35 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
           setIsAiSpeaking(false);
           setAudioState('idle');
         }
+      } else {
+        // Honest fallback: Audio not available in environment, return to idle
+        setIsAiSpeaking(false);
+        setAudioState('idle');
       }
     },
     [aiAudioMuted, isPaused]
   );
 
-  // Play voice when question changes
+  // Play audio when canonical question changes, guarded against duplicate re-renders
   useEffect(() => {
-    if (currentQuestion?.prompt && !isPaused) {
-      playReceptionistVoice(currentQuestion.prompt, currentQuestion.audioUrl);
+    const qTurnId = currentQuestion?.turnId || 1;
+    if (
+      currentQuestion?.prompt &&
+      !isPaused &&
+      modality === 'voice' &&
+      lastSpokenTurnIdRef.current !== qTurnId
+    ) {
+      lastSpokenTurnIdRef.current = qTurnId;
+      playReceptionistVoice(currentQuestion.prompt, qTurnId);
     }
     return () => {
-      handleStopAssistant();
+      silenceAudio();
     };
-  }, [currentQuestion, playReceptionistVoice, isPaused, handleStopAssistant]);
+  }, [currentQuestion, playReceptionistVoice, isPaused, modality, handleStopAssistant]);
 
   // Pause conversation
   const handlePauseConversation = () => {
-    handleStopAssistant();
+    silenceAudio();
     if (isListeningRef.current && recognitionRef.current) {
       try {
         (recognitionRef.current as any).stop();
@@ -971,10 +986,12 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
         // Conclude
         onComplete(updatedFacts);
       } else {
-        // Personalize prompt with conversational response if available
+        // Establish single canonical prompt for UI, TTS, and ledger
+        const canonicalPrompt = turnResult.assistantResponseText || nextQ.prompt;
         const enhancedQ: IntakeQuestion = {
           ...nextQ,
-          prompt: turnResult.assistantResponseText || nextQ.prompt,
+          turnId: currentStepIndex + 2,
+          prompt: canonicalPrompt,
         };
         setQuestionHistory((prev) => [...prev, enhancedQ]);
         setCurrentQuestion(enhancedQ);
@@ -1013,11 +1030,13 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
     setIsInactiveWarning(false);
   };
 
-  // Replay receptionist voice
+  // Replay canonical question voice
   const handleReplayAiVoice = () => {
     resetTimer();
     if (currentQuestion?.prompt) {
-      playReceptionistVoice(currentQuestion.prompt, currentQuestion.audioUrl);
+      const qTurnId = currentQuestion.turnId || 1;
+      lastSpokenTurnIdRef.current = qTurnId;
+      playReceptionistVoice(currentQuestion.prompt, qTurnId);
     }
   };
 
@@ -1391,7 +1410,10 @@ export const IntakeInterview: React.FC<IntakeInterviewProps> = ({
             </span>
           </div>
 
-          <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal pt-3 leading-snug tracking-tight">
+          <h2
+            data-testid="canonical-question-prompt"
+            className="font-serif text-2xl sm:text-3xl text-white font-normal pt-3 leading-snug tracking-tight"
+          >
             {currentQuestion.prompt}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
