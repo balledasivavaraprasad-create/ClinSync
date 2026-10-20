@@ -18,7 +18,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-export type UserRole = 'doctor' | 'kiosk' | 'auditor';
+export type UserRole = 'doctor' | 'kiosk' | 'auditor' | 'staff';
 
 export interface LoginSuccessPayload {
   role: UserRole;
@@ -94,6 +94,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           userName: 'Tablet Intake Station 01',
           department: 'Emergency & Urgent Ambulatory Check-in',
         });
+      } else if (selectedRole === 'staff') {
+        onLoginSuccess({
+          role: 'staff',
+          userId: userId || 'nurse_sarah_lin',
+          userName: 'Sarah Lin, RN',
+          department: 'Front Desk & Triage Operations',
+        });
       } else {
         onLoginSuccess({
           role: 'auditor',
@@ -149,7 +156,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6 relative z-10">
         <div className="w-full max-w-md space-y-6">
           {/* Presets Bar / Role Switcher */}
-          <div className="bg-[#050811]/90 p-1.5 rounded-2xl border border-white/[0.08] grid grid-cols-3 gap-1.5 shadow-inner backdrop-blur-xl">
+          <div className="bg-[#050811]/90 p-1.5 rounded-2xl border border-white/[0.08] grid grid-cols-2 sm:grid-cols-4 gap-1.5 shadow-inner backdrop-blur-xl">
             <button
               type="button"
               onClick={() => {
@@ -183,6 +190,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             >
               <Tablet className="w-3.5 h-3.5" />
               <span>{t('auth.kiosk_role', 'Patient Kiosk')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRole('staff');
+                setUserId('nurse_sarah_lin');
+                setErrorMessage(null);
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                selectedRole === 'staff'
+                  ? 'bg-cyan-400 text-slate-950 font-bold shadow-md shadow-cyan-400/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+              }`}
+              data-testid="role-tab-staff"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Staff Desk</span>
             </button>
             <button
               type="button"

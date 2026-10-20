@@ -4,7 +4,7 @@ import { initLandingInteractions } from './landingInteractions';
 import { useTheme } from '../../lib/theme';
 
 export interface LandingPageProps {
-  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor') => void;
+  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'staff' | 'dashboard') => void;
   onOpenLogin?: () => void;
 }
 
@@ -171,11 +171,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
       <div className="mobile-menu" id="mobileMenu">
         <button
           onClick={() => onLaunchApp('kiosk')}
-          style={{ color: 'var(--accent, #ea580c)', fontWeight: 600, textAlign: 'left', padding: '12px 0' }}
+          style={{ color: 'var(--accent, #ea580c)', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
           data-action="launch-app"
           data-tab="kiosk"
         >
-          Launch Web App →
+          Launch Web App (Kiosk) →
+        </button>
+        <button
+          onClick={() => onLaunchApp('doctor')}
+          style={{ color: '#06b6d4', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
+          data-testid="mobile-link-doctor"
+        >
+          Doctor Console →
+        </button>
+        <button
+          onClick={() => onLaunchApp('staff')}
+          style={{ color: '#10b981', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
+          data-testid="mobile-link-staff"
+        >
+          Hospital Staff Desk →
+        </button>
+        <button
+          onClick={() => onLaunchApp('dashboard')}
+          style={{ color: '#8b5cf6', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
+          data-testid="mobile-link-dashboard"
+        >
+          Command Center →
         </button>
         <a
           href="https://clinsync-landing.vercel.app/downloads/ClinSync.apk"
@@ -308,6 +329,74 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
                 </svg>
                 <span>Download Android APK</span>
               </a>
+            </div>
+
+            {/* Direct Role Launchers (Person 1 Role Separation Directive) */}
+            <div
+              className="hero__role-launchers reveal"
+              data-testid="hero-role-launchers"
+              style={{
+                marginTop: '20px',
+                padding: '14px 18px',
+                borderRadius: '16px',
+                background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(12px)',
+                display: 'inline-flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  opacity: 0.75,
+                  fontWeight: 600,
+                  marginRight: '6px',
+                }}
+              >
+                Role Workspaces:
+              </span>
+              <button
+                type="button"
+                onClick={() => onLaunchApp('kiosk')}
+                className="btn btn--line btn--sm"
+                data-testid="hero-role-kiosk"
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Patient Kiosk
+              </button>
+              <button
+                type="button"
+                onClick={() => onLaunchApp('doctor')}
+                className="btn btn--line btn--sm"
+                data-testid="hero-role-doctor"
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Doctor Console
+              </button>
+              <button
+                type="button"
+                onClick={() => onLaunchApp('staff')}
+                className="btn btn--line btn--sm"
+                data-testid="hero-role-staff"
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Hospital Staff
+              </button>
+              <button
+                type="button"
+                onClick={() => onLaunchApp('dashboard')}
+                className="btn btn--line btn--sm"
+                data-testid="hero-role-dashboard"
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Command Center
+              </button>
             </div>
 
             <div className="hero__tags reveal">

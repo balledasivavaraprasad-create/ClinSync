@@ -6,7 +6,7 @@ import { ErrorState } from '../components/shared/ErrorState';
 import { ThemeProvider } from '../lib/theme';
 import { LanguageProvider } from '../lib/i18n';
 
-type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'profile';
+type TabType = 'dashboard' | 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'profile' | 'staff';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -64,19 +64,25 @@ function parseRoute(): { view: 'landing' | 'login' | 'app'; tab: TabType } {
     hash.startsWith('#/dashboard') ||
     hash.startsWith('#/kiosk') ||
     hash.startsWith('#/doctor') ||
+    hash.startsWith('#/staff') ||
     hash.startsWith('#/ledger') ||
     hash.startsWith('#/appointments') ||
     hash.startsWith('#/profile') ||
     search.includes('view=app') ||
     search.includes('app=1') ||
-    pathname.startsWith('/app')
+    pathname.startsWith('/app') ||
+    pathname.startsWith('/kiosk') ||
+    pathname.startsWith('/doctor') ||
+    pathname.startsWith('/staff') ||
+    pathname.startsWith('/dashboard')
   ) {
     let tab: TabType = 'dashboard';
-    if (hash.includes('kiosk')) tab = 'kiosk';
-    else if (hash.includes('doctor')) tab = 'doctor';
-    else if (hash.includes('ledger')) tab = 'ledger';
-    else if (hash.includes('appointments')) tab = 'appointments';
-    else if (hash.includes('profile')) tab = 'profile';
+    if (hash.includes('kiosk') || pathname.startsWith('/kiosk')) tab = 'kiosk';
+    else if (hash.includes('doctor') || pathname.startsWith('/doctor')) tab = 'doctor';
+    else if (hash.includes('staff') || pathname.startsWith('/staff')) tab = 'staff';
+    else if (hash.includes('ledger') || pathname.startsWith('/ledger')) tab = 'ledger';
+    else if (hash.includes('appointments') || pathname.startsWith('/appointments')) tab = 'appointments';
+    else if (hash.includes('profile') || pathname.startsWith('/profile')) tab = 'profile';
 
     return { view: 'app', tab };
   }
@@ -104,7 +110,7 @@ export const App: React.FC = () => {
     const targetTab = tab || 'dashboard';
     setActiveTab(targetTab);
     setRoute('app');
-    window.location.hash = targetTab === 'dashboard' ? '#/app' : `#/app/${targetTab}`;
+    window.location.hash = targetTab === 'dashboard' ? '#/dashboard' : `#/${targetTab}`;
     window.scrollTo(0, 0);
   };
 
@@ -119,6 +125,8 @@ export const App: React.FC = () => {
     let targetTab: TabType = 'kiosk';
     if (payload.role === 'doctor') {
       targetTab = 'doctor';
+    } else if (payload.role === 'staff' || (payload.role as string) === 'nurse') {
+      targetTab = 'staff';
     } else if (payload.role === 'auditor') {
       targetTab = 'ledger';
     } else {
@@ -127,7 +135,7 @@ export const App: React.FC = () => {
 
     setActiveTab(targetTab);
     setRoute('app');
-    window.location.hash = `#/app/${targetTab}`;
+    window.location.hash = `#/${targetTab}`;
     window.scrollTo(0, 0);
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, Bell, LogOut } from 'lucide-react';
+import { Stethoscope, Bell, LogOut, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export interface DoctorConsoleLayoutProps {
@@ -7,6 +7,7 @@ export interface DoctorConsoleLayoutProps {
   department?: string;
   activePatientCount?: number;
   onLogout?: () => void;
+  onBackToLanding?: () => void;
   children: React.ReactNode;
 }
 
@@ -15,13 +16,29 @@ export const DoctorConsoleLayout: React.FC<DoctorConsoleLayoutProps> = ({
   department = 'Cardiology & Outpatient Triage',
   activePatientCount = 2,
   onLogout,
+  onBackToLanding,
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-transparent flex flex-col text-slate-100 font-sans relative">
+    <div
+      data-testid="doctor-console-layout"
+      className="min-h-screen bg-transparent flex flex-col text-slate-100 font-sans relative"
+    >
       {/* Clinician Top App Bar with Frosted Glassmorphism */}
       <header className="bg-[#080c17]/90 backdrop-blur-2xl border-b border-white/[0.08] px-6 py-4 shadow-2xl flex items-center justify-between relative z-10">
         <div className="flex items-center space-x-4">
+          {onBackToLanding && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBackToLanding}
+              leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+              className="text-slate-400 hover:text-white hover:bg-white/[0.06] text-xs border border-white/10"
+              aria-label="Back to Portal"
+            >
+              Portal
+            </Button>
+          )}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
             <Stethoscope className="w-5 h-5" />
           </div>

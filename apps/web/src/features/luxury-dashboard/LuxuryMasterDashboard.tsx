@@ -36,7 +36,8 @@ export type DashboardTabType =
   | 'ledger'
   | 'appointments'
   | 'doctor'
-  | 'profile';
+  | 'profile'
+  | 'staff';
 
 export interface LuxuryMasterDashboardProps {
   activeTab?: DashboardTabType;
@@ -44,6 +45,7 @@ export interface LuxuryMasterDashboardProps {
   onNavigateToTab?: (tab: string) => void;
   onLaunchKiosk?: () => void;
   onOpenDoctorConsole?: () => void;
+  onOpenStaffOperations?: () => void;
   onOpenLedger?: () => void;
   onOpenAppointments?: () => void;
   onOpenProfile?: () => void;
@@ -84,8 +86,10 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   onNavigateToTab,
   onLaunchKiosk,
   onOpenDoctorConsole,
+  onOpenStaffOperations,
   onOpenLedger,
   onOpenAppointments,
+  onOpenProfile,
   onOpenLogin,
   onBackToLanding,
   currentUser,
@@ -276,8 +280,12 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
       onLaunchKiosk();
     } else if (tab === 'doctor' && onOpenDoctorConsole) {
       onOpenDoctorConsole();
+    } else if (tab === 'staff' && onOpenStaffOperations) {
+      onOpenStaffOperations();
     } else if (tab === 'ledger' && onOpenLedger) {
       onOpenLedger();
+    } else if (tab === 'profile' && onOpenProfile) {
+      onOpenProfile();
     } else if (onSelectTab) {
       onSelectTab(tab);
     } else if (onNavigateToTab) {
@@ -288,6 +296,7 @@ export const LuxuryMasterDashboard: React.FC<LuxuryMasterDashboardProps> = ({
   const navItems = [
     { id: 'dashboard', label: t('nav.dashboard', 'Command Center'), icon: LayoutDashboard, testId: 'tab-dashboard' },
     { id: 'kiosk', label: t('nav.kiosk', 'Patient Kiosk'), icon: Tablet, testId: 'tab-kiosk' },
+    { id: 'staff', label: t('nav.staff', 'Staff Desk'), icon: Users, testId: 'tab-staff-operations' },
     { id: 'ledger', label: t('nav.ledger', 'Clinical Ledger'), icon: FileSpreadsheet, testId: 'tab-ledger-diff' },
     { id: 'appointments', label: t('nav.appointments', 'Smart Booking'), icon: Calendar, testId: 'tab-appointments' },
     { id: 'doctor', label: t('nav.doctor', 'Doctor Console'), icon: Stethoscope, testId: 'tab-doctor-console' },

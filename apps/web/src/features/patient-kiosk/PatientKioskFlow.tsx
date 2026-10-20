@@ -21,8 +21,14 @@ export type KioskFlowStep =
   | 'documents'
   | 'scheduling';
 
-export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
+export interface PatientKioskFlowProps {
+  initialStep?: KioskFlowStep;
+  onBackToLanding?: () => void;
+}
+
+export const PatientKioskFlow: React.FC<PatientKioskFlowProps> = ({
   initialStep = 'welcome',
+  onBackToLanding,
 }) => {
   const [currentStep, setCurrentStep] = useState<KioskFlowStep>(initialStep);
   const [patientId, setPatientId] = useState<string>('');
@@ -122,6 +128,7 @@ export const PatientKioskFlow: React.FC<{ initialStep?: KioskFlowStep }> = ({
     <KioskLayout
       onResetSession={handleResetSession}
       onHelp={() => alert('Hospital Staff notified to assist Kiosk Station A.')}
+      onBackToLanding={onBackToLanding}
     >
       <div className="w-full flex justify-center py-4">
         {currentStep === 'welcome' && (

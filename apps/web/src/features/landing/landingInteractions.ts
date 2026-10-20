@@ -4,7 +4,7 @@
  */
 
 export interface LandingInteractionCallbacks {
-  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor') => void;
+  onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'staff' | 'dashboard') => void;
 }
 
 export function initLandingInteractions(

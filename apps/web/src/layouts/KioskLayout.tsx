@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, HelpCircle, Globe, RotateCcw } from 'lucide-react';
+import { Shield, HelpCircle, Globe, RotateCcw, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export interface KioskLayoutProps {
@@ -9,6 +9,7 @@ export interface KioskLayoutProps {
   totalSteps?: number;
   onResetSession?: () => void;
   onHelp?: () => void;
+  onBackToLanding?: () => void;
   children: React.ReactNode;
 }
 
@@ -19,10 +20,15 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
   totalSteps,
   onResetSession,
   onHelp,
+  onBackToLanding,
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-transparent flex flex-col justify-between text-slate-100 select-none relative">
+    <div
+      data-testid="patient-kiosk-layout"
+      className="min-h-screen bg-transparent flex flex-col justify-between text-slate-100 select-none relative"
+    >
+      <span className="sr-only">Phase 1–6 Prototype</span>
       {/* Top Tablet Header Bar */}
       <header className="bg-[#080c17]/90 backdrop-blur-2xl border-b border-white/[0.08] px-6 py-4 shadow-2xl flex items-center justify-between relative z-10">
         <div className="flex items-center space-x-3.5">
@@ -55,6 +61,19 @@ export const KioskLayout: React.FC<KioskLayoutProps> = ({
             <Globe className="w-3.5 h-3.5 text-cyan-400" />
             <span>English (US)</span>
           </div>
+
+          {onBackToLanding && (
+            <button
+              type="button"
+              onClick={onBackToLanding}
+              data-testid="btn-back-to-landing"
+              className="text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] px-3 py-1.5 rounded-full transition-all flex items-center space-x-1.5 shadow-sm cursor-pointer"
+              title="Return to the ClinSync landing page"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Portal</span>
+            </button>
+          )}
 
           {onResetSession && (
             <Button
