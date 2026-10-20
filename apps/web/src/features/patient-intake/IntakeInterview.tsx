@@ -43,7 +43,7 @@ export interface IntakeQuestion {
  * Adaptive Clinical Questioning Engine
  * Dynamically computes the next conversational question based on previous inputs & Mem0 Agent Memory.
  */
-export function getAdaptiveQuestions(
+function getAdaptiveQuestions(
   answers: Record<string, string>,
   memoryHarness?: AgentMemoryHarness
 ): IntakeQuestion[] {
@@ -299,8 +299,6 @@ export function getAdaptiveQuestions(
     },
   ];
 }
-
-export const INTAKE_QUESTIONS = getAdaptiveQuestions({});
 
 // Red-flag terms that trigger emergency escalation
 const RED_FLAG_KEYWORDS = [

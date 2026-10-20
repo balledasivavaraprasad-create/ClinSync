@@ -67,6 +67,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; defaultTheme?:
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = (): ThemeContextValue => {
   const context = useContext(ThemeContext);
   if (!context) {

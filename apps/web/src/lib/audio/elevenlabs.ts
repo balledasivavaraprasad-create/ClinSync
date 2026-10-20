@@ -4,7 +4,7 @@
  */
 
 export const ELEVENLABS_CONFIG = {
-  apiKey: 'sk_5d3dec9f5341ac40f6a75d3d32752cc93835a105a24b8677',
+  apiKey: (import.meta.env.VITE_ELEVENLABS_API_KEY as string) || '',
   modelId: 'eleven_flash_v2_5',
   voices: {
     receptionist: 'EXAVITQu4vr4xnSDxMaL', // Bella (warm, empathetic female receptionist)
@@ -23,6 +23,10 @@ export async function synthesizeSpeech(
   text: string,
   voiceType: 'receptionist' | 'clinician' = 'receptionist'
 ): Promise<string | null> {
+  if (!ELEVENLABS_CONFIG.apiKey) {
+    return null;
+  }
+
   const voiceId = ELEVENLABS_CONFIG.voices[voiceType] || ELEVENLABS_CONFIG.voices.receptionist;
   const cacheKey = `${voiceId}:${text.trim()}`;
 
@@ -162,6 +166,10 @@ export async function transcribeAudioWithElevenLabs(
   audioBlob: Blob,
   languageCode: string = 'eng'
 ): Promise<ElevenLabsTranscriptionResult | null> {
+  if (!ELEVENLABS_CONFIG.apiKey) {
+    return null;
+  }
+
   const formData = new FormData();
   const extension = audioBlob.type.includes('mp4') ? 'mp4' : 'webm';
   formData.append('file', audioBlob, `speech_recording.${extension}`);

@@ -39,7 +39,7 @@ export const KioskWelcome: React.FC<KioskWelcomeProps> = ({
   const [language, setLanguage] = useState<SupportedLanguage>(selectedLanguage);
 
   useEffect(() => {
-    if (selectedLanguage && selectedLanguage !== language) {
+    if (selectedLanguage) {
       setLanguage(selectedLanguage);
     }
   }, [selectedLanguage]);
