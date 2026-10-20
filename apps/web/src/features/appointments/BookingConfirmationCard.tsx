@@ -13,6 +13,7 @@ import {
   QrCode,
   ShieldCheck,
 } from 'lucide-react';
+import { AppointmentQRCode } from './AppointmentQRCode';
 import type { BookingResponse } from '../../lib/api/types';
 
 interface BookingConfirmationCardProps {
@@ -163,6 +164,16 @@ export const BookingConfirmationCard: React.FC<BookingConfirmationCardProps> = (
               </div>
             </div>
           </div>
+
+          {/* Scannable Appointment QR Pass */}
+          <AppointmentQRCode
+            bookingId={booking_id}
+            patientName={patientName}
+            slotTime={formatSlotTime(startAt)}
+            slotDate={formatSlotDate(startAt)}
+            doctorName={doctorName}
+            departmentName={departmentName}
+          />
 
           {/* Next Steps Guidance */}
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] text-xs text-slate-300 space-y-1.5">

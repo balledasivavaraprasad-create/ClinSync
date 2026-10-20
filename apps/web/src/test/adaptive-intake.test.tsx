@@ -87,6 +87,44 @@ describe('Adaptive Patient Intake Questioning Engine', () => {
       expect(nextQ?.category).toMatch(/Medication/i);
     });
 
+    it('concludes minor localized complaint in exactly 2 questions without forcing 5', () => {
+      // Turn 1: Patient reports rash
+      const turn1 = { chief_complaint: 'Small rash on my left arm' };
+      const q2 = determineNextAdaptiveQuestion(turn1, 1);
+      expect(q2).not.toBeNull();
+      expect(q2?.fieldKey).toBe('duration');
+
+      // Turn 2: Patient reports duration and onset
+      const turn2 = { ...turn1, duration: 'Started yesterday, mild itch' };
+      const q3 = determineNextAdaptiveQuestion(turn2, 2);
+      // Must conclude at step 2!
+      expect(q3).toBeNull();
+    });
+
+    it('concludes routine cough complaint in exactly 3 questions without forcing 5', () => {
+      const turn1 = { chief_complaint: 'Dry seasonal cough' };
+      const q2 = determineNextAdaptiveQuestion(turn1, 1);
+      expect(q2).not.toBeNull();
+
+      const turn2 = { ...turn1, duration: 'For about 3 days' };
+      const q3 = determineNextAdaptiveQuestion(turn2, 2);
+      expect(q3).not.toBeNull();
+      expect(q3?.fieldKey).toBe('breathing_difficulty');
+
+      const turn3 = { ...turn2, breathing_difficulty: 'Breathing is completely normal' };
+      const q4 = determineNextAdaptiveQuestion(turn3, 3);
+      // Concludes at step 3!
+      expect(q4).toBeNull();
+    });
+
+    it('skips duration question when patient already provided timeline in initial chief complaint', () => {
+      const turn1 = { chief_complaint: 'Severe chest tightness that started this morning' };
+      const q2 = determineNextAdaptiveQuestion(turn1, 1);
+      // Because patient said "started this morning" (duration) and "severe" (intensity), both are covered! Next is associated symptoms
+      expect(q2).not.toBeNull();
+      expect(q2?.fieldKey).toBe('associated_symptoms');
+    });
+
     it('applies bounded safety limit at turn 9 to prevent infinite loops', () => {
       const answers: Record<string, string> = {
         chief_complaint: 'Vague fatigue',

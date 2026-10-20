@@ -311,6 +311,9 @@ describe('TASK-P1-401: Appointment and Scheduling UI Suite', () => {
 
       expect(screen.getByTestId('booking-confirmation-container')).toBeInTheDocument();
       expect(screen.getByTestId('confirmed-booking-id')).toHaveTextContent('bkg_persist_9981');
+      expect(screen.getByTestId('appointment-qr-pass')).toBeInTheDocument();
+      expect(screen.getByText(/Digital Fast-Track QR Pass/i)).toBeInTheDocument();
+      expect(screen.getByText(/Scan Before Your Appointment/i)).toBeInTheDocument();
       expect(screen.getByText(/Appointment Confirmed!/i)).toBeInTheDocument();
       expect(screen.getByText(/Persisted in Hospital Registry/i)).toBeInTheDocument();
       expect(screen.getByText('Dr. Clara Chen, MD (Cardiology)')).toBeInTheDocument();
