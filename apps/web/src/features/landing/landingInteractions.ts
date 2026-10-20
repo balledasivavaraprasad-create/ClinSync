@@ -5,6 +5,7 @@
 
 export interface LandingInteractionCallbacks {
   onLaunchApp: (tab?: 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'staff' | 'dashboard') => void;
+  onOpenLogin?: (role?: 'doctor' | 'kiosk' | 'auditor' | 'staff') => void;
 }
 
 export function initLandingInteractions(
@@ -725,7 +726,7 @@ export function initLandingInteractions(
   }
 
   /* ----------------------------------------------------------
-     16. WIRE PROTOTYPE LAUNCHER BUTTONS
+     16. WIRE PROTOTYPE LAUNCHER & LOGIN BUTTONS
      ---------------------------------------------------------- */
   const launchButtons = $$('[data-action="launch-app"]');
   launchButtons.forEach((btn) => {
@@ -733,6 +734,19 @@ export function initLandingInteractions(
       e.preventDefault();
       const targetTab = btn.dataset.tab as 'kiosk' | 'doctor' | 'ledger' | 'appointments' | undefined;
       callbacks.onLaunchApp(targetTab || 'kiosk');
+    });
+  });
+
+  const loginButtons = $$('[data-action="launch-login"]');
+  loginButtons.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (callbacks.onOpenLogin) {
+        callbacks.onOpenLogin();
+      } else {
+        const tab = btn.dataset.tab as 'kiosk' | 'ledger' | 'appointments' | 'doctor' | 'staff' | 'dashboard' | undefined;
+        callbacks.onLaunchApp(tab || 'kiosk');
+      }
     });
   });
 

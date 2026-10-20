@@ -35,6 +35,7 @@ export const StaffLayout: React.FC<StaffLayoutProps> = ({
               leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
               className="text-slate-400 hover:text-white hover:bg-white/[0.06] text-xs border border-white/10"
               aria-label="Back to Portal"
+              data-testid="btn-back-to-landing"
             >
               Portal
             </Button>

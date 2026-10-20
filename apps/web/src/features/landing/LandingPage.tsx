@@ -16,9 +16,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
     if (!containerRef.current) return;
     const cleanup = initLandingInteractions(containerRef.current, {
       onLaunchApp,
+      onOpenLogin,
     });
     return cleanup;
-  }, [onLaunchApp]);
+  }, [onLaunchApp, onOpenLogin]);
 
   return (
     <div className="clinsync-landing-root" ref={containerRef}>
@@ -121,15 +122,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
               </span>
             </button>
 
-            <button
-              onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('doctor'))}
-              className="btn btn--ghost"
-              data-cursor="login"
-              data-action="launch-login"
-              data-testid="landing-btn-signin"
-            >
-              Sign in
-            </button>
             <a
               href="https://clinsync-landing.vercel.app/downloads/ClinSync.apk"
               download="ClinSync.apk"
@@ -152,11 +144,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
               Platform
             </a>
             <button
-              onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
+              onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('kiosk'))}
               className="btn btn--solid"
               data-cursor="start"
-              data-action="launch-app"
+              data-action="launch-login"
               data-tab="kiosk"
+              data-testid="landing-btn-signin"
             >
               Sign in to get started
             </button>
@@ -170,10 +163,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
 
       <div className="mobile-menu" id="mobileMenu">
         <button
-          onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
+          onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('kiosk'))}
           style={{ color: 'var(--accent, #ea580c)', fontWeight: 600, textAlign: 'left', padding: '10px 0' }}
-          data-action="launch-app"
-          data-tab="kiosk"
+          data-action="launch-login"
         >
           Sign in to get started →
         </button>
@@ -224,10 +216,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
           </button>
         </div>
         <button
-          onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
+          onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('kiosk'))}
           className="mobile-menu__cta"
-          data-action="launch-app"
-          data-tab="kiosk"
+          data-action="launch-login"
           style={{ width: '100%', marginTop: '16px' }}
         >
           Sign in to get started
@@ -295,11 +286,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
 
             <div className="hero__cta reveal">
               <button
-                onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
+                onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('kiosk'))}
                 className="btn btn--solid btn--lg"
                 data-cursor="open"
-                data-action="launch-app"
-                data-tab="kiosk"
+                data-action="launch-login"
+                data-testid="landing-hero-cta"
               >
                 <span>Sign in to get started</span>
                 <svg viewBox="0 0 24 24" fill="none" width="18" height="18" style={{ marginLeft: 8 }}>
@@ -1545,11 +1536,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
             <p className="cta__sub reveal">ClinSync prepares the clinical picture. Your team focuses on care.</p>
             <div className="cta__actions reveal">
               <button
-                onClick={() => (onOpenLogin ? onOpenLogin('kiosk') : onLaunchApp('kiosk'))}
+                onClick={() => (onOpenLogin ? onOpenLogin() : onLaunchApp('kiosk'))}
                 className="btn btn--solid btn--lg"
                 data-cursor="launch"
-                data-action="launch-app"
-                data-tab="kiosk"
+                data-action="launch-login"
+                data-testid="landing-bottom-cta"
               >
                 <span>Sign in to get started</span>
                 <svg viewBox="0 0 24 24" fill="none" width="18" height="18" style={{ marginLeft: 8 }}>

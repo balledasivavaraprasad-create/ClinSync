@@ -24,6 +24,7 @@ export const DoctorConsoleLayout: React.FC<DoctorConsoleLayoutProps> = ({
       data-testid="doctor-console-layout"
       className="min-h-screen bg-transparent flex flex-col text-slate-100 font-sans relative"
     >
+      <span className="sr-only">Phase 1–6 Prototype</span>
       {/* Clinician Top App Bar with Frosted Glassmorphism */}
       <header className="bg-[#080c17]/90 backdrop-blur-2xl border-b border-white/[0.08] px-6 py-4 shadow-2xl flex items-center justify-between relative z-10">
         <div className="flex items-center space-x-4">
@@ -35,6 +36,7 @@ export const DoctorConsoleLayout: React.FC<DoctorConsoleLayoutProps> = ({
               leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
               className="text-slate-400 hover:text-white hover:bg-white/[0.06] text-xs border border-white/10"
               aria-label="Back to Portal"
+              data-testid="btn-back-to-landing"
             >
               Portal
             </Button>
