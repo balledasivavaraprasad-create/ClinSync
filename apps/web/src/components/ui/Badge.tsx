@@ -26,21 +26,21 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   const variants = {
-    neutral: 'bg-slate-800/80 text-slate-200 border-white/10 shadow-sm',
-    success: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10',
-    warning: 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10',
-    error: 'bg-rose-500/15 text-rose-300 border-rose-500/30 shadow-sm shadow-rose-500/10',
-    info: 'bg-sky-500/15 text-sky-300 border-sky-500/30 shadow-sm shadow-sky-500/10',
+    neutral: 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-white/10 shadow-sm',
+    success: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30 shadow-sm shadow-emerald-500/10',
+    warning: 'bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 shadow-sm shadow-amber-500/10',
+    error: 'bg-rose-100 dark:bg-rose-500/15 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-500/30 shadow-sm shadow-rose-500/10',
+    info: 'bg-sky-100 dark:bg-sky-500/15 text-sky-900 dark:text-sky-300 border-sky-300 dark:border-sky-500/30 shadow-sm shadow-sky-500/10',
   };
 
   const statusStyles: Record<ClinicalFactStatus, string> = {
-    reported: 'bg-sky-500/15 border-sky-500/30 font-mono text-[11px] text-sky-800',
-    extracted_unverified: 'bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono text-[11px]',
-    historical_recorded: 'bg-slate-800/80 text-slate-300 border-white/10 font-mono text-[11px]',
-    doctor_confirmed: 'bg-emerald-500/15 border-emerald-500/30 font-mono text-[11px] font-semibold text-emerald-900',
-    uncertain: 'bg-purple-500/15 text-purple-300 border-purple-500/30 font-mono text-[11px]',
-    conflicting: 'bg-red-500/20 border-red-500/40 font-mono text-[11px] font-semibold text-red-800',
-    rejected: 'bg-slate-900/60 text-slate-500 border-slate-700/60 line-through',
+    reported: 'bg-sky-100 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/30 font-mono text-[11px] text-sky-800 dark:text-sky-200',
+    extracted_unverified: 'bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 font-mono text-[11px]',
+    historical_recorded: 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-white/10 font-mono text-[11px]',
+    doctor_confirmed: 'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-300 dark:border-emerald-500/30 font-mono text-[11px] font-semibold text-emerald-900 dark:text-emerald-200',
+    uncertain: 'bg-purple-100 dark:bg-purple-500/15 text-purple-900 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 font-mono text-[11px]',
+    conflicting: 'bg-red-100 dark:bg-red-500/20 border-red-300 dark:border-red-500/40 font-mono text-[11px] font-semibold text-red-800 dark:text-red-200',
+    rejected: 'bg-slate-100 dark:bg-slate-900/60 text-slate-500 border-slate-300 dark:border-slate-700/60 line-through',
   };
 
   const appliedStyle = status ? statusStyles[status] : variants[variant];

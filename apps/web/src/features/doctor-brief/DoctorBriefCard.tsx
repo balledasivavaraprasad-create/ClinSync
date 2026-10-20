@@ -81,16 +81,16 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
         <div
           role="status"
           data-testid="approval-success-banner"
-          className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-200 flex items-center justify-between shadow-lg backdrop-blur-md"
+          className="p-4 rounded-xl border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 flex items-center justify-between shadow-sm dark:shadow-lg backdrop-blur-md"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center font-bold">
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-sm text-white block">Encounter Review & Sign-Off Completed</span>
-              <span className="text-xs text-emerald-300 font-mono">
-                Approval ID: <code className="font-mono text-white">{recordedApproval.approval_id}</code> • Signed at{' '}
+              <span className="font-bold text-sm text-slate-900 dark:text-white block">Encounter Review & Sign-Off Completed</span>
+              <span className="text-xs text-emerald-800 dark:text-emerald-300 font-mono">
+                Approval ID: <code className="font-mono text-slate-900 dark:text-white font-bold">{recordedApproval.approval_id}</code> • Signed at{' '}
                 {new Date(recordedApproval.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
@@ -102,25 +102,25 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
       )}
 
       {/* Main Sourced Brief Card */}
-      <Card className="shadow-2xl border-white/[0.08] bg-[#080d19]/90 backdrop-blur-xl overflow-hidden">
+      <Card className="shadow-sm dark:shadow-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#080d19]/90 backdrop-blur-xl overflow-hidden">
         {/* Top Header Bar */}
-        <CardHeader className="pb-3 border-b border-white/[0.08] bg-[#050811]/60">
+        <CardHeader className="pb-3 border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#050811]/60">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-xs uppercase font-extrabold font-mono tracking-wider text-cyan-300 bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 rounded">
+                <span className="text-xs uppercase font-extrabold font-mono tracking-wider text-cyan-800 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-400/30 px-2 py-0.5 rounded">
                   Encounter #{encounterId}
                 </span>
-                <Badge variant="neutral" size="sm" className="font-mono text-slate-400 border-white/10">
+                <Badge variant="neutral" size="sm" className="font-mono">
                   Evidence Sourced (100% Grounded)
                 </Badge>
               </div>
-              <CardTitle className="text-xl font-black text-white mt-1 flex items-center">
-                <User className="w-5 h-5 mr-2 text-cyan-400" />
+              <CardTitle className="text-xl font-black text-slate-900 dark:text-white mt-1 flex items-center">
+                <User className="w-5 h-5 mr-2 text-cyan-600 dark:text-cyan-400" />
                 {brief.patient_name || patientName} — Clinical Brief
               </CardTitle>
-              <CardDescription className="text-xs text-slate-400 mt-0.5 font-medium">
-                Chief Complaint: <strong className="text-white">{brief.chief_complaint}</strong>
+              <CardDescription className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                Chief Complaint: <strong className="text-slate-900 dark:text-white">{brief.chief_complaint}</strong>
               </CardDescription>
             </div>
 
@@ -133,9 +133,9 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                   onClick={onRegenerateBrief}
                   disabled={isRegenerating}
                   data-testid="regenerate-brief-btn"
-                  className="text-xs text-teal-300 border-teal-500/30 hover:bg-teal-500/10 min-h-[40px] cursor-pointer"
+                  className="text-xs text-teal-700 dark:text-teal-300 border-teal-400/40 dark:border-teal-500/30 hover:bg-teal-50 dark:hover:bg-teal-500/10 min-h-[40px] cursor-pointer"
                 >
-                  <Sparkles className={`w-3.5 h-3.5 mr-1 text-teal-400 ${isRegenerating ? 'animate-spin' : ''}`} />
+                  <Sparkles className={`w-3.5 h-3.5 mr-1 text-teal-600 dark:text-teal-400 ${isRegenerating ? 'animate-spin' : ''}`} />
                   {isRegenerating ? 'Synthesizing...' : 'Regenerate Brief'}
                 </Button>
               )}
@@ -146,7 +146,7 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                 size="sm"
                 onClick={() => setIsAudioExpanded(!isAudioExpanded)}
                 data-testid="toggle-audio-section-btn"
-                className="text-xs text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10 min-h-[40px]"
+                className="text-xs text-cyan-700 dark:text-cyan-300 border-cyan-400/40 dark:border-cyan-500/30 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 min-h-[40px]"
               >
                 <Volume2 className="w-3.5 h-3.5 mr-1" />
                 {isAudioExpanded ? 'Hide Audio Player' : 'Play 60s Summary'}
@@ -184,64 +184,64 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
           {/* Quick Vitals, Medications, and Allergies Strip */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Vitals */}
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1">
-              <span className="text-[11px] font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center">
-                <HeartPulse className="w-3.5 h-3.5 mr-1 text-rose-400" />
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-1">
+              <span className="text-[11px] font-bold font-mono text-cyan-700 dark:text-cyan-400 uppercase tracking-wider flex items-center">
+                <HeartPulse className="w-3.5 h-3.5 mr-1 text-rose-500 dark:text-rose-400" />
                 Investigations & Vitals
               </span>
               {vitals.length > 0 ? (
                 vitals.map((v) => (
-                  <div key={v.id} className="text-xs font-semibold text-slate-300">
-                    {v.concept}: <span className="font-mono text-white font-bold">{v.value} {v.unit || ''}</span>
+                  <div key={v.id} className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {v.concept}: <span className="font-mono text-slate-900 dark:text-white font-bold">{v.value} {v.unit || ''}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-slate-400 italic">Blood pressure 142/88 recorded</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 italic">Blood pressure 142/88 recorded</p>
               )}
             </div>
 
             {/* Current Medications */}
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1">
-              <span className="text-[11px] font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center">
-                <Pill className="w-3.5 h-3.5 mr-1 text-cyan-400" />
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] space-y-1">
+              <span className="text-[11px] font-bold font-mono text-cyan-700 dark:text-cyan-400 uppercase tracking-wider flex items-center">
+                <Pill className="w-3.5 h-3.5 mr-1 text-cyan-600 dark:text-cyan-400" />
                 Current Medications
               </span>
               {medications.length > 0 ? (
                 medications.map((m) => (
-                  <div key={m.id} className="text-xs font-semibold text-slate-200">
+                  <div key={m.id} className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     {m.value}
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-slate-400 italic">Lisinopril 10mg daily</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 italic">Lisinopril 10mg daily</p>
               )}
             </div>
 
             {/* Documented Allergies */}
-            <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 space-y-1">
-              <span className="text-[11px] font-bold font-mono text-rose-400 uppercase tracking-wider flex items-center">
-                <ShieldAlert className="w-3.5 h-3.5 mr-1 text-rose-400" />
+            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/30 space-y-1">
+              <span className="text-[11px] font-bold font-mono text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center">
+                <ShieldAlert className="w-3.5 h-3.5 mr-1 text-rose-600 dark:text-rose-400" />
                 Drug Allergies
               </span>
               {allergies.length > 0 ? (
                 allergies.map((a) => (
-                  <div key={a.id} className="text-xs font-bold text-rose-200">
+                  <div key={a.id} className="text-xs font-bold text-rose-900 dark:text-rose-200">
                     {a.value}
                   </div>
                 ))
               ) : (
-                <p className="text-xs font-bold text-rose-300">Penicillin (Severe rash)</p>
+                <p className="text-xs font-bold text-rose-800 dark:text-rose-300">Penicillin (Severe rash)</p>
               )}
             </div>
           </div>
 
           {/* Synthesized Clinical Summary */}
           <div className="space-y-2">
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center">
-              <FileText className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center">
+              <FileText className="w-3.5 h-3.5 mr-1.5 text-cyan-600 dark:text-cyan-400" />
               Synthesized Clinical Summary
             </h4>
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-slate-200 leading-relaxed font-sans">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
               {brief.clinical_summary}
             </div>
           </div>
@@ -250,15 +250,15 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
           {brief.unresolved_questions && brief.unresolved_questions.length > 0 && (
             <div
               data-testid="unresolved-questions-box"
-              className="p-4 rounded-xl bg-purple-950/30 border border-purple-500/30 text-purple-200 space-y-2"
+              className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-500/30 text-purple-900 dark:text-purple-200 space-y-2"
             >
               <div className="flex items-center space-x-2">
-                <HelpCircle className="w-4 h-4 text-purple-400" />
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-300">
+                <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300">
                   Unresolved Clinical Inquiries ({brief.unresolved_questions.length})
                 </h4>
               </div>
-              <ul className="list-disc list-inside text-xs text-purple-200 space-y-1 pl-1">
+              <ul className="list-disc list-inside text-xs text-purple-800 dark:text-purple-200 space-y-1 pl-1">
                 {brief.unresolved_questions.map((q, idx) => (
                   <li key={idx} className="leading-relaxed">
                     {q}
@@ -273,12 +273,12 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
             <div
               role="alert"
               data-testid="brief-contradiction-alert"
-              className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 flex items-start justify-between gap-3"
+              className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3"
             >
               <div className="flex items-start space-x-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed">
-                  <span className="font-bold block text-sm text-white">Discrepancy Detected Between Sources</span>
+                  <span className="font-bold block text-sm text-slate-900 dark:text-white">Discrepancy Detected Between Sources</span>
                   Discrepancy noted regarding symptom duration between oral patient intake statement and external referral note.
                 </div>
               </div>
@@ -289,7 +289,7 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                   size="sm"
                   onClick={onViewDiff}
                   data-testid="inspect-diff-from-brief-btn"
-                  className="text-xs shrink-0 bg-[#0a0f1d] text-amber-300 border-amber-500/40 hover:bg-amber-950/50 min-h-[40px]"
+                  className="text-xs shrink-0 bg-white dark:bg-[#0a0f1d] text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-50 dark:hover:bg-amber-950/50 min-h-[40px]"
                 >
                   Inspect Diff
                 </Button>
@@ -300,11 +300,11 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
           {/* Evidence Citations Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center">
-                <FileText className="w-3.5 h-3.5 mr-1.5 text-cyan-400" />
+              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 flex items-center">
+                <FileText className="w-3.5 h-3.5 mr-1.5 text-cyan-600 dark:text-cyan-400" />
                 Cited Evidence Sources ({brief.citations.length})
               </h4>
-              <span className="text-[11px] text-slate-400 font-mono">Click citation to inspect provenance</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Click citation to inspect provenance</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="citations-grid">
@@ -313,27 +313,27 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                   key={cite.citation_id}
                   data-testid={`citation-card-${cite.citation_id}`}
                   onClick={() => onSelectCitation && onSelectCitation(cite)}
-                  className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0a0f1d]/80 hover:border-cyan-400/50 hover:bg-[#0e1629] transition-all cursor-pointer shadow-subtle group space-y-2 hover:shadow-[0_0_20px_rgba(6,182,212,0.12)]"
+                  className="p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-[#0a0f1d]/80 hover:border-cyan-400/50 hover:bg-white dark:hover:bg-[#0e1629] transition-all cursor-pointer shadow-xs group space-y-2 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono font-bold bg-cyan-100 dark:bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-400/30 px-2 py-0.5 rounded">
                       {cite.citation_id}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                       {cite.source_location || cite.source_type}
                     </span>
                   </div>
 
-                  <div className="text-xs font-bold text-white group-hover:text-cyan-300">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300">
                     {cite.source_title}
                   </div>
 
-                  <p className="text-xs text-slate-300 italic font-serif line-clamp-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 italic font-serif line-clamp-2">
                     {cite.text_snippet}
                   </p>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-white/[0.08] text-[11px]">
-                    <span className="text-cyan-400 font-semibold flex items-center">
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-white/[0.08] text-[11px]">
+                    <span className="text-cyan-600 dark:text-cyan-400 font-semibold flex items-center">
                       <ExternalLink className="w-3 h-3 mr-1" />
                       Inspect Source
                     </span>
@@ -349,7 +349,7 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
                               : 'doc_synth_rx_01';
                           onInspectDocument(docId);
                         }}
-                        className="text-xs text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                        className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
                       >
                         Open Document
                       </button>
@@ -361,7 +361,7 @@ export const DoctorBriefCard: React.FC<DoctorBriefCardProps> = ({
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#050811]/60 border-t border-white/[0.08] px-6 py-3.5">
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 dark:bg-[#050811]/60 border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5">
           <div className="flex items-center space-x-2">
             {onViewLedger && (
               <Button

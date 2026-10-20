@@ -464,9 +464,10 @@ describe('TASK-P1-501: Doctor Console, Briefing UI & Audio Player Suite', () => 
       fireEvent.click(screen.getByTestId('doc-tab-diff'));
       expect(screen.getByTestId('tab-content-diff')).toBeInTheDocument();
 
-      // Tab 4: Documents
-      fireEvent.click(screen.getByTestId('doc-tab-documents'));
-      expect(screen.getByTestId('tab-content-documents')).toBeInTheDocument();
+      // Tab 4: Patient Profile (Diagnostic Documents removed to eliminate redundancy with Clinical Ledger)
+      expect(screen.queryByTestId('doc-tab-documents')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('doc-tab-profile'));
+      expect(screen.getByTestId('tab-content-profile')).toBeInTheDocument();
     });
 
     it('opens document viewer modal when citation is clicked', async () => {

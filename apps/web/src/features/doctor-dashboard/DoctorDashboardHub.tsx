@@ -3,7 +3,7 @@ import { DoctorQueueList } from './DoctorQueueList';
 import { DoctorBriefCard } from '../doctor-brief/DoctorBriefCard';
 import { ClinicalContextLedger } from '../patient-context/ClinicalContextLedger';
 import { ContextDiffView } from '../patient-context/ContextDiffView';
-import { DocumentUploadZone, type UploadedDocItem } from '../documents/DocumentUploadZone';
+import type { UploadedDocItem } from '../documents/DocumentUploadZone';
 import { DocumentViewerModal } from '../documents/DocumentViewerModal';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -20,7 +20,6 @@ import {
   Stethoscope,
   FileSpreadsheet,
   GitCompare,
-  UploadCloud,
   AlertCircle,
   RefreshCw,
   CheckCircle2,
@@ -186,17 +185,17 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
   return (
     <div className="w-full space-y-6" data-testid="doctor-dashboard-hub">
       {/* 1. Clinician Workstation Active Context Header Banner */}
-      <div className="bg-[#080d19]/90 border border-white/[0.08] p-4 rounded-2xl shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#080d19]/90 border border-slate-200 dark:border-white/[0.08] p-4 rounded-2xl shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center font-extrabold text-sm border border-white/20 shrink-0 shadow-md shadow-cyan-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center font-extrabold text-sm border border-cyan-400/30 shrink-0 shadow-md shadow-cyan-500/20">
             {selectedPatientName.slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">
+              <span className="text-xs font-mono uppercase tracking-wider text-cyan-700 dark:text-cyan-400 font-semibold">
                 Active Consultation Case
               </span>
-              <Badge variant="neutral" size="sm" className="font-mono text-[10px] text-slate-400 border-white/10">
+              <Badge variant="neutral" size="sm" className="font-mono text-[10px]">
                 {selectedEncounterId}
               </Badge>
               {activePatientItem?.priority === 'URGENT' && (
@@ -205,11 +204,11 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
                 </Badge>
               )}
             </div>
-            <h2 className="text-lg font-black text-white leading-tight mt-0.5">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight mt-0.5">
               {selectedPatientName}
             </h2>
             {activePatientItem && (
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {activePatientItem.department} • Scheduled {activePatientItem.appointment_time}
               </p>
             )}
@@ -219,21 +218,21 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
         {/* Anti-Wrong Patient Safeguard Confirmation & Quick Stats */}
         <div className="flex items-center space-x-3 self-end md:self-center">
           <div className="text-right hidden sm:block">
-            <span className="text-[11px] text-slate-400 font-mono block">Queue Status</span>
-            <span className="text-xs font-bold text-slate-200">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">Queue Status</span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
               {activePatientItem?.status === 'COMPLETED' ? (
-                <span className="text-emerald-400 flex items-center justify-end">
+                <span className="text-emerald-600 dark:text-emerald-400 flex items-center justify-end font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Sign-off Complete
                 </span>
               ) : activePatientItem?.status === 'IN_CONSULTATION' ? (
-                <span className="text-cyan-300">In Active Consultation</span>
+                <span className="text-cyan-700 dark:text-cyan-300 font-semibold">In Active Consultation</span>
               ) : (
                 'Pending Review'
               )}
             </span>
           </div>
 
-          <div className="h-8 w-px bg-white/10 hidden sm:block" />
+          <div className="h-8 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
 
           <Button
             type="button"
@@ -241,7 +240,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
             size="sm"
             onClick={() => fetchEncounterData(selectedEncounterId)}
             data-testid="refresh-encounter-btn"
-            className="text-xs min-h-[40px] text-slate-300 border-white/10 hover:bg-white/5"
+            className="text-xs min-h-[40px] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isBriefLoading ? 'animate-spin' : ''}`} />
             Re-sync Case
@@ -281,15 +280,15 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
         {/* Right Column: Multi-tab Clinical Workspace */}
         <div className="lg:col-span-8 space-y-4">
           {/* Sub-Navigation Tabs */}
-          <div className="flex items-center space-x-1 bg-[#050811]/90 p-1.5 rounded-xl border border-white/[0.08] shadow-inner overflow-x-auto">
+          <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-[#050811]/90 p-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] shadow-inner overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab('brief')}
               data-testid="doc-tab-brief"
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'brief'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-white dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-300 border border-slate-300 dark:border-cyan-400/40 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Stethoscope className="w-3.5 h-3.5" />
@@ -302,8 +301,8 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               data-testid="doc-tab-ledger"
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'ledger'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-white dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-300 border border-slate-300 dark:border-cyan-400/40 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -316,8 +315,8 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
               data-testid="doc-tab-diff"
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'diff'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-white dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-300 border border-slate-300 dark:border-cyan-400/40 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
               <GitCompare className="w-3.5 h-3.5" />
@@ -329,26 +328,12 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
 
             <button
               type="button"
-              onClick={() => setActiveTab('documents')}
-              data-testid="doc-tab-documents"
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'documents'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-              }`}
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>Diagnostic Documents</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setActiveTab('profile')}
               data-testid="doc-tab-profile"
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeTab === 'profile'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-white dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-300 border border-slate-300 dark:border-cyan-400/40 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
               <User className="w-3.5 h-3.5" />
@@ -429,18 +414,7 @@ export const DoctorDashboardHub: React.FC<DoctorDashboardHubProps> = ({
             </div>
           )}
 
-          {/* Tab 4: Uploaded Diagnostic Documents */}
-          {activeTab === 'documents' && (
-            <div data-testid="tab-content-documents">
-              <DocumentUploadZone
-                encounterId={selectedEncounterId}
-                onViewDocument={(doc) => {
-                  setSelectedDoc(doc);
-                  setIsDocModalOpen(true);
-                }}
-              />
-            </div>
-          )}
+
 
           {/* Tab 5: Hospital Patient Record / Master Profile */}
           {activeTab === 'profile' && (
