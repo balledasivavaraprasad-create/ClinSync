@@ -30,6 +30,8 @@ export const MainView: React.FC<MainViewProps> = ({
   currentUser,
 }) => {
   const [activeTab, setActiveTab] = useState<DashboardTabType>(initialTab);
+  const [doctorSubTab, setDoctorSubTab] = useState<'console' | 'ledger'>('console');
+  const [staffSubTab, setStaffSubTab] = useState<'operations' | 'ledger'>('operations');
 
   React.useEffect(() => {
     if (initialTab) {
@@ -60,7 +62,7 @@ export const MainView: React.FC<MainViewProps> = ({
 
   // 2. DOCTOR CONSOLE (STRICT ROLE SEPARATION)
   // Clinician workspace with prioritized queue, 60s brief, diff/ledger, doctor sign-off
-  // NO kiosk intake buttons, NO front-desk registration controls
+  // Includes direct tab toggle to QA & Clinical Ledger for attending physicians
   if (activeTab === 'doctor') {
     return (
       <div data-testid="role-doctor-view" className="w-full min-h-screen">
@@ -68,10 +70,18 @@ export const MainView: React.FC<MainViewProps> = ({
           doctorName={currentUser?.userName || 'Dr. Clara Chen, MD'}
           department={currentUser?.department || 'Cardiology & Outpatient Triage'}
           activePatientCount={mockDoctorQueue.length}
+          activeSubTab={doctorSubTab}
+          onSubTabChange={setDoctorSubTab}
           onLogout={onBackToLanding || onOpenLogin}
           onBackToLanding={onBackToLanding}
         >
-          <DoctorDashboardHub />
+          {doctorSubTab === 'console' ? (
+            <DoctorDashboardHub />
+          ) : (
+            <div className="space-y-4">
+              <LedgerDiffHub />
+            </div>
+          )}
         </DoctorConsoleLayout>
       </div>
     );
@@ -79,7 +89,7 @@ export const MainView: React.FC<MainViewProps> = ({
 
   // 3. HOSPITAL STAFF OPERATIONS (STRICT ROLE SEPARATION)
   // Front-desk triage operations: queue monitoring, walk-in registration, kiosk fleet monitoring
-  // NO medical sign-off, NO diagnosis modification
+  // Includes direct tab toggle to QA & Clinical Ledger for desk coordinators
   if (activeTab === 'staff') {
     return (
       <div data-testid="role-staff-view" className="w-full min-h-screen">
@@ -87,10 +97,18 @@ export const MainView: React.FC<MainViewProps> = ({
           terminalName="Front Desk Terminal 01"
           shiftName="Morning Shift"
           activeQueueCount={7}
+          activeSubTab={staffSubTab}
+          onSubTabChange={setStaffSubTab}
           onLogout={onBackToLanding || onOpenLogin}
           onBackToLanding={onBackToLanding}
         >
-          <StaffOperationsHub />
+          {staffSubTab === 'operations' ? (
+            <StaffOperationsHub />
+          ) : (
+            <div className="space-y-4">
+              <LedgerDiffHub />
+            </div>
+          )}
         </StaffLayout>
       </div>
     );
