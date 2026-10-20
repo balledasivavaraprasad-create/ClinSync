@@ -22,7 +22,7 @@ describe('LoginPage Component', () => {
     expect(screen.getByTestId('btn-login-submit')).toBeInTheDocument();
   });
 
-  it('switches between Doctor, Kiosk, and Auditor roles', () => {
+  it('switches between Doctor, Kiosk, and Staff roles', () => {
     const handleLoginSuccess = vi.fn();
     const handleBackToLanding = vi.fn();
 
@@ -37,9 +37,9 @@ describe('LoginPage Component', () => {
     fireEvent.click(screen.getByTestId('role-tab-kiosk'));
     expect(screen.getByText('Tablet Kiosk Activation')).toBeInTheDocument();
 
-    // Click Auditor tab
-    fireEvent.click(screen.getByTestId('role-tab-auditor'));
-    expect(screen.getByText('Clinical Auditor Access')).toBeInTheDocument();
+    // Click Staff tab
+    fireEvent.click(screen.getByTestId('role-tab-staff'));
+    expect(screen.getByText('Staff Desk Sign-In')).toBeInTheDocument();
 
     // Click Doctor tab
     fireEvent.click(screen.getByTestId('role-tab-doctor'));

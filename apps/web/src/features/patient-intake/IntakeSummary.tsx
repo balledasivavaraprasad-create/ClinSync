@@ -1,13 +1,11 @@
 import React from 'react';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import type { ClinicalFact } from '../../lib/api/types';
 import {
   CheckCircle2,
   RotateCcw,
-  Sparkles,
-  ClipboardList,
 } from 'lucide-react';
+import { PatientAITransparencyLedger } from './PatientAITransparencyLedger';
 
 interface IntakeSummaryProps {
   patientId?: string;
@@ -93,45 +91,13 @@ export const IntakeSummary: React.FC<IntakeSummaryProps> = ({
           </p>
         </div>
 
-        <div className="space-y-4 px-6 sm:px-8 py-6">
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-2.5">
-            <span className="text-xs uppercase font-mono tracking-wider text-slate-400 flex items-center">
-              <ClipboardList className="w-4 h-4 mr-1.5 text-cyan-400" />
-              Recorded Clinical Facts (Context Ledger)
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              {displayFacts.length} fact(s) captured
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {displayFacts.map((fact) => (
-              <div
-                key={fact.id}
-                className="p-3.5 bg-white/[0.025] rounded-xl border border-white/[0.08] flex items-center justify-between shadow-sm"
-              >
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-bold text-white">
-                      {fact.concept}
-                    </span>
-                    <span className="text-xs text-slate-400">({fact.value})</span>
-                  </div>
-                  <span className="text-xs text-slate-400 block mt-1 font-mono">
-                    Source: {fact.source_type} • Method: {fact.extraction_method || 'direct'}
-                  </span>
-                </div>
-                <Badge status={fact.status} />
-              </div>
-            ))}
-          </div>
-
-          <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-200 text-xs flex items-start space-x-2.5 mt-4">
-            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">
-              Your symptoms are ready for clinician review. You can attach medical documents or proceed directly to clinic appointment booking.
-            </span>
-          </div>
+        <div className="space-y-6 px-6 sm:px-8 py-6">
+          <PatientAITransparencyLedger
+            facts={displayFacts}
+            encounterId={encounterId}
+            patientName={patientName}
+            showCardWrapper={false}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#050811]/90 border-t border-white/[0.06] px-6 sm:px-8 py-4">
